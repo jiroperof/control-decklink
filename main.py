@@ -1045,9 +1045,18 @@ async def get_stats(token: str = Depends(require_admin)):
 
     recent_logins = ACCESS_LOG[-50:]
     user_counts = {}
+    user_fails = {}
     for entry in ACCESS_LOG:
         u = entry.get("username", "Desconocido")
-        user_counts[u] = user_counts.get(u, 0) + 1
+        is_fail = (entry.get("role") == "fallido")
+        
+        if u not in user_counts: user_counts[u] = 0
+        if u not in user_fails: user_fails[u] = 0
+        
+        if is_fail:
+            user_fails[u] += 1
+        else:
+            user_counts[u] += 1
 
     return {
         "recordings": {
@@ -1061,7 +1070,8 @@ async def get_stats(token: str = Depends(require_admin)):
         "access": {
             "total_logins": len(ACCESS_LOG),
             "recent": recent_logins,
-            "distribution": user_counts
+            "distribution": user_counts,
+            "distribution_fails": user_fails
         }
     }
 

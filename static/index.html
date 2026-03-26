@@ -6,7 +6,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Capturadora 2.0</title>
     <link rel="icon" type="image/png" href="logo.png">
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800;900&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
@@ -200,30 +200,40 @@
     </style>
 </head>
 
-<body class="bg-slate-900 text-white min-h-screen antialiased" style="font-family: 'Inter', system-ui, sans-serif;">
+<body class="bg-slate-900 text-white min-h-screen antialiased" style="font-family: 'Outfit', system-ui, sans-serif;">
 
     <!-- TOAST CONTAINER -->
     <div id="toastContainer" class="fixed top-6 right-6 z-[100] flex flex-col gap-3 pointer-events-none"></div>
 
     <!-- ════════════════════════════════ LOGIN ════════════════════════════════ -->
-    <div id="loginSection" class="fixed inset-0 z-50 flex flex-col items-center justify-center p-4 backdrop-blur-sm">
-        <div class="w-full max-w-md p-8 sm:p-10 glass-panel rounded-3xl text-center shadow-2xl animate-fade-in-up">
-            <img src="logo.png" alt="VTV" class="h-20 mx-auto mb-6 drop-shadow-lg">
-            <h2 class="text-3xl font-bold mb-6 uppercase text-white italic"
-                style="font-family:'Segoe UI',system-ui,-apple-system,sans-serif;">Capturadora VTV 2.0</h2>
+    <div id="loginSection" class="fixed inset-0 z-50 flex flex-col items-center justify-center p-4 backdrop-blur-xl bg-slate-900">
+        <div class="w-full max-w-md p-8 sm:p-10 glass-panel rounded-3xl shadow-2xl animate-fade-in-up">
+            
+            <!-- Branding Idéntico al Header Superior Izquierdo -->
+            <div class="flex items-center justify-center mb-8">
+                <img src="logo.png" alt="VTV" class="h-10 sm:h-12 drop-shadow-lg scale-95" />
+                <div class="ml-4 flex flex-col justify-center text-left">
+                    <h2 class="text-xl sm:text-2xl font-black tracking-tight text-white mb-0 uppercase transition-all duration-500">
+                        CAPTURADORA 2.0
+                    </h2>
+                    <p class="text-[7px] sm:text-[8px] text-slate-400 font-bold uppercase tracking-widest transition-all duration-500">
+                        Sistema Multicanal
+                    </p>
+                </div>
+            </div>
             <div class="space-y-4">
                 <!-- Hidden elements kept for modal compatibility -->
                 <span id="btnRoleG1Label" class="hidden">Capturadora2.0I</span>
                 <span id="btnRoleG2Label" class="hidden">Capturadora2.0II</span>
 
                 <div>
-                    <input type="text" id="user" placeholder="Usuario"
-                        class="w-full p-4 rounded-xl outline-none font-mono bg-slate-900/80 border-2 border-slate-700 text-white focus:border-red-500 transition-all text-center tracking-widest text-lg" autocomplete="username">
+                    <input type="text" id="user" placeholder="Usuario de acceso"
+                        class="w-full px-5 py-4 rounded-2xl outline-none bg-slate-800/40 border border-slate-600/50 text-white focus:bg-slate-800 focus:border-red-500 focus:ring-4 focus:ring-red-500/20 transition-all text-base font-medium placeholder:text-slate-500 shadow-inner" autocomplete="username">
                 </div>
 
                 <div class="relative w-full">
-                    <input type="password" id="pass" placeholder="Contraseña"
-                        class="w-full p-4 rounded-xl outline-none font-mono bg-slate-900/80 border-2 border-slate-700 text-white focus:border-red-500 transition-all text-center tracking-[0.2em] text-lg" autocomplete="current-password">
+                    <input type="password" id="pass" placeholder="Contraseña de seguridad"
+                        class="w-full px-5 py-4 rounded-2xl outline-none bg-slate-800/40 border border-slate-600/50 text-white focus:bg-slate-800 focus:border-red-500 focus:ring-4 focus:ring-red-500/20 transition-all text-base font-medium placeholder:text-slate-500 shadow-inner" autocomplete="current-password">
                     <button type="button" onmousedown="document.getElementById('pass').type='text'" onmouseup="document.getElementById('pass').type='password'" onmouseleave="document.getElementById('pass').type='password'" ontouchstart="document.getElementById('pass').type='text'" ontouchend="document.getElementById('pass').type='password'" class="absolute right-4 top-1/2 -translate-y-1/2 text-slate-500 hover:text-white p-2 cursor-pointer transition-colors" title="Mantener para ver clave">
                         <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
@@ -236,7 +246,7 @@
                     class="hidden text-red-400 text-sm font-semibold bg-red-900/30 border border-red-700/50 rounded-xl py-2 px-4 shadow-inner">
                 </p>
                 <button id="btnLogin" onclick="login()"
-                    class="w-full bg-red-600/90 py-4 rounded-xl font-black uppercase tracking-widest shadow-[0_0_15px_rgba(220,38,38,0.4)] hover:shadow-[0_0_25px_rgba(220,38,38,0.6)] hover:bg-red-500 active:scale-95 transition-all mt-2 border border-red-500">Iniciar Sesión</button>
+                    class="w-full bg-red-600 py-4 rounded-2xl font-black text-sm uppercase tracking-wide shadow-lg hover:shadow-red-600/40 hover:bg-red-500 active:scale-95 transition-all mt-3 border border-red-500/50">Iniciar Sesión</button>
             </div>
         </div>
         
@@ -248,7 +258,7 @@
             </div>
             <div class="flex flex-col items-end pointer-events-auto">
                 <a href="mailto:mesadeayuda@vtv.gob.ve"
-                    class="bg-blue-600/10 hover:bg-blue-600/20 text-blue-400 px-4 py-2 rounded-lg border border-blue-500/30 transition-all font-bold uppercase tracking-tighter italic">
+                    class="bg-blue-600/10 hover:bg-blue-600/20 text-blue-400 px-4 py-2 rounded-lg border border-blue-500/30 transition-all font-bold uppercase tracking-tighter">
                     Contactar a Soporte</a>
             </div>
         </div>
@@ -267,7 +277,7 @@
                         class="h-6 md:h-7 transition-all duration-500 ease-[cubic-bezier(0.16,1,0.3,1)] drop-shadow-[0_0_15px_rgba(255,255,255,0.08)] hover:scale-105 hover:drop-shadow-[0_0_20px_rgba(239,68,68,0.3)] cursor-pointer">
                     <div class="border-l-4 border-red-600 pl-2 md:pl-3 transition-all duration-500" id="headerTitleBox">
                         <h1 id="headerTitle"
-                            class="text-base md:text-lg font-black italic tracking-tighter uppercase text-white transition-all duration-500 drop-shadow-md">
+                            class="text-base md:text-lg font-black tracking-tighter uppercase text-white transition-all duration-500 drop-shadow-md">
                             CAPTURADORA 2.0</h1>
                         <p id="headerSubtitle"
                             class="text-[7px] md:text-[8px] text-slate-400 font-bold uppercase tracking-widest transition-all duration-500">
@@ -284,34 +294,31 @@
                             class="px-3 py-1 rounded border border-slate-700/50 bg-slate-800/40 backdrop-blur-md text-slate-400 font-bold text-[10px] tracking-widest shadow-inner transition-all duration-300">
                             GRABANDO 2</div>
                     </div>
-                    <div class="flex flex-col items-end gap-2 border-l border-slate-700/50 pl-5">
-                        <span id="roleBadge"
-                            class="px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest bg-slate-800/40 backdrop-blur-md text-slate-300 border border-slate-700/50 shadow-md"></span>
-                        <div class="flex items-center gap-1.5">
-                            <!-- Admin Tools -->
-                            <div class="flex items-center gap-1.5 border-r border-slate-700/50 pr-3 mr-1.5">
-                                <button id="btnStatsPanel" onclick="openStatsModal()" class="hidden group flex items-center gap-2 bg-emerald-800/40 hover:bg-emerald-500/20 text-emerald-400 hover:text-emerald-300 px-3 py-1.5 rounded-lg border border-emerald-700/50 hover:border-emerald-500/60 transition-all duration-300 font-bold uppercase tracking-widest text-[9px] shadow-sm backdrop-blur-sm active:scale-95">
-                                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path></svg>
-                                    <span>Estadísticas</span>
-                                </button>
-                                <button id="btnAdminPanel" onclick="openAdminModal()" class="hidden group flex items-center gap-2 bg-indigo-800/40 hover:bg-indigo-500/20 text-indigo-400 hover:text-indigo-300 px-3 py-1.5 rounded-lg border border-indigo-700/50 hover:border-indigo-500/60 transition-all duration-300 font-bold uppercase tracking-widest text-[9px] shadow-sm backdrop-blur-sm active:scale-95">
-                                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"></path></svg>
-                                    <span>Administración</span>
-                                </button>
-                            </div>
-                            <!-- Logout -->
-                            <button onclick="logout()"
-                                class="group flex items-center gap-2 bg-slate-800/40 hover:bg-red-500/15 text-slate-400 hover:text-red-400 px-3 py-1.5 rounded-lg border border-slate-700/50 hover:border-red-500/40 transition-all duration-300 font-bold uppercase tracking-widest text-[9px] shadow-sm backdrop-blur-sm active:scale-95">
-                                <svg class="w-3.5 h-3.5 group-hover:translate-x-0.5 transition-transform" fill="none"
-                                    stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                        d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1">
-                                    </path>
+                    <div class="flex justify-center items-center gap-4 border-l border-slate-700/50 pl-5 h-full">
+                        
+                        <!-- Admin Tools Container (2x1 Grid) -->
+                        <div id="adminToolsContainer" class="hidden flex-col justify-center gap-2 border-r border-slate-700/50 pr-4">
+                            <button id="btnAdminPanel" onclick="openAdminModal()" class="group flex items-center gap-2 bg-indigo-800/40 hover:bg-indigo-500/20 text-indigo-400 hover:text-indigo-300 px-3 py-1.5 rounded-lg border border-indigo-700/50 hover:border-indigo-500/60 transition-all duration-300 font-bold uppercase tracking-widest text-[9px] shadow-sm backdrop-blur-sm active:scale-95 w-full justify-start">
+                                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"></path></svg>
+                                <span>Administración</span>
+                            </button>
+                            <button id="btnStatsPanel" onclick="openStatsModal()" class="group flex items-center gap-2 bg-emerald-800/40 hover:bg-emerald-500/20 text-emerald-400 hover:text-emerald-300 px-3 py-1.5 rounded-lg border border-emerald-700/50 hover:border-emerald-500/60 transition-all duration-300 font-bold uppercase tracking-widest text-[9px] shadow-sm backdrop-blur-sm active:scale-95 w-full justify-start">
+                                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002-2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path></svg>
+                                <span>Estadísticas</span>
+                            </button>
+                        </div>
+
+                        <!-- User & Session Container (2x1 Grid) -->
+                        <div class="flex flex-col justify-center gap-2">
+                            <span id="roleBadge" class="flex justify-center items-center px-3 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-widest bg-slate-800/40 backdrop-blur-md text-slate-300 border border-slate-700/50 shadow-md w-full"></span>
+                            <button onclick="logout()" class="group flex items-center gap-2 bg-slate-800/40 hover:bg-red-500/15 text-slate-400 hover:text-red-400 px-3 py-1.5 rounded-lg border border-slate-700/50 hover:border-red-500/40 transition-all duration-300 font-bold uppercase tracking-widest text-[9px] shadow-sm backdrop-blur-sm active:scale-95 w-full justify-start">
+                                <svg class="w-3.5 h-3.5 group-hover:translate-x-0.5 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"></path>
                                 </svg>
                                 <span>Cerrar Sesión</span>
                             </button>
                         </div>
-                    </div>
+                        
                 </div>
             </div>
         </header>
@@ -342,7 +349,7 @@
                             <label class="block text-[9px] font-bold text-slate-400 mb-1 uppercase">Calidad del
                                 Master</label>
                             <select id="bitrate_1"
-                                class="w-full p-2.5 rounded-xl outline-none italic font-bold text-xs">
+                                class="w-full p-2.5 rounded-xl outline-none font-bold text-xs">
                                 <option value="15M" selected>15 Mbps - Estándar</option>
                                 <option value="25M">25 Mbps - HD Master</option>
                                 <option value="50M">50 Mbps - Master Pro</option>
@@ -406,9 +413,9 @@
                             </div>
                             <div class="flex gap-2">
                                 <button onclick="setSchedule('1')"
-                                    class="flex-1 bg-blue-700 hover:bg-blue-600 py-2 rounded-xl font-bold text-[10px] uppercase italic transition-all">Guardar</button>
+                                    class="flex-1 bg-blue-700 hover:bg-blue-600 py-2 rounded-xl font-bold text-[10px] uppercase transition-all">Guardar</button>
                                 <button onclick="cancelSchedule('1')"
-                                    class="flex-1 bg-slate-700 hover:bg-slate-600 py-2 rounded-xl font-bold text-[10px] uppercase italic transition-all">Borrar</button>
+                                    class="flex-1 bg-slate-700 hover:bg-slate-600 py-2 rounded-xl font-bold text-[10px] uppercase transition-all">Borrar</button>
                             </div>
                         </div>
                     </div>
@@ -425,9 +432,9 @@
 
                     <div class="admin-ui-block grid grid-cols-2 gap-4 mt-2">
                         <button id="btnStart_1" onclick="execute('1', 'start')"
-                            class="bg-red-600 hover:bg-red-500 py-4 rounded-2xl font-black text-lg active:scale-95 uppercase italic shadow-lg shadow-red-900/40 transition-all">Iniciar</button>
+                            class="bg-red-600 hover:bg-red-500 py-4 rounded-2xl font-black text-lg active:scale-95 uppercase shadow-lg shadow-red-900/40 transition-all">Iniciar</button>
                         <button id="btnStop_1" onclick="execute('1', 'stop')"
-                            class="bg-slate-700 hover:bg-slate-600 py-4 rounded-2xl font-black text-lg active:scale-95 uppercase italic shadow-lg transition-all">Detener</button>
+                            class="bg-slate-700 hover:bg-slate-600 py-4 rounded-2xl font-black text-lg active:scale-95 uppercase shadow-lg transition-all">Detener</button>
                     </div>
                     <button id="btnPreview_1" onclick="openPreview('1')" class="w-full mt-3 bg-slate-800/60 hover:bg-slate-700 border border-slate-700 py-2 rounded-xl font-bold text-[10px] uppercase tracking-widest transition-all active:scale-95 disabled:opacity-30 disabled:cursor-not-allowed">👁 Vista Previa</button>
                 </div>
@@ -450,7 +457,7 @@
                             <label class="block text-[9px] font-bold text-slate-400 mb-1 uppercase">Calidad del
                                 Master</label>
                             <select id="bitrate_2"
-                                class="w-full p-2.5 rounded-xl outline-none italic font-bold text-xs">
+                                class="w-full p-2.5 rounded-xl outline-none font-bold text-xs">
                                 <option value="15M" selected>15 Mbps - Estándar</option>
                                 <option value="25M">25 Mbps - HD Master</option>
                                 <option value="50M">50 Mbps - Master Pro</option>
@@ -514,9 +521,9 @@
                             </div>
                             <div class="flex gap-2">
                                 <button onclick="setSchedule('2')"
-                                    class="flex-1 bg-blue-700 hover:bg-blue-600 py-2 rounded-xl font-bold text-[10px] uppercase italic transition-all">Guardar</button>
+                                    class="flex-1 bg-blue-700 hover:bg-blue-600 py-2 rounded-xl font-bold text-[10px] uppercase transition-all">Guardar</button>
                                 <button onclick="cancelSchedule('2')"
-                                    class="flex-1 bg-slate-700 hover:bg-slate-600 py-2 rounded-xl font-bold text-[10px] uppercase italic transition-all">Borrar</button>
+                                    class="flex-1 bg-slate-700 hover:bg-slate-600 py-2 rounded-xl font-bold text-[10px] uppercase transition-all">Borrar</button>
                             </div>
                         </div>
                     </div>
@@ -533,9 +540,9 @@
 
                     <div class="admin-ui-block grid grid-cols-2 gap-4 mt-2">
                         <button id="btnStart_2" onclick="execute('2', 'start')"
-                            class="bg-red-600 hover:bg-red-500 py-4 rounded-2xl font-black text-lg active:scale-95 uppercase italic shadow-lg shadow-red-900/40 transition-all">Iniciar</button>
+                            class="bg-red-600 hover:bg-red-500 py-4 rounded-2xl font-black text-lg active:scale-95 uppercase shadow-lg shadow-red-900/40 transition-all">Iniciar</button>
                         <button id="btnStop_2" onclick="execute('2', 'stop')"
-                            class="bg-slate-700 hover:bg-slate-600 py-4 rounded-2xl font-black text-lg active:scale-95 uppercase italic shadow-lg transition-all">Detener</button>
+                            class="bg-slate-700 hover:bg-slate-600 py-4 rounded-2xl font-black text-lg active:scale-95 uppercase shadow-lg transition-all">Detener</button>
                     </div>
                     <button id="btnPreview_2" onclick="openPreview('2')" class="w-full mt-3 bg-slate-800/60 hover:bg-slate-700 border border-slate-700 py-2 rounded-xl font-bold text-[10px] uppercase tracking-widest transition-all active:scale-95 disabled:opacity-30 disabled:cursor-not-allowed">👁 Vista Previa</button>
                 </div>
@@ -544,7 +551,7 @@
             <!-- MÉTRICAS -->
             <div id="resPanel" class="font-mono h-full">
                 <div class="glass-panel p-6 rounded-3xl shadow-2xl h-full flex flex-col gap-0">
-                    <h3 class="text-xs font-black text-white uppercase mb-5 border-b border-slate-700 pb-2 text-center tracking-widest italic">
+                    <h3 class="text-xs font-black text-white uppercase mb-5 border-b border-slate-700 pb-2 text-center tracking-widest">
                         RECURSOS</h3>
 
                     <div class="flex flex-col gap-3">
@@ -584,7 +591,7 @@
 
                         <!-- VRAM -->
                         <div>
-                            <div class="flex justify-between text-[11px] uppercase font-black text-red-400 italic mb-1">
+                            <div class="flex justify-between text-[11px] uppercase font-black text-red-400 mb-1">
                                 <span>VRAM</span><span id="vramVal">0%</span>
                             </div>
                             <div class="bg-slate-900 h-1.5 rounded-full overflow-hidden border border-slate-700/50">
@@ -627,16 +634,14 @@
 
                     </div>
 
-                    <div class="mt-auto"></div>
-
                     <!-- Procesos activos -->
-                    <div class="admin-ui-block mt-4 pt-3 border-t border-slate-700/50">
+                    <div class="admin-ui-block mt-8 pt-4 border-t border-slate-700/50">
                         <div class="flex justify-between items-center mb-2">
                             <p class="text-[10px] text-slate-500 uppercase font-bold tracking-widest">⚙ Procesos Activos</p>
                             <span id="procCount" class="text-[10px] text-slate-600 font-mono"></span>
                         </div>
                         <div id="procList" class="space-y-1.5 text-[11px] font-mono max-h-[80px] overflow-y-auto pr-1 custom-scrollbar">
-                            <p class="text-slate-600 italic">Cargando...</p>
+                            <p class="text-slate-600">Cargando...</p>
                         </div>
                     </div>
                 </div>
@@ -645,7 +650,7 @@
         </div><!-- /gridCards -->
 
         <!-- HISTORIAL DE ARCHIVOS -->
-        <div class="glass-panel rounded-3xl shadow-2xl mb-6 overflow-hidden animate-fade-in-up delay-200">
+        <div class="mt-12 glass-panel rounded-3xl shadow-2xl mb-6 overflow-hidden animate-fade-in-up delay-200">
             <button onclick="toggleSection('filesBody'); loadFiles();"
                 class="w-full flex justify-between items-center px-8 py-5 text-xs font-black text-slate-400 uppercase tracking-widest hover:text-white transition-all">
                 <span>📁 Historial Global de Grabaciones</span>
@@ -657,15 +662,15 @@
             <div id="filesBody" class="collapsible-body closed px-8 pb-6">
                 <div class="flex justify-end mb-4">
                     <button onclick="loadFiles()"
-                        class="text-[11px] bg-slate-700 hover:bg-slate-600 px-4 py-2 rounded-lg font-bold uppercase italic transition-all">🔄
+                        class="text-[11px] bg-slate-700 hover:bg-slate-600 px-4 py-2 rounded-lg font-bold uppercase transition-all">🔄
                         Actualizar</button>
                 </div>
-                <div id="filesTable" class="text-sm font-mono text-slate-400 italic">Cargando...</div>
+                <div id="filesTable" class="text-sm font-mono text-slate-400">Cargando...</div>
             </div>
         </div>
 
         <!-- LOG FFMPEG -->
-        <div id="logSectionMain" class="admin-ui-block glass-panel rounded-3xl shadow-2xl mb-8 overflow-hidden animate-fade-in-up delay-300">
+        <div id="logSectionMain" class="glass-panel rounded-3xl shadow-2xl mb-8 overflow-hidden animate-fade-in-up delay-300">
             <button onclick="toggleSection('logBody')"
                 class="w-full flex justify-between items-center px-8 py-5 text-xs font-black text-slate-400 uppercase tracking-widest hover:text-white transition-all">
                 <span>🖥 Log de FFmpeg en Vivo (Sincronizado)</span>
@@ -679,7 +684,7 @@
                         <option value="200">200 líneas</option>
                     </select>
                     <button onclick="loadLog()"
-                        class="text-[11px] bg-slate-700 hover:bg-slate-600 px-4 py-2 rounded-lg font-bold uppercase italic transition-all">🔄
+                        class="text-[11px] bg-slate-700 hover:bg-slate-600 px-4 py-2 rounded-lg font-bold uppercase transition-all">🔄
                         Actualizar Ambos</button>
                     <label class="flex items-center gap-2 text-xs text-slate-400 font-bold cursor-pointer select-none">
                         <input type="checkbox" id="logAutoRefresh" onchange="toggleLogAuto()" class="accent-red-500">
@@ -712,7 +717,7 @@
             </div>
             <div class="flex flex-col items-end gap-3">
                 <a href="mailto:mesadeayuda@vtv.gob.ve"
-                    class="bg-blue-600/10 hover:bg-blue-600/20 text-blue-400 px-4 py-2 rounded-lg border border-blue-500/30 transition-all font-bold uppercase tracking-tighter italic">
+                    class="bg-blue-600/10 hover:bg-blue-600/20 text-blue-400 px-4 py-2 rounded-lg border border-blue-500/30 transition-all font-bold uppercase tracking-tighter">
                     Contactar a Soporte</a>
             </div>
         </footer>
@@ -723,7 +728,7 @@
         class="fixed inset-0 z-[60] hidden flex items-center justify-center bg-slate-950/80 backdrop-blur-md p-6">
         <div class="glass-panel w-full max-w-sm p-8 rounded-3xl shadow-2xl animate-fade-in-up">
             <div class="flex justify-between items-center mb-6 border-b border-slate-700 pb-3">
-                <h3 class="text-sm font-black uppercase tracking-widest text-white italic">⚙ Gestión de Limpieza</h3>
+                <h3 class="text-sm font-black uppercase tracking-widest text-white">⚙ Gestión de Limpieza</h3>
                 <button onclick="closeCleanupModal()"
                     class="text-slate-500 hover:text-white transition-colors">✕</button>
             </div>
@@ -741,7 +746,7 @@
                         <button onclick="changeCleanupDays(1)"
                             class="px-4 py-2 hover:bg-slate-800 transition-colors text-slate-400 font-bold border-l border-slate-700">+</button>
                     </div>
-                    <p class="text-[9px] text-slate-500 mt-2 italic">* Los archivos más antiguos se borrarán
+                    <p class="text-[9px] text-slate-500 mt-2">* Los archivos más antiguos se borrarán
                         automáticamente vía Crontab.</p>
                 </div>
 
@@ -769,7 +774,7 @@
         <div class="glass-panel w-full max-w-lg p-0 rounded-3xl shadow-2xl animate-fade-in-up overflow-hidden" style="max-height:90vh;overflow-y:auto">
             <!-- Header Modal -->
             <div class="flex justify-between items-center px-8 py-5 bg-indigo-900/30 border-b border-indigo-700/40">
-                <h3 class="text-sm font-black uppercase tracking-widest text-indigo-200 italic">⚙ Administración del Sistema</h3>
+                <h3 class="text-sm font-black uppercase tracking-widest text-indigo-200">⚙ Administración del Sistema</h3>
                 <button onclick="closeAdminModal()" class="text-slate-400 hover:text-white transition-colors text-lg font-bold">✕</button>
             </div>
             <!-- Tabs -->
@@ -829,7 +834,7 @@
                         <button onclick="loadAdminUsers()" class="text-[9px] text-slate-500 hover:text-white font-bold uppercase tracking-widest transition-all">🔄 Recargar</button>
                     </div>
                     <div id="adminUsersList" class="space-y-2 max-h-[240px] overflow-y-auto pr-1">
-                        <p class="text-slate-600 italic text-xs">Cargando...</p>
+                        <p class="text-slate-600 text-xs">Cargando...</p>
                     </div>
                 </div>
             </div>
@@ -840,7 +845,7 @@
     <div id="modalPreview" class="fixed inset-0 z-[70] hidden flex items-center justify-center bg-slate-950/90 backdrop-blur-lg p-4">
         <div class="glass-panel w-full max-w-4xl rounded-3xl overflow-hidden shadow-2xl border border-white/10 animate-fade-in-up">
             <div class="flex justify-between items-center px-6 py-4 bg-slate-900/80 border-b border-slate-700">
-                <h3 id="previewTitle" class="text-sm font-black uppercase tracking-widest text-white italic">Señal en Vivo: Canal 1</h3>
+                <h3 id="previewTitle" class="text-sm font-black uppercase tracking-widest text-white">Señal en Vivo: Canal 1</h3>
                 <button onclick="closePreview()" class="bg-red-600/20 hover:bg-red-600 text-red-500 hover:text-white px-3 py-1 rounded-lg transition-all font-bold">CERRAR</button>
             </div>
             <div class="aspect-video bg-black flex items-center justify-center relative">
@@ -856,7 +861,7 @@
     <div id="modalPlayer" class="fixed inset-0 z-[80] hidden flex items-center justify-center bg-slate-950/90 backdrop-blur-lg p-4">
         <div class="glass-panel w-full max-w-5xl rounded-3xl overflow-hidden shadow-2xl border border-white/10 animate-fade-in-up flex flex-col">
             <div class="flex justify-between items-center px-6 py-4 bg-slate-900/80 border-b border-slate-700">
-                <h3 id="playerTitle" class="text-sm font-black uppercase tracking-widest text-white italic truncate max-w-[80%]">Reproductor VOD</h3>
+                <h3 id="playerTitle" class="text-sm font-black uppercase tracking-widest text-white truncate max-w-[80%]">Reproductor VOD</h3>
                 <button onclick="closePlayer()" class="bg-red-600/20 hover:bg-red-600 text-red-500 hover:text-white px-3 py-1 rounded-lg transition-all font-bold">CERRAR</button>
             </div>
             <div class="bg-black w-full aspect-video flex-1 flex items-center justify-center">
@@ -874,7 +879,7 @@
     <div id="modalStats" class="hidden fixed inset-0 z-[100] bg-slate-900/95 backdrop-blur-xl overflow-y-auto w-full h-full">
         <div class="max-w-7xl mx-auto px-4 py-8">
             <div class="flex justify-between items-center mb-8 border-b border-slate-700/50 pb-4">
-                <h2 class="text-2xl font-black italic tracking-tighter uppercase text-white drop-shadow-md">Panel de Estadísticas</h2>
+                <h2 class="text-2xl font-black tracking-tighter uppercase text-white drop-shadow-md">Panel de Estadísticas</h2>
                 <button onclick="closeStatsModal()" class="text-slate-400 hover:text-white transition-colors bg-slate-800 p-2 rounded-full shadow border border-slate-700">
                     <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
                 </button>

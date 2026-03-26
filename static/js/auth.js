@@ -106,7 +106,7 @@
         }, 1000);
 
         // ── Init ──────────────────────────────────────────────────────────────────────
-        (function init() {
+        document.addEventListener("DOMContentLoaded", () => {
             const t = localStorage.getItem(TOKEN_KEY);
             const exp = parseInt(localStorage.getItem(EXPIRE_KEY) || '0', 10);
             if (t && Date.now() < exp) { TOKEN = t; showDashboard(); }
@@ -121,7 +121,7 @@
                     p.addEventListener('keydown', e => { if (e.key === 'Enter') login(); });
                 }
             }
-        })();
+        });
         // Carga los nombres de grupos desde el servidor para el login
         async function loadGroupNamesIntoLogin() {
             try {
@@ -152,11 +152,17 @@
             const isGroup = role === 'group1' || role === 'group2';
             USER_CHANNEL = localStorage.getItem(CHANNEL_KEY) || null;
             
-            // Mostrar botón Administración y Estadísticas solo al admin
-            const btnAdmin = document.getElementById('btnAdminPanel');
-            const btnStats = document.getElementById('btnStatsPanel');
-            if (btnAdmin) btnAdmin.classList.toggle('hidden', !isAdmin);
-            if (btnStats) btnStats.classList.toggle('hidden', !isAdmin);
+            // Mostrar botón Administración y Estadísticas solo al admin a través del contenedor
+            const adminToolsGrp = document.getElementById('adminToolsContainer');
+            if (adminToolsGrp) {
+                if (isAdmin) {
+                    adminToolsGrp.classList.remove('hidden');
+                    adminToolsGrp.classList.add('flex');
+                } else {
+                    adminToolsGrp.classList.remove('flex');
+                    adminToolsGrp.classList.add('hidden');
+                }
+            }
 
             // Elementos Globales (Limpiar Disco)
             const btnClean = document.getElementById('btnCleanupConfig');
@@ -176,8 +182,6 @@
             if (grid) {
                 grid.classList.remove('xl:grid-cols-[1fr_1fr]', 'xl:grid-cols-[1fr_260px]', 'lg:grid-cols-[1fr_260px]');
                 grid.classList.add('xl:grid-cols-[1fr_1fr_260px]', 'lg:grid-cols-[1fr_1fr]');
-                grid.style.maxWidth = 'none';
-                grid.style.margin = '0';
             }
 
             if (!isAdmin) {

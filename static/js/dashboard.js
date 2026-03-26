@@ -177,13 +177,21 @@
 
             const b = document.getElementById(`badgeCH${id}`);
             if (b) {
-                const isHidden = b.classList.contains('hidden');
-                if (c.running) {
-                    b.className = 'px-3 py-1 rounded border border-red-500 bg-red-600 text-white animate-pulse font-black text-[10px] tracking-widest' + (isHidden ? ' hidden' : '');
-                    b.innerText = `● GRABANDO ${id}`;
+                const role = localStorage.getItem(ROLE_KEY) || '';
+                const uCh = localStorage.getItem(CHANNEL_KEY) || null;
+                const isGroup = (role === 'group1' || role === 'group2');
+                const shouldHide = isGroup && (uCh !== id);
+                
+                if (shouldHide) {
+                    b.className = 'hidden';
                 } else {
-                    b.className = 'px-3 py-1 rounded border border-slate-600 bg-slate-700 text-slate-400 font-bold text-[10px] tracking-widest' + (isHidden ? ' hidden' : '');
-                    b.innerText = `GRABANDO ${id}`;
+                    if (c.running) {
+                        b.className = 'px-3 py-1 rounded border border-red-500 bg-red-600 text-white animate-pulse font-black text-[10px] tracking-widest';
+                        b.innerText = `● GRABANDO ${id}`;
+                    } else {
+                        b.className = 'px-3 py-1 rounded border border-slate-600 bg-slate-700 text-slate-400 font-bold text-[10px] tracking-widest';
+                        b.innerText = `GRABANDO ${id}`;
+                    }
                 }
             }
 

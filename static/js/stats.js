@@ -72,21 +72,40 @@
             if(usersChartInst) usersChartInst.destroy();
             
             const dist = data.access.distribution;
-            const userKeys = Object.keys(dist).sort((a,b) => dist[b] - dist[a]).slice(0, 15);
-            const uData = userKeys.map(k => dist[k]);
+            const fails = data.access.distribution_fails || {};
+            
+            const allKeysSet = new Set([...Object.keys(dist), ...Object.keys(fails)]);
+            const userKeys = Array.from(allKeysSet).sort((a,b) => {
+                const totalB = (dist[b]||0) + (fails[b]||0);
+                const totalA = (dist[a]||0) + (fails[a]||0);
+                return totalB - totalA;
+            }).slice(0, 15);
+            
+            const uDataSuccess = userKeys.map(k => dist[k] || 0);
+            const uDataFails = userKeys.map(k => fails[k] || 0);
 
             usersChartInst = new Chart(ctx2, {
                 type: 'bar',
                 data: {
                     labels: userKeys,
-                    datasets: [{
-                        label: 'Inicios de sesión (Exitosos)',
-                        data: uData,
-                        backgroundColor: 'rgba(56, 189, 248, 0.7)',
-                        borderColor: 'rgb(56, 189, 248)',
-                        borderWidth: 1,
-                        borderRadius: 4
-                    }]
+                    datasets: [
+                        {
+                            label: 'Exitosos',
+                            data: uDataSuccess,
+                            backgroundColor: 'rgba(56, 189, 248, 0.7)',
+                            borderColor: 'rgb(56, 189, 248)',
+                            borderWidth: 1,
+                            borderRadius: 4
+                        },
+                        {
+                            label: 'Fallidos',
+                            data: uDataFails,
+                            backgroundColor: 'rgba(239, 68, 68, 0.7)',
+                            borderColor: 'rgb(239, 68, 68)',
+                            borderWidth: 1,
+                            borderRadius: 4
+                        }
+                    ]
                 },
                 options: { 
                     responsive: true, 
