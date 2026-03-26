@@ -8,6 +8,7 @@
     <link rel="icon" type="image/png" href="logo.png">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800;900&display=swap" rel="stylesheet">
     <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
         .bar {
             transition: width 0.6s ease, background-color 0.4s ease;
@@ -287,6 +288,10 @@
                         <span id="roleBadge"
                             class="px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest bg-slate-800/40 backdrop-blur-md text-slate-300 border border-slate-700/50 shadow-md"></span>
                         <div class="flex items-center gap-2">
+                            <button id="btnStatsPanel" onclick="openStatsModal()" class="hidden group flex items-center gap-2 bg-emerald-800/40 hover:bg-emerald-500/20 text-emerald-400 hover:text-emerald-300 px-3 py-1.5 rounded-lg border border-emerald-700/50 hover:border-emerald-500/60 transition-all duration-300 font-bold uppercase tracking-widest text-[9px] shadow-sm backdrop-blur-sm active:scale-95">
+                                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path></svg>
+                                <span>Estadísticas</span>
+                            </button>
                             <button id="btnAdminPanel" onclick="openAdminModal()" class="hidden group flex items-center gap-2 bg-indigo-800/40 hover:bg-indigo-500/20 text-indigo-400 hover:text-indigo-300 px-3 py-1.5 rounded-lg border border-indigo-700/50 hover:border-indigo-500/60 transition-all duration-300 font-bold uppercase tracking-widest text-[9px] shadow-sm backdrop-blur-sm active:scale-95">
                                 <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"></path></svg>
                                 <span>Administración</span>
@@ -1015,9 +1020,11 @@
             const isGroup = role === 'group1' || role === 'group2';
             USER_CHANNEL = localStorage.getItem(CHANNEL_KEY) || null;
             
-            // Mostrar botón Administración solo al admin
+            // Mostrar botón Administración y Estadísticas solo al admin
             const btnAdmin = document.getElementById('btnAdminPanel');
+            const btnStats = document.getElementById('btnStatsPanel');
             if (btnAdmin) btnAdmin.classList.toggle('hidden', !isAdmin);
+            if (btnStats) btnStats.classList.toggle('hidden', !isAdmin);
 
             // Elementos Globales (Limpiar Disco)
             const btnClean = document.getElementById('btnCleanupConfig');
@@ -1926,6 +1933,210 @@
             } catch(_) { showToast('Error de conexión.', 'error'); }
         }
     </script>
-</body>
+    <!-- ════════════════════════════════ MODAL ESTADÍSTICAS ════════════════════════════════ -->
+    <div id="modalStats" class="hidden fixed inset-0 z-[100] bg-slate-900/95 backdrop-blur-xl overflow-y-auto w-full h-full">
+        <div class="max-w-7xl mx-auto px-4 py-8">
+            <div class="flex justify-between items-center mb-8 border-b border-slate-700/50 pb-4">
+                <h2 class="text-2xl font-black italic tracking-tighter uppercase text-white drop-shadow-md">Panel de Estadísticas</h2>
+                <button onclick="closeStatsModal()" class="text-slate-400 hover:text-white transition-colors bg-slate-800 p-2 rounded-full shadow border border-slate-700">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+                </button>
+            </div>
+            
+            <div id="statsLoader" class="text-center text-slate-400 py-20 font-mono text-sm uppercase tracking-widest animate-pulse">
+                Cargando métricas del sistema...
+            </div>
+            
+            <div id="statsContent" class="hidden">
+                <!-- KPIs -->
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+                    <!-- KPI 1 -->
+                    <div class="bg-indigo-900/20 border border-indigo-500/30 rounded-2xl p-6 shadow-lg backdrop-blur-sm relative overflow-hidden">
+                        <div class="absolute -right-4 -top-4 opacity-5"><svg class="w-32 h-32" fill="currentColor" viewBox="0 0 20 20"><path d="M2 6a2 2 0 012-2h12a2 2 0 012 2v8a2 2 0 01-2 2H4a2 2 0 01-2-2V6zM14.553 7.106A1 1 0 0014 8v4a1 1 0 00.553.894l2 1A1 1 0 0018 13V7a1 1 0 00-1.447-.894l-2 1z"></path></svg></div>
+                        <h3 class="text-[10px] font-bold uppercase tracking-widest text-indigo-400 mb-2">Total Grabado</h3>
+                        <p id="kpiTotalSize" class="text-3xl font-black text-white font-mono drop-shadow-md">0 GB</p>
+                    </div>
+                    <!-- KPI 2 -->
+                    <div class="bg-emerald-900/20 border border-emerald-500/30 rounded-2xl p-6 shadow-lg backdrop-blur-sm relative overflow-hidden">
+                        <div class="absolute -right-4 -top-4 opacity-5"><svg class="w-32 h-32" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-12a1 1 0 10-2 0v4a1 1 0 00.293.707l2.828 2.829a1 1 0 101.415-1.415L11 9.586V6z" clip-rule="evenodd"></path></svg></div>
+                        <h3 class="text-[10px] font-bold uppercase tracking-widest text-emerald-400 mb-2">Horas en Disco</h3>
+                        <p id="kpiTotalHours" class="text-3xl font-black text-white font-mono drop-shadow-md">0h 0m</p>
+                    </div>
+                    <!-- KPI 3 -->
+                    <div class="bg-blue-900/20 border border-blue-500/30 rounded-2xl p-6 shadow-lg backdrop-blur-sm relative overflow-hidden">
+                        <div class="absolute -right-4 -top-4 opacity-5"><svg class="w-32 h-32" fill="currentColor" viewBox="0 0 20 20"><path d="M9 6a3 3 0 11-6 0 3 3 0 016 0zM17 6a3 3 0 11-6 0 3 3 0 016 0zM12.93 17c.046-.327.07-.66.07-1a6.97 6.97 0 00-1.5-4.33A5 5 0 0119 16v1h-6.07zM6 11a5 5 0 015 5v1H1v-1a5 5 0 015-5z"></path></svg></div>
+                        <h3 class="text-[10px] font-bold uppercase tracking-widest text-blue-400 mb-2">Histórico de Accesos</h3>
+                        <p id="kpiTotalLogins" class="text-3xl font-black text-white font-mono drop-shadow-md">0</p>
+                    </div>
+                </div>
 
+                <!-- Charts Area -->
+                <div class="grid grid-cols-1 lg:grid-cols-[1fr_2fr] gap-6 mb-8">
+                    <!-- Discos Pie Chart -->
+                    <div class="bg-slate-800/40 border border-slate-700/50 rounded-2xl p-6 flex flex-col items-center shadow-lg">
+                        <h3 class="text-[11px] font-black uppercase tracking-widest text-slate-300 mb-4 w-full border-b border-slate-700/50 pb-2">Distribución de Almacenamiento</h3>
+                        <div class="w-full max-w-[250px] aspect-square">
+                            <canvas id="storageChart"></canvas>
+                        </div>
+                    </div>
+                    <!-- Users Bar Chart -->
+                    <div class="bg-slate-800/40 border border-slate-700/50 rounded-2xl p-6 flex flex-col shadow-lg">
+                        <h3 class="text-[11px] font-black uppercase tracking-widest text-slate-300 mb-4 border-b border-slate-700/50 pb-2">Actividad por Usuario</h3>
+                        <div class="flex-1 w-full min-h-[250px]">
+                            <canvas id="usersChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Recent Logins Table -->
+                <div class="bg-slate-800/40 border border-slate-700/50 rounded-2xl p-6 shadow-lg">
+                    <h3 class="text-[11px] font-black uppercase tracking-widest text-slate-300 mb-4 border-b border-slate-700/50 pb-2">Últimos Accesos</h3>
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-left font-mono text-[11px]">
+                            <thead class="text-slate-500 border-b border-slate-700/50 uppercase tracking-wider">
+                                <tr>
+                                    <th class="pb-3 font-bold">Fecha / Hora</th>
+                                    <th class="pb-3 font-bold">Autenticación</th>
+                                    <th class="pb-3 font-bold">Rol de Acceso</th>
+                                    <th class="pb-3 font-bold">Dirección IP</th>
+                                </tr>
+                            </thead>
+                            <tbody id="accessTableBody" class="text-slate-300">
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        let storageChartInst = null;
+        let usersChartInst = null;
+
+        function openStatsModal() {
+            document.getElementById('modalStats').classList.remove('hidden');
+            document.getElementById('statsLoader').classList.remove('hidden');
+            document.getElementById('statsContent').classList.add('hidden');
+            document.body.style.overflow = 'hidden';
+            fetchStats();
+        }
+
+        function closeStatsModal() {
+            document.getElementById('modalStats').classList.add('hidden');
+            document.body.style.overflow = 'auto';
+            if(storageChartInst) storageChartInst.destroy();
+            if(usersChartInst) usersChartInst.destroy();
+        }
+
+        async function fetchStats() {
+            try {
+                const res = await fetch('/api/admin/stats', { headers: { 'X-Token': TOKEN } });
+                if (!res.ok) {
+                    showToast('Error cargando estadísticas. Verifica tus permisos.', 'error');
+                    closeStatsModal();
+                    return;
+                }
+                const data = await res.json();
+                renderStats(data);
+            } catch(e) {
+                showToast('Fallo de conexión al cargar estadísticas.', 'error');
+                closeStatsModal();
+            }
+        }
+
+        function renderStats(data) {
+            document.getElementById('statsLoader').classList.add('hidden');
+            document.getElementById('statsContent').classList.remove('hidden');
+
+            const rec = data.recordings;
+            const totalBytes = rec.ch1.size_bytes + rec.ch2.size_bytes;
+            const totalSecs = rec.ch1.duration_sec + rec.ch2.duration_sec;
+            
+            document.getElementById('kpiTotalSize').textContent = (totalBytes / 1073741824).toFixed(2) + ' GB';
+            const h = Math.floor(totalSecs / 3600);
+            const m = Math.floor((totalSecs % 3600) / 60);
+            document.getElementById('kpiTotalHours').textContent = `${h}h ${m}m`;
+            document.getElementById('kpiTotalLogins').textContent = data.access.total_logins;
+
+            Chart.defaults.color = '#94a3b8';
+            Chart.defaults.font.family = 'Inter, sans-serif';
+
+            // Storage Chart
+            const ctx1 = document.getElementById('storageChart').getContext('2d');
+            if(storageChartInst) storageChartInst.destroy();
+            storageChartInst = new Chart(ctx1, {
+                type: 'doughnut',
+                data: {
+                    labels: ['Canal 1 (GB)', 'Canal 2 (GB)'],
+                    datasets: [{
+                        data: [(rec.ch1.size_bytes / 1073741824).toFixed(2), (rec.ch2.size_bytes / 1073741824).toFixed(2)],
+                        backgroundColor: ['rgba(99, 102, 241, 0.8)', 'rgba(6, 182, 212, 0.8)'],
+                        borderColor: ['#1e293b', '#1e293b'],
+                        borderWidth: 2,
+                        hoverOffset: 4
+                    }]
+                },
+                options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'bottom' } } }
+            });
+
+            // Users Chart
+            const ctx2 = document.getElementById('usersChart').getContext('2d');
+            if(usersChartInst) usersChartInst.destroy();
+            
+            const dist = data.access.distribution;
+            const userKeys = Object.keys(dist).sort((a,b) => dist[b] - dist[a]).slice(0, 15);
+            const uData = userKeys.map(k => dist[k]);
+
+            usersChartInst = new Chart(ctx2, {
+                type: 'bar',
+                data: {
+                    labels: userKeys,
+                    datasets: [{
+                        label: 'Inicios de sesión (Exitosos)',
+                        data: uData,
+                        backgroundColor: 'rgba(56, 189, 248, 0.7)',
+                        borderColor: 'rgb(56, 189, 248)',
+                        borderWidth: 1,
+                        borderRadius: 4
+                    }]
+                },
+                options: { 
+                    responsive: true, 
+                    maintainAspectRatio: false, 
+                    scales: { 
+                        y: { beginAtZero: true, grid: { color: 'rgba(51, 65, 85, 0.5)' } }, 
+                        x: { grid: { display: false } } 
+                    } 
+                }
+            });
+
+            // Table
+            const tb = document.getElementById('accessTableBody');
+            tb.innerHTML = '';
+            const recent = [...data.access.recent].reverse();
+            recent.forEach(acc => {
+                const tr = document.createElement('tr');
+                tr.className = "border-b border-slate-700/30 hover:bg-slate-700/40 transition-colors";
+                const d = new Date(acc.timestamp * 1000).toLocaleString('es-ES');
+                const roleColors = {
+                    'admin': 'text-purple-400 bg-purple-900/30 px-2 py-0.5 rounded border border-purple-700/50',
+                    'operator': 'text-yellow-400 bg-yellow-900/30 px-2 py-0.5 rounded border border-yellow-700/50',
+                    'group1': 'text-indigo-400 bg-indigo-900/30 px-2 py-0.5 rounded border border-indigo-700/50',
+                    'group2': 'text-cyan-400 bg-cyan-900/30 px-2 py-0.5 rounded border border-cyan-700/50'
+                };
+                const rStyle = roleColors[acc.role] || 'text-slate-400';
+                const fRole = acc.role.toUpperCase();
+
+                tr.innerHTML = `
+                    <td class="py-3 px-2">${d}</td>
+                    <td class="py-3 px-2 text-white font-bold">${acc.username}</td>
+                    <td class="py-3 px-2"><span class="${rStyle} text-[9px] font-black">${fRole}</span></td>
+                    <td class="py-3 px-2 text-slate-400 font-mono text-[10px]">${acc.ip}</td>
+                `;
+                tb.appendChild(tr);
+            });
+        }
+    </script>
+</body>
 </html>

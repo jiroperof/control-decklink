@@ -109,6 +109,25 @@ def _save_users_db():
 
 USERS_DB = _load_users_db()
 
+ACCESS_LOG_FILE = os.path.join(_BASE_USERS_DIR, "access_log.json")
+def _load_access_log() -> list:
+    try:
+        if os.path.exists(ACCESS_LOG_FILE):
+            with open(ACCESS_LOG_FILE, "r") as f:
+                return json.load(f)
+    except Exception as e:
+        logger.error(f"Error cargando access_log: {e}")
+    return []
+
+def _save_access_log():
+    try:
+        with open(ACCESS_LOG_FILE, "w") as f:
+            json.dump(ACCESS_LOG[-2000:], f, indent=2)
+    except Exception as e:
+        logger.error(f"Error guardando access_log: {e}")
+
+ACCESS_LOG = _load_access_log()
+
 def _rebuild_dynamic_maps():
     """Reconstruye TOKEN_TO_ROLE, TOKEN_TO_USER y ACTIVE_SESSIONS con usuarios dinámicos."""
     global TOKEN_TO_ROLE, TOKEN_TO_USER
@@ -530,6 +549,14 @@ async def login(data: LoginRequest, request: Request):
     if user_data and user_data["password"] == data.password:
         LOGIN_ATTEMPTS[ip] = {"count": 0, "lock_until": 0} # reset
         new_sess = str(uuid.uuid4())
+        
+        ACCESS_LOG.append({
+            "timestamp": now,
+            "username": real_user,
+            "ip": ip,
+            "role": user_data["role"]
+        })
+        _save_access_log()
         
         # Gestión de sesiones concurrentes por Rol
         role = user_data["role"]
@@ -988,6 +1015,46 @@ async def delete_user(username: str, token: str = Depends(require_admin)):
     _rebuild_dynamic_maps()
     logger.info(f"[ADMIN] Usuario eliminado: {username}")
     return {"status": "ok"}
+
+@app.get("/api/admin/stats")
+async def get_stats(token: str = Depends(require_admin)):
+    files_ch1 = 0; size_ch1 = 0; duration_ch1 = 0
+    files_ch2 = 0; size_ch2 = 0; duration_ch2 = 0
+
+    for path_str, (mtime, dur) in DURATION_CACHE.items():
+        try:
+            sz = os.path.getsize(path_str)
+        except Exception:
+            sz = 0
+        if "_CH1_" in path_str:
+            files_ch1 += 1; size_ch1 += sz; duration_ch1 += dur
+        elif "_CH2_" in path_str:
+            files_ch2 += 1; size_ch2 += sz; duration_ch2 += dur
+
+    log1_sz = os.path.getsize(managers["1"].log_file) if os.path.exists(managers["1"].log_file) else 0
+    log2_sz = os.path.getsize(managers["2"].log_file) if os.path.exists(managers["2"].log_file) else 0
+
+    recent_logins = ACCESS_LOG[-50:]
+    user_counts = {}
+    for entry in ACCESS_LOG:
+        u = entry.get("username", "Desconocido")
+        user_counts[u] = user_counts.get(u, 0) + 1
+
+    return {
+        "recordings": {
+            "ch1": {"files": files_ch1, "size_bytes": size_ch1, "duration_sec": duration_ch1},
+            "ch2": {"files": files_ch2, "size_bytes": size_ch2, "duration_sec": duration_ch2}
+        },
+        "logs": {
+            "ch1_bytes": log1_sz,
+            "ch2_bytes": log2_sz
+        },
+        "access": {
+            "total_logins": len(ACCESS_LOG),
+            "recent": recent_logins,
+            "distribution": user_counts
+        }
+    }
 
 app.mount("/", StaticFiles(directory="static", html=True), name="static")
 

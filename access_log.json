@@ -1,0 +1,62 @@
+[
+  {
+    "timestamp": 1774542406.0404065,
+    "username": "administrador",
+    "ip": "192.168.22.203",
+    "role": "admin"
+  },
+  {
+    "timestamp": 1774542406.0428233,
+    "username": "administrador",
+    "ip": "192.168.22.203",
+    "role": "admin"
+  },
+  {
+    "timestamp": 1774542507.305983,
+    "username": "jropero",
+    "ip": "192.168.22.203",
+    "role": "group2"
+  },
+  {
+    "timestamp": 1774542507.308566,
+    "username": "jropero",
+    "ip": "192.168.22.203",
+    "role": "group2"
+  },
+  {
+    "timestamp": 1774542571.219931,
+    "username": "operador",
+    "ip": "192.168.22.203",
+    "role": "operator"
+  },
+  {
+    "timestamp": 1774542571.2231784,
+    "username": "operador",
+    "ip": "192.168.22.203",
+    "role": "operator"
+  },
+  {
+    "timestamp": 1774542588.6685297,
+    "username": "administrador",
+    "ip": "192.168.22.203",
+    "role": "admin"
+  },
+  {
+    "timestamp": 1774542588.6723595,
+    "username": "administrador",
+    "ip": "192.168.22.203",
+    "role": "admin"
+  },
+  {
+    "timestamp": 1774542702.2243166,
+    "username": "eblanco",
+    "ip": "192.168.22.250",
+    "role": "group2"
+  },
+  {
+    "timestamp": 1774542702.2285314,
+    "username": "eblanco",
+    "ip": "192.168.22.250",
+    "role": "group2"
+  }
+]
