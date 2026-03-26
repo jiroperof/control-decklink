@@ -26,7 +26,7 @@ Esta herramienta está pensada para entornos *broadcast* de alta disponibilidad 
 *   **📊 Telemetría de Sistemas en Tiempo Real:** Interfaz viva con lecturas de uso de CPU, VRAM, GPU, Discos y Red mediante *psutil*.
 *   **🛡️ Watchdog & Autorecovery:** Sistema de demonios en segundo plano que monitorea la salud de `FFmpeg` y resucita procesos huérfanos si la capturadora sufre un microcorte.
 *   **🧹 Rotación de Almacenamiento:** Módulo automático de limpieza que se encarga de eliminar ficheros `.mp4` obsoletos basándose en políticas de retención.
-*   **📈 Dashboard de Estadísticas:** Panel analítico reservado para el Administrador equipado con gráficas `Chart.js` para monitorear la distribución de almacenamiento, horas grabadas y el registro de accesos en tiempo real (Audit Log).
+*   **📈 Dashboard de Estadísticas:** Panel analítico reservado para el Administrador equipado con gráficas `Chart.js` para monitorear la distribución de almacenamiento, horas grabadas y el registro de accesos en tiempo real (Audit Log con rastreo de intentos fallidos).
 
 ---
 
