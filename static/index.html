@@ -1,0 +1,1656 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Capturadora 2.0</title>
+    <link rel="icon" type="image/png" href="logo.png">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800;900&display=swap" rel="stylesheet">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        .bar {
+            transition: width 0.6s ease, background-color 0.4s ease;
+        }
+
+        select,
+        input[type=text],
+        input[type=password],
+        input[type=number],
+        input[type=time] {
+            background: #0f172a !important;
+            border: 1px solid #334155 !important;
+            color: white !important;
+        }
+
+        button:disabled,
+        select:disabled,
+        input:disabled {
+            cursor: not-allowed;
+            opacity: 0.5;
+        }
+
+        @keyframes spin {
+            to {
+                transform: rotate(360deg);
+            }
+        }
+
+        .spinner {
+            display: inline-block;
+            width: 16px;
+            height: 16px;
+            border: 2px solid rgba(255, 255, 255, .3);
+            border-top-color: white;
+            border-radius: 50%;
+            animation: spin .7s linear infinite;
+            vertical-align: middle;
+            margin-right: 6px;
+        }
+
+        #logBox {
+            font-family: monospace;
+            font-size: 12px;
+            background: #0a0f1a;
+            color: #a3e635;
+            height: 280px;
+            overflow-y: auto;
+            padding: 12px;
+            border-radius: 12px;
+            white-space: pre-wrap;
+            word-break: break-all;
+        }
+
+        .collapsible-body {
+            transition: max-height 0.3s ease, opacity 0.3s ease;
+            overflow: hidden;
+        }
+
+        .collapsible-body.closed {
+            max-height: 0;
+            opacity: 0;
+        }
+
+        .collapsible-body.open {
+            max-height: 9999px;
+            opacity: 1;
+        }
+
+
+        .tab-btn {
+            transition: all 0.2s;
+        }
+
+        .tab-active {
+            background-color: #1e293b;
+            border-bottom: 2px solid #ef4444;
+            color: white;
+            border-top-left-radius: 0.75rem;
+            border-top-right-radius: 0.75rem;
+        }
+
+        .tab-inactive {
+            background-color: transparent;
+            border-bottom: 2px solid transparent;
+            color: #64748b;
+        }
+
+        .tab-inactive:hover {
+            color: #cbd5e1;
+            background-color: #1e293b80;
+            border-top-left-radius: 0.75rem;
+            border-top-right-radius: 0.75rem;
+        }
+
+
+        /* Hide number spinners */
+        input[type="number"]::-webkit-inner-spin-button,
+        input[type="number"]::-webkit-outer-spin-button {
+            -webkit-appearance: none;
+            appearance: none;
+            margin: 0;
+        }
+
+        input[type="number"] {
+            -moz-appearance: textfield;
+        }
+
+        /* Premium Animations */
+        @keyframes fade-in-up {
+            0% {
+                opacity: 0;
+                transform: translateY(30px);
+                filter: blur(4px);
+            }
+
+            100% {
+                opacity: 1;
+                transform: translateY(0);
+                filter: blur(0);
+            }
+        }
+
+        .animate-fade-in-up {
+            animation: fade-in-up 0.7s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+        }
+
+        .delay-100 {
+            animation-delay: 100ms;
+            opacity: 0;
+        }
+
+        .delay-200 {
+            animation-delay: 200ms;
+            opacity: 0;
+        }
+
+        .delay-300 {
+            animation-delay: 300ms;
+            opacity: 0;
+        }
+
+        /* Smooth Scrollbar */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: #0f172a;
+            border-radius: 4px;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: #334155;
+            border-radius: 4px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: #475569;
+        }
+
+        body {
+            background: radial-gradient(circle at top right, #162447 0%, #0a0e1a 100%);
+            min-height: 100vh;
+        }
+
+        .glass-panel {
+            background: rgba(15, 23, 42, 0.4);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(51, 65, 85, 0.5);
+        }
+
+        /* Toasts */
+        @keyframes slideInRight {
+            from { transform: translateX(100%); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+        @keyframes fadeOut {
+            from { opacity: 1; }
+            to { opacity: 0; }
+        }
+        .toast {
+            animation: slideInRight 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+            pointer-events: auto;
+        }
+        .toast.hiding {
+            animation: fadeOut 0.3s ease forwards;
+        }
+    </style>
+</head>
+
+<body class="bg-slate-900 text-white min-h-screen antialiased" style="font-family: 'Inter', system-ui, sans-serif;">
+
+    <!-- TOAST CONTAINER -->
+    <div id="toastContainer" class="fixed top-6 right-6 z-[100] flex flex-col gap-3 pointer-events-none"></div>
+
+    <!-- ════════════════════════════════ LOGIN ════════════════════════════════ -->
+    <div id="loginSection" class="fixed inset-0 z-50 flex flex-col items-center justify-center p-4 backdrop-blur-sm">
+        <div class="w-full max-w-md p-8 sm:p-10 glass-panel rounded-3xl text-center shadow-2xl animate-fade-in-up">
+            <img src="logo.png" alt="VTV" class="h-20 mx-auto mb-6 drop-shadow-lg">
+            <h2 class="text-3xl font-bold mb-6 uppercase text-white italic"
+                style="font-family:'Segoe UI',system-ui,-apple-system,sans-serif;">Capturadora VTV 2.0</h2>
+            <div id="roleSelector" class="space-y-3 mb-4">
+                <button onclick="selectRole('admin')" class="w-full bg-slate-800 hover:bg-red-600/80 border border-slate-600 hover:border-red-400 py-3 rounded-xl font-black uppercase tracking-widest text-slate-300 hover:text-white transition-all duration-300 shadow-md text-center">
+                    Administrador
+                </button>
+                <button onclick="selectRole('operador')" class="w-full bg-slate-800/60 hover:bg-slate-700/80 border border-slate-700 hover:border-slate-500 py-3 rounded-xl font-bold uppercase tracking-widest text-slate-400 hover:text-white transition-all duration-300 shadow-md text-center">
+                    Operador
+                </button>
+            </div>
+
+            <div id="passwordForm" class="hidden space-y-4">
+                <div class="flex items-center justify-between mb-1 px-1">
+                    <span id="loginRoleLabel" class="text-slate-400 font-bold uppercase text-[10px] tracking-widest"></span>
+                    <button onclick="backToRoles()" class="text-red-400 hover:text-red-300 text-[10px] font-black uppercase tracking-widest hover:underline transition-all active:scale-95">Cambiar</button>
+                </div>
+                
+                <input type="hidden" id="user" value="">
+                
+                <div class="relative w-full">
+                    <input type="password" id="pass" placeholder="Password"
+                        class="w-full p-4 rounded-xl outline-none font-mono bg-slate-900/80 border-2 border-slate-700 text-white focus:border-red-500 transition-all text-center tracking-[0.2em] text-lg" autocomplete="current-password">
+                    <button type="button" onmousedown="document.getElementById('pass').type='text'" onmouseup="document.getElementById('pass').type='password'" onmouseleave="document.getElementById('pass').type='password'" ontouchstart="document.getElementById('pass').type='text'" ontouchend="document.getElementById('pass').type='password'" class="absolute right-4 top-1/2 -translate-y-1/2 text-slate-500 hover:text-white p-2 cursor-pointer transition-colors" title="Mantener para ver clave">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                        </svg>
+                    </button>
+                </div>
+
+                <p id="loginError"
+                    class="hidden text-red-400 text-sm font-semibold bg-red-900/30 border border-red-700/50 rounded-xl py-2 px-4 shadow-inner">
+                </p>
+                <button id="btnLogin" onclick="login()"
+                    class="w-full bg-red-600/90 py-4 rounded-xl font-black uppercase tracking-widest shadow-[0_0_15px_rgba(220,38,38,0.4)] hover:shadow-[0_0_25px_rgba(220,38,38,0.6)] hover:bg-red-500 active:scale-95 transition-all mt-2 border border-red-500">Iniciar Sesión</button>
+            </div>
+        </div>
+        
+        <!-- FOOTER LOGIN -->
+        <div class="fixed bottom-6 left-6 right-6 flex justify-between items-end text-[11px] font-mono opacity-70 pointer-events-none z-[51]">
+            <div class="flex flex-col gap-1 text-slate-500 font-bold uppercase tracking-widest">
+                <span>© C.A. Venezolana de Televisión 2026</span>
+                <span class="text-[9px] text-slate-600">RIF: G-200082933</span>
+            </div>
+            <div class="flex flex-col items-end pointer-events-auto">
+                <a href="mailto:mesadeayuda@vtv.gob.ve"
+                    class="bg-blue-600/10 hover:bg-blue-600/20 text-blue-400 px-4 py-2 rounded-lg border border-blue-500/30 transition-all font-bold uppercase tracking-tighter italic">
+                    Contactar a Soporte</a>
+            </div>
+        </div>
+    </div>
+
+    <!-- ════════════════════════════════ DASHBOARD ════════════════════════════════ -->
+    <div id="mainSection" class="hidden container mx-auto px-6 pt-4 pb-10">
+
+        <!-- HEADER -->
+        <header id="mainHeader"
+            class="sticky top-0 z-50 bg-slate-900/80 backdrop-blur-xl border-b border-transparent transition-all duration-500 ease-[cubic-bezier(0.16,1,0.3,1)] font-mono rounded-xl -mx-6 px-6 sm:-mx-8 sm:px-8 mb-4 py-1.5 shadow-sm animate-fade-in-up">
+            <div class="flex flex-col md:flex-row justify-between items-center max-w-7xl mx-auto gap-2 md:gap-0">
+                <div class="flex items-center gap-3">
+                    <!-- Drop shadow on logo to make it pop over blurred background -->
+                    <img id="logoImg" src="logo.png" alt="VTV"
+                        class="h-6 md:h-7 transition-all duration-500 ease-[cubic-bezier(0.16,1,0.3,1)] drop-shadow-[0_0_15px_rgba(255,255,255,0.08)] hover:scale-105 hover:drop-shadow-[0_0_20px_rgba(239,68,68,0.3)] cursor-pointer">
+                    <div class="border-l-4 border-red-600 pl-2 md:pl-3 transition-all duration-500" id="headerTitleBox">
+                        <h1 id="headerTitle"
+                            class="text-base md:text-lg font-black italic tracking-tighter uppercase text-white transition-all duration-500 drop-shadow-md">
+                            CAPTURADORA 2.0</h1>
+                        <p id="headerSubtitle"
+                            class="text-[7px] md:text-[8px] text-slate-400 font-bold uppercase tracking-widest transition-all duration-500">
+                            Sistema Multicanal</p>
+                    </div>
+                </div>
+                <div class="flex flex-wrap justify-center items-center gap-3 md:gap-5 w-full md:w-auto">
+                    <div class="flex items-center gap-3">
+                        <!-- Indicadores Globales de Grabación -->
+                        <div id="badgeCH1"
+                            class="px-3 py-1 rounded border border-slate-700/50 bg-slate-800/40 backdrop-blur-md text-slate-400 font-bold text-[10px] tracking-widest shadow-inner transition-all duration-300">
+                            GRABANDO 1</div>
+                        <div id="badgeCH2"
+                            class="px-3 py-1 rounded border border-slate-700/50 bg-slate-800/40 backdrop-blur-md text-slate-400 font-bold text-[10px] tracking-widest shadow-inner transition-all duration-300">
+                            GRABANDO 2</div>
+                    </div>
+                    <div class="flex flex-col items-end gap-2 border-l border-slate-700/50 pl-5">
+                        <span id="roleBadge"
+                            class="px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest bg-slate-800/40 backdrop-blur-md text-slate-300 border border-slate-700/50 shadow-md"></span>
+                        <button onclick="logout()"
+                            class="group flex items-center gap-2 bg-slate-800/40 hover:bg-red-500/15 text-slate-400 hover:text-red-400 px-3 py-1.5 rounded-lg border border-slate-700/50 hover:border-red-500/40 transition-all duration-300 font-bold uppercase tracking-widest text-[9px] shadow-sm backdrop-blur-sm active:scale-95">
+                            <svg class="w-3.5 h-3.5 group-hover:translate-x-0.5 transition-transform" fill="none"
+                                stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1">
+                                </path>
+                            </svg>
+                            <span>Cerrar Sesión</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </header>
+
+        <!-- BANNERS -->
+        <div id="networkError"
+            class="hidden mb-4 text-yellow-400 text-sm font-semibold bg-yellow-900/20 border border-yellow-700/40 rounded-xl py-2 px-5 text-center">
+            ⚠ Sin conexión con el servidor. Reintentando...</div>
+
+        <!-- MAIN GRID -->
+        <div id="gridCards" class="grid grid-cols-1 lg:grid-cols-[1fr_1fr] xl:grid-cols-[1fr_1fr_260px] gap-4 xl:gap-5 mb-6 animate-fade-in-up delay-100 items-start">
+
+
+            <!-- CONFIG: CH1 -->
+            <div class="glass-panel rounded-3xl font-mono flex flex-col overflow-hidden h-full shadow-lg">
+                <div
+                    class="bg-slate-900/40 px-5 py-4 border-b border-slate-700/50 font-black text-white uppercase tracking-widest flex justify-between items-center">
+                    <span class="text-red-500">🔴 DeckLink Duo (1)</span><span id="autoRestartBanner_1"
+                        class="hidden text-orange-400 text-[9px] bg-orange-900/30 px-2 py-1 rounded border border-orange-700/50">🔄
+                        Auto-Rec Injected</span></div>
+                <div class="p-4 flex-1 flex flex-col">
+                    <div id="scheduleBanner_1"
+                        class="hidden mb-4 text-blue-400 text-[10px] font-bold bg-blue-900/20 border border-blue-700/40 rounded-xl py-2 px-3 text-center">
+                    </div>
+
+                    <div class="admin-ui-block grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                        <div>
+                            <label class="block text-[9px] font-bold text-slate-400 mb-1 uppercase">Calidad del
+                                Master</label>
+                            <select id="bitrate_1"
+                                class="w-full p-2.5 rounded-xl outline-none italic font-bold text-xs">
+                                <option value="15M" selected>15 Mbps - Estándar</option>
+                                <option value="25M">25 Mbps - HD Master</option>
+                                <option value="50M">50 Mbps - Master Pro</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-[9px] font-bold text-slate-400 mb-1 uppercase">Cortes cada
+                                (Minutos)</label>
+                            <div
+                                class="flex items-center bg-[#0f172a] rounded-xl overflow-hidden focus-within:ring-2 focus-within:ring-red-500/40 transition-all font-mono border border-slate-700 shadow-inner">
+                                <button type="button" id="btnMinDec_1" onclick="adjMin('1', -1)"
+                                    class="px-4 py-2 text-slate-400 hover:text-white hover:bg-slate-700 transition-colors disabled:opacity-50 border-r border-slate-700 font-bold active:bg-slate-600 text-[14px]"
+                                    style="line-height: 1.1;">-</button>
+                                <input type="number" id="minutes_1" value="1" min="1" max="120"
+                                    class="w-full py-2 outline-none font-black text-[13px] text-center text-white"
+                                    style="border: none !important; box-shadow: none; background: transparent !important;">
+                                <button type="button" id="btnMinInc_1" onclick="adjMin('1', 1)"
+                                    class="px-4 py-2 text-slate-400 hover:text-white hover:bg-slate-700 transition-colors disabled:opacity-50 border-l border-slate-700 font-bold active:bg-slate-600 text-[14px]"
+                                    style="line-height: 1.1;">+</button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="admin-ui-block mb-4">
+                        <label class="block text-[9px] font-bold text-slate-400 mb-1 uppercase">Carpeta de
+                            Destino</label>
+                        <div class="flex gap-2">
+                            <input type="text" id="destPath_1" value="/home/administrador/Capturas"
+                                class="flex-1 p-2.5 rounded-xl outline-none font-mono text-[11px]">
+                            <button id="btnResetDest_1" onclick="resetDestPath('1')"
+                                class="bg-slate-700 hover:bg-slate-600 px-3 py-2.5 rounded-xl transition-all flex items-center justify-center disabled:opacity-50 disabled:cursor-not-allowed border border-slate-600 shadow-md active:scale-95"
+                                title="Restaurar ruta">
+                                <svg class="w-4 h-4 text-slate-300" fill="none" stroke="currentColor"
+                                    viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                        d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15">
+                                    </path>
+                                </svg>
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- GRABACIÓN PROGRAMADA -->
+                    <div class="admin-ui-block mb-4 bg-slate-900/50 rounded-2xl border border-slate-700/50 p-4 pb-3">
+                        <p class="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-3">⏰ Programar Canal
+                        </p>
+                        <div id="scheduleBody_1">
+                            <div class="grid grid-cols-2 gap-3 mb-3">
+                                <div>
+                                    <label class="block text-[9px] text-slate-500 mb-1 uppercase font-bold">Inicio
+                                        (HH:MM)</label>
+                                    <input type="time" id="scheduleStart_1"
+                                        class="w-full p-2 rounded-xl outline-none font-mono text-xs">
+                                </div>
+                                <div>
+                                    <label class="block text-[9px] text-slate-500 mb-1 uppercase font-bold">Stop
+                                        (HH:MM)</label>
+                                    <input type="time" id="scheduleStop_1"
+                                        class="w-full p-2 rounded-xl outline-none font-mono text-xs">
+                                </div>
+                            </div>
+                            <div class="flex gap-2">
+                                <button onclick="setSchedule('1')"
+                                    class="flex-1 bg-blue-700 hover:bg-blue-600 py-2 rounded-xl font-bold text-[10px] uppercase italic transition-all">Guardar</button>
+                                <button onclick="cancelSchedule('1')"
+                                    class="flex-1 bg-slate-700 hover:bg-slate-600 py-2 rounded-xl font-bold text-[10px] uppercase italic transition-all">Borrar</button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="mt-auto"></div>
+
+                    <!-- Duración -->
+                    <div id="durationBox_1" class="my-2 text-center transition-all duration-300 opacity-50">
+                        <p class="text-[9px] text-slate-500 uppercase font-bold mb-0.5">Duración (CH1)</p>
+                        <p id="durationVal_1"
+                            class="text-2xl font-black text-red-400 font-mono tracking-widest drop-shadow-md">00:00:00
+                        </p>
+                    </div>
+
+                    <div class="admin-ui-block grid grid-cols-2 gap-4 mt-2">
+                        <button id="btnStart_1" onclick="execute('1', 'start')"
+                            class="bg-red-600 hover:bg-red-500 py-4 rounded-2xl font-black text-lg active:scale-95 uppercase italic shadow-lg shadow-red-900/40 transition-all">Iniciar</button>
+                        <button id="btnStop_1" onclick="execute('1', 'stop')"
+                            class="bg-slate-700 hover:bg-slate-600 py-4 rounded-2xl font-black text-lg active:scale-95 uppercase italic shadow-lg transition-all">Detener</button>
+                    </div>
+                    <button id="btnPreview_1" onclick="openPreview('1')" class="w-full mt-3 bg-slate-800/60 hover:bg-slate-700 border border-slate-700 py-2 rounded-xl font-bold text-[10px] uppercase tracking-widest transition-all active:scale-95 disabled:opacity-30 disabled:cursor-not-allowed">👁 Vista Previa</button>
+                </div>
+            </div>
+
+            <!-- CONFIG: CH2 -->
+            <div class="glass-panel rounded-3xl font-mono flex flex-col overflow-hidden h-full">
+                <div
+                    class="bg-slate-900/40 px-5 py-4 border-b border-slate-700/50 font-black text-white uppercase tracking-widest flex justify-between items-center">
+                    <span class="text-blue-500">🔴 DeckLink Duo (2)</span><span id="autoRestartBanner_2"
+                        class="hidden text-orange-400 text-[9px] bg-orange-900/30 px-2 py-1 rounded border border-orange-700/50">🔄
+                        Auto-Rec Injected</span></div>
+                <div class="p-4 flex-1 flex flex-col">
+                    <div id="scheduleBanner_2"
+                        class="hidden mb-4 text-blue-400 text-[10px] font-bold bg-blue-900/20 border border-blue-700/40 rounded-xl py-2 px-3 text-center">
+                    </div>
+
+                    <div class="admin-ui-block grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                        <div>
+                            <label class="block text-[9px] font-bold text-slate-400 mb-1 uppercase">Calidad del
+                                Master</label>
+                            <select id="bitrate_2"
+                                class="w-full p-2.5 rounded-xl outline-none italic font-bold text-xs">
+                                <option value="15M" selected>15 Mbps - Estándar</option>
+                                <option value="25M">25 Mbps - HD Master</option>
+                                <option value="50M">50 Mbps - Master Pro</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-[9px] font-bold text-slate-400 mb-1 uppercase">Cortes cada
+                                (Minutos)</label>
+                            <div
+                                class="flex items-center bg-[#0f172a] rounded-xl overflow-hidden focus-within:ring-2 focus-within:ring-blue-500/40 transition-all font-mono border border-slate-700 shadow-inner">
+                                <button type="button" id="btnMinDec_2" onclick="adjMin('2', -1)"
+                                    class="px-4 py-2 text-slate-400 hover:text-white hover:bg-slate-700 transition-colors disabled:opacity-50 border-r border-slate-700 font-bold active:bg-slate-600 text-[14px]"
+                                    style="line-height: 1.1;">-</button>
+                                <input type="number" id="minutes_2" value="1" min="1" max="120"
+                                    class="w-full py-2 outline-none font-black text-[13px] text-center text-white"
+                                    style="border: none !important; box-shadow: none; background: transparent !important;">
+                                <button type="button" id="btnMinInc_2" onclick="adjMin('2', 1)"
+                                    class="px-4 py-2 text-slate-400 hover:text-white hover:bg-slate-700 transition-colors disabled:opacity-50 border-l border-slate-700 font-bold active:bg-slate-600 text-[14px]"
+                                    style="line-height: 1.1;">+</button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="admin-ui-block mb-4">
+                        <label class="block text-[9px] font-bold text-slate-400 mb-1 uppercase">Carpeta de
+                            Destino</label>
+                        <div class="flex gap-2">
+                            <input type="text" id="destPath_2" value="/home/administrador/Capturas"
+                                class="flex-1 p-2.5 rounded-xl outline-none font-mono text-[11px]">
+                            <button id="btnResetDest_2" onclick="resetDestPath('2')"
+                                class="bg-slate-700 hover:bg-slate-600 px-3 py-2.5 rounded-xl transition-all flex items-center justify-center disabled:opacity-50 disabled:cursor-not-allowed border border-slate-600 shadow-md active:scale-95"
+                                title="Restaurar ruta">
+                                <svg class="w-4 h-4 text-slate-300" fill="none" stroke="currentColor"
+                                    viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                        d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15">
+                                    </path>
+                                </svg>
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- GRABACIÓN PROGRAMADA -->
+                    <div class="admin-ui-block mb-4 bg-slate-900/50 rounded-2xl border border-slate-700/50 p-4 pb-3">
+                        <p class="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-3">⏰ Programar Canal
+                        </p>
+                        <div id="scheduleBody_2">
+                            <div class="grid grid-cols-2 gap-3 mb-3">
+                                <div>
+                                    <label class="block text-[9px] text-slate-500 mb-1 uppercase font-bold">Inicio
+                                        (HH:MM)</label>
+                                    <input type="time" id="scheduleStart_2"
+                                        class="w-full p-2 rounded-xl outline-none font-mono text-xs">
+                                </div>
+                                <div>
+                                    <label class="block text-[9px] text-slate-500 mb-1 uppercase font-bold">Stop
+                                        (HH:MM)</label>
+                                    <input type="time" id="scheduleStop_2"
+                                        class="w-full p-2 rounded-xl outline-none font-mono text-xs">
+                                </div>
+                            </div>
+                            <div class="flex gap-2">
+                                <button onclick="setSchedule('2')"
+                                    class="flex-1 bg-blue-700 hover:bg-blue-600 py-2 rounded-xl font-bold text-[10px] uppercase italic transition-all">Guardar</button>
+                                <button onclick="cancelSchedule('2')"
+                                    class="flex-1 bg-slate-700 hover:bg-slate-600 py-2 rounded-xl font-bold text-[10px] uppercase italic transition-all">Borrar</button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="mt-auto"></div>
+
+                    <!-- Duración -->
+                    <div id="durationBox_2" class="my-2 text-center transition-all duration-300 opacity-50">
+                        <p class="text-[9px] text-slate-500 uppercase font-bold mb-0.5">Duración (CH2)</p>
+                        <p id="durationVal_2"
+                            class="text-2xl font-black text-red-400 font-mono tracking-widest drop-shadow-md">00:00:00
+                        </p>
+                    </div>
+
+                    <div class="admin-ui-block grid grid-cols-2 gap-4 mt-2">
+                        <button id="btnStart_2" onclick="execute('2', 'start')"
+                            class="bg-red-600 hover:bg-red-500 py-4 rounded-2xl font-black text-lg active:scale-95 uppercase italic shadow-lg shadow-red-900/40 transition-all">Iniciar</button>
+                        <button id="btnStop_2" onclick="execute('2', 'stop')"
+                            class="bg-slate-700 hover:bg-slate-600 py-4 rounded-2xl font-black text-lg active:scale-95 uppercase italic shadow-lg transition-all">Detener</button>
+                    </div>
+                    <button id="btnPreview_2" onclick="openPreview('2')" class="w-full mt-3 bg-slate-800/60 hover:bg-slate-700 border border-slate-700 py-2 rounded-xl font-bold text-[10px] uppercase tracking-widest transition-all active:scale-95 disabled:opacity-30 disabled:cursor-not-allowed">👁 Vista Previa</button>
+                </div>
+            </div>
+
+            <!-- MÉTRICAS -->
+            <div id="resPanel" class="font-mono h-full">
+                <div class="glass-panel p-6 rounded-3xl shadow-2xl h-full flex flex-col gap-0">
+                    <h3 class="text-xs font-black text-white uppercase mb-5 border-b border-slate-700 pb-2 text-center tracking-widest italic">
+                        RECURSOS</h3>
+
+                    <div class="flex flex-col gap-3">
+
+                        <!-- CPU -->
+                        <div>
+                            <div class="flex justify-between text-[11px] uppercase font-black text-green-400 mb-1">
+                                <span>CPU</span><span id="cpuVal">0%</span>
+                            </div>
+                            <div class="bg-slate-900 h-1.5 rounded-full overflow-hidden border border-slate-700/50">
+                                <div id="cpuBar" class="bar h-full bg-green-500 transition-all duration-500" style="width:0%"></div>
+                            </div>
+                            <div id="cpuModel" class="text-[8px] text-slate-500 uppercase tracking-widest text-right mt-0.5"></div>
+                        </div>
+
+                        <!-- RAM -->
+                        <div>
+                            <div class="flex justify-between text-[11px] uppercase font-black text-blue-400 mb-1">
+                                <span>RAM</span><span id="ramVal">0%</span>
+                            </div>
+                            <div class="bg-slate-900 h-1.5 rounded-full overflow-hidden border border-slate-700/50">
+                                <div id="ramBar" class="bar h-full bg-blue-500 transition-all duration-500" style="width:0%"></div>
+                            </div>
+                            <div id="ramModel" class="text-[8px] text-slate-500 uppercase tracking-widest text-right mt-0.5">Cargando...</div>
+                        </div>
+
+                        <!-- GPU -->
+                        <div>
+                            <div class="flex justify-between text-[11px] uppercase font-black text-red-500 mb-1">
+                                <span>Tarjeta de Video</span><span id="gpuVal">0%</span>
+                            </div>
+                            <div class="bg-slate-900 h-1.5 rounded-full overflow-hidden border border-slate-700/50">
+                                <div id="gpuBar" class="bar h-full bg-red-600 transition-all duration-500" style="width:0%"></div>
+                            </div>
+                            <div id="gpuModel" class="text-[8px] text-slate-500 uppercase tracking-widest text-right mt-0.5"></div>
+                        </div>
+
+                        <!-- VRAM -->
+                        <div>
+                            <div class="flex justify-between text-[11px] uppercase font-black text-red-400 italic mb-1">
+                                <span>VRAM</span><span id="vramVal">0%</span>
+                            </div>
+                            <div class="bg-slate-900 h-1.5 rounded-full overflow-hidden border border-slate-700/50">
+                                <div id="vramBar" class="bar h-full bg-red-400 transition-all duration-500" style="width:0%"></div>
+                            </div>
+                            <div id="vramModel" class="text-[8px] text-slate-500 uppercase tracking-widest text-right mt-0.5">Cargando...</div>
+                        </div>
+
+                        <!-- DISCO -->
+                        <div>
+                            <div id="diskTitle" class="flex justify-between items-center text-[11px] uppercase font-black text-green-500 mb-1">
+                                <span class="flex items-center gap-2">
+                                    <span>Disco (/) Root</span>
+                                    <button onclick="openCleanupModal()"
+                                        class="admin-ui-block text-[8px] text-red-500 hover:text-red-400 font-bold border border-red-900/40 bg-red-900/10 px-1.5 py-0.5 rounded transition-all active:scale-95"
+                                        title="Configurar Limpieza">LIMPIAR</button>
+                                    <span id="diskAlert" class="hidden text-red-500 text-sm animate-pulse" title="¡Espacio Crítico!">⚠</span>
+                                </span>
+                                <span id="diskVal">0%</span>
+                            </div>
+                            <div class="bg-slate-900 h-1.5 rounded-full overflow-hidden border border-slate-700/50">
+                                <div id="diskBar" class="bar h-full bg-green-500 transition-all duration-500" style="width:0%"></div>
+                            </div>
+                            <div class="flex justify-between items-center text-[8px] uppercase tracking-widest mt-0.5">
+                                <span id="diskRemaining" class="font-bold text-yellow-400">Calculando...</span>
+                                <div id="diskModel" class="text-slate-500">Cargando...</div>
+                            </div>
+                        </div>
+
+                        <!-- RED -->
+                        <div>
+                            <div class="flex justify-between text-[11px] uppercase font-black text-teal-400 mb-1">
+                                <span>Red (eno1)</span><span id="netVal">0 Mbps</span>
+                            </div>
+                            <div class="bg-slate-900 h-1.5 rounded-full overflow-hidden border border-slate-700/50">
+                                <div id="netBar" class="bar h-full bg-teal-500 transition-all duration-500" style="width:0%"></div>
+                            </div>
+                            <div class="text-[8px] text-slate-500 uppercase tracking-widest text-right mt-0.5" id="networkIpLabel">IP: ...</div>
+                        </div>
+
+                    </div>
+
+                    <div class="mt-auto"></div>
+
+                    <!-- Procesos activos -->
+                    <div class="admin-ui-block mt-4 pt-3 border-t border-slate-700/50">
+                        <div class="flex justify-between items-center mb-2">
+                            <p class="text-[10px] text-slate-500 uppercase font-bold tracking-widest">⚙ Procesos Activos</p>
+                            <span id="procCount" class="text-[10px] text-slate-600 font-mono"></span>
+                        </div>
+                        <div id="procList" class="space-y-1.5 text-[11px] font-mono max-h-[80px] overflow-y-auto pr-1 custom-scrollbar">
+                            <p class="text-slate-600 italic">Cargando...</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+        </div><!-- /gridCards -->
+
+        <!-- HISTORIAL DE ARCHIVOS -->
+        <div class="glass-panel rounded-3xl shadow-2xl mb-6 overflow-hidden animate-fade-in-up delay-200">
+            <button onclick="toggleSection('filesBody'); loadFiles();"
+                class="w-full flex justify-between items-center px-8 py-5 text-xs font-black text-slate-400 uppercase tracking-widest hover:text-white transition-all">
+                <span>📁 Historial Global de Grabaciones</span>
+                <div class="flex items-center gap-4">
+                    <span id="filesCount" class="text-slate-600 font-mono"></span>
+                    <span id="filesChevron">▼</span>
+                </div>
+            </button>
+            <div id="filesBody" class="collapsible-body closed px-8 pb-6">
+                <div class="flex justify-end mb-4">
+                    <button onclick="loadFiles()"
+                        class="text-[11px] bg-slate-700 hover:bg-slate-600 px-4 py-2 rounded-lg font-bold uppercase italic transition-all">🔄
+                        Actualizar</button>
+                </div>
+                <div id="filesTable" class="text-sm font-mono text-slate-400 italic">Cargando...</div>
+            </div>
+        </div>
+
+        <!-- LOG FFMPEG -->
+        <div class="admin-ui-block glass-panel rounded-3xl shadow-2xl mb-8 overflow-hidden animate-fade-in-up delay-300">
+            <button onclick="toggleSection('logBody')"
+                class="w-full flex justify-between items-center px-8 py-5 text-xs font-black text-slate-400 uppercase tracking-widest hover:text-white transition-all">
+                <span>🖥 Log de FFmpeg en Vivo (Sincronizado)</span>
+                <span id="logBodyChevron">▼</span>
+            </button>
+            <div id="logBody" class="collapsible-body closed px-8 pb-6">
+                <div class="flex flex-wrap items-center gap-4 mb-4">
+                    <select id="logLines" class="p-2 rounded-lg outline-none text-xs font-mono">
+                        <option value="50">50 líneas</option>
+                        <option value="100" selected>100 líneas</option>
+                        <option value="200">200 líneas</option>
+                    </select>
+                    <button onclick="loadLog()"
+                        class="text-[11px] bg-slate-700 hover:bg-slate-600 px-4 py-2 rounded-lg font-bold uppercase italic transition-all">🔄
+                        Actualizar Ambos</button>
+                    <label class="flex items-center gap-2 text-xs text-slate-400 font-bold cursor-pointer select-none">
+                        <input type="checkbox" id="logAutoRefresh" onchange="toggleLogAuto()" class="accent-red-500">
+                        Auto-refresh (5s)
+                    </label>
+                </div>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div class="flex flex-col">
+                        <p class="text-[10px] text-slate-500 font-bold mb-2 uppercase tracking-widest">DeckLink (1)
+                            <span id="logSize_1" class="ml-2 font-mono text-slate-600"></span></p>
+                        <div id="logBox_1"
+                            class="font-mono text-[9px] bg-[#0a0f1a] text-[#a3e635] h-[300px] overflow-y-auto p-4 rounded-xl whitespace-pre-wrap break-all border border-slate-700/50">
+                        </div>
+                    </div>
+                    <div class="flex flex-col">
+                        <p class="text-[10px] text-slate-500 font-bold mb-2 uppercase tracking-widest">DeckLink (2)
+                            <span id="logSize_2" class="ml-2 font-mono text-slate-600"></span></p>
+                        <div id="logBox_2"
+                            class="font-mono text-[9px] bg-[#0a0f1a] text-[#60a5fa] h-[300px] overflow-y-auto p-4 rounded-xl whitespace-pre-wrap break-all border border-slate-700/50">
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <!-- FOOTER -->
+        <footer class="flex justify-between items-end text-[11px] font-mono">
+            <div class="flex flex-col gap-1 text-slate-500 font-bold uppercase tracking-widest">
+                <span>© C.A. Venezolana de Televisión 2026</span>
+                <span class="text-[9px] text-slate-600">RIF: G-200082933</span>
+            </div>
+            <div class="flex flex-col items-end gap-3">
+                <a href="mailto:mesadeayuda@vtv.gob.ve"
+                    class="bg-blue-600/10 hover:bg-blue-600/20 text-blue-400 px-4 py-2 rounded-lg border border-blue-500/30 transition-all font-bold uppercase tracking-tighter italic">
+                    Contactar a Soporte</a>
+            </div>
+        </footer>
+    </div>
+
+    <!-- MODAL GESTIÓN DE LIMPIEZA -->
+    <div id="modalCleanup"
+        class="fixed inset-0 z-[60] hidden flex items-center justify-center bg-slate-950/80 backdrop-blur-md p-6">
+        <div class="glass-panel w-full max-w-sm p-8 rounded-3xl shadow-2xl animate-fade-in-up">
+            <div class="flex justify-between items-center mb-6 border-b border-slate-700 pb-3">
+                <h3 class="text-sm font-black uppercase tracking-widest text-white italic">⚙ Gestión de Limpieza</h3>
+                <button onclick="closeCleanupModal()"
+                    class="text-slate-500 hover:text-white transition-colors">✕</button>
+            </div>
+
+            <div class="space-y-5">
+                <div>
+                    <label class="block text-[10px] font-bold text-slate-400 mb-2 uppercase tracking-widest">Días a
+                        Conservar</label>
+                    <div
+                        class="flex items-center bg-slate-900 rounded-xl border border-slate-700 overflow-hidden shadow-inner">
+                        <button onclick="changeCleanupDays(-1)"
+                            class="px-4 py-2 hover:bg-slate-800 transition-colors text-slate-400 font-bold border-r border-slate-700">-</button>
+                        <input type="number" id="cleanupDays" value="2" min="1" max="30"
+                            class="w-full bg-transparent text-center font-black text-sm text-white outline-none">
+                        <button onclick="changeCleanupDays(1)"
+                            class="px-4 py-2 hover:bg-slate-800 transition-colors text-slate-400 font-bold border-l border-slate-700">+</button>
+                    </div>
+                    <p class="text-[9px] text-slate-500 mt-2 italic">* Los archivos más antiguos se borrarán
+                        automáticamente vía Crontab.</p>
+                </div>
+
+                <div>
+                    <label class="block text-[10px] font-bold text-slate-400 mb-2 uppercase tracking-widest">Confirmar
+                        Contraseña Admin</label>
+                    <input type="password" id="cleanupPass" placeholder="••••••••"
+                        class="w-full p-3 rounded-xl bg-slate-900 border border-slate-700 outline-none font-mono text-sm text-center">
+                </div>
+
+                <div class="pt-2">
+                    <button onclick="saveCleanupConfig()"
+                        class="w-full bg-blue-600 hover:bg-blue-500 py-3 rounded-xl font-bold uppercase tracking-widest text-[10px] shadow-lg transition-all active:scale-95 mb-3">Guardar
+                        Configuración</button>
+                    <button onclick="runManualCleanup()" id="btnManualCleanup"
+                        class="w-full bg-slate-700 hover:bg-red-600 py-3 rounded-xl font-bold uppercase tracking-widest text-[10px] shadow-lg transition-all active:scale-95 text-slate-300 hover:text-white border border-slate-600 hover:border-red-500">Limpiar
+                        Ayer Ahora (Manual)</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL VISTA PREVIA -->
+    <div id="modalPreview" class="fixed inset-0 z-[70] hidden flex items-center justify-center bg-slate-950/90 backdrop-blur-lg p-4">
+        <div class="glass-panel w-full max-w-4xl rounded-3xl overflow-hidden shadow-2xl border border-white/10 animate-fade-in-up">
+            <div class="flex justify-between items-center px-6 py-4 bg-slate-900/80 border-b border-slate-700">
+                <h3 id="previewTitle" class="text-sm font-black uppercase tracking-widest text-white italic">Señal en Vivo: Canal 1</h3>
+                <button onclick="closePreview()" class="bg-red-600/20 hover:bg-red-600 text-red-500 hover:text-white px-3 py-1 rounded-lg transition-all font-bold">CERRAR</button>
+            </div>
+            <div class="aspect-video bg-black flex items-center justify-center relative">
+                <img id="previewImg" src="" class="w-full h-full object-contain" alt="Live Feed">
+                <div id="previewLoader" class="absolute inset-0 flex items-center justify-center bg-slate-950/50">
+                    <span class="spinner !w-10 !h-10 !border-4"></span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL REPRODUCTOR VOD -->
+    <div id="modalPlayer" class="fixed inset-0 z-[80] hidden flex items-center justify-center bg-slate-950/90 backdrop-blur-lg p-4">
+        <div class="glass-panel w-full max-w-5xl rounded-3xl overflow-hidden shadow-2xl border border-white/10 animate-fade-in-up flex flex-col">
+            <div class="flex justify-between items-center px-6 py-4 bg-slate-900/80 border-b border-slate-700">
+                <h3 id="playerTitle" class="text-sm font-black uppercase tracking-widest text-white italic truncate max-w-[80%]">Reproductor VOD</h3>
+                <button onclick="closePlayer()" class="bg-red-600/20 hover:bg-red-600 text-red-500 hover:text-white px-3 py-1 rounded-lg transition-all font-bold">CERRAR</button>
+            </div>
+            <div class="bg-black w-full aspect-video flex-1 flex items-center justify-center">
+                <video id="vodPlayer" class="w-full h-full" controls playsinline controlsList="nodownload"></video>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // ... logic functions here or appended below
+
+
+        // ── Efecto Animado del Header (Scroll) ─────────────────────────────────────────
+        window.addEventListener('scroll', () => {
+            const header = document.getElementById('mainHeader');
+            const logo = document.getElementById('logoImg');
+            const title = document.getElementById('headerTitle');
+            const subtitle = document.getElementById('headerSubtitle');
+            const titleBox = document.getElementById('headerTitleBox');
+            if (!header) return;
+
+            if (window.scrollY > 20) {
+                header.classList.add('shadow-[0_20px_40px_-15px_rgba(0,0,0,0.8)]', 'border-slate-700/60', 'bg-slate-900/95', 'py-1');
+                header.classList.remove('bg-slate-900/80', 'border-transparent', 'shadow-sm', 'py-1.5');
+                if (logo) { logo.classList.replace('h-6', 'h-5'); logo.classList.replace('md:h-7', 'md:h-6'); }
+                if (title) { title.classList.replace('text-base', 'text-sm'); title.classList.replace('md:text-lg', 'md:text-base'); title.classList.replace('tracking-tighter', 'tracking-normal'); }
+                if (subtitle) subtitle.classList.add('opacity-60');
+            } else {
+                header.classList.remove('shadow-[0_20px_40px_-15px_rgba(0,0,0,0.8)]', 'border-slate-700/60', 'bg-slate-900/95', 'py-1', 'pt-6', 'pb-6', 'pt-3', 'pb-3');
+                header.classList.add('bg-slate-900/80', 'border-transparent', 'shadow-sm', 'py-1.5');
+                if (logo) { logo.classList.replace('h-5', 'h-6'); logo.classList.replace('md:h-6', 'md:h-7'); logo.classList.replace('h-8', 'h-6'); logo.classList.replace('h-11', 'h-6'); }
+                if (title) { title.classList.replace('text-sm', 'text-base'); title.classList.replace('md:text-base', 'md:text-lg'); title.classList.replace('tracking-normal', 'tracking-tighter'); title.classList.replace('text-xl', 'text-base'); title.classList.replace('text-2xl', 'text-base'); }
+                if (subtitle) subtitle.classList.remove('opacity-60');
+            }
+        });
+
+        // ── Toasts y Alertas Sonoras ──────────────────────────────────────────────────
+        function showToast(msg, type = 'info') {
+            const container = document.getElementById('toastContainer');
+            if (!container) return;
+            const t = document.createElement('div');
+            
+            let bg = 'bg-slate-800/90', border = 'border-slate-600', icon = 'ℹ️', textColor = 'text-white';
+            if (type === 'success') { bg = 'bg-green-900/90'; border = 'border-green-600'; icon = '✅'; textColor = 'text-green-100'; }
+            if (type === 'error') { bg = 'bg-red-900/90'; border = 'border-red-600'; icon = '❌'; textColor = 'text-red-100'; }
+            if (type === 'warning') { bg = 'bg-yellow-900/90'; border = 'border-yellow-600'; icon = '⚠️'; textColor = 'text-yellow-100'; }
+            
+            t.className = `toast ${bg} ${border} ${textColor} border backdrop-blur-md shadow-2xl rounded-2xl p-4 flex items-center gap-3 text-sm font-bold w-[340px]`;
+            t.innerHTML = `<span>${icon}</span><span>${msg}</span>`;
+            
+            container.appendChild(t);
+            setTimeout(() => {
+                t.classList.add('hiding');
+                t.addEventListener('animationend', () => t.remove());
+            }, 4000);
+        }
+        
+        let lastErrorBeep = 0;
+        function playErrorBeep() {
+            if (Date.now() - lastErrorBeep < 10000) return; // 10s cooldown
+            lastErrorBeep = Date.now();
+            const ctx = new (window.AudioContext || window.webkitAudioContext)();
+            if(!ctx) return;
+            const osc = ctx.createOscillator();
+            const gain = ctx.createGain();
+            osc.connect(gain);
+            gain.connect(ctx.destination);
+            osc.type = "square";
+            osc.frequency.setValueAtTime(800, ctx.currentTime);
+            osc.frequency.setValueAtTime(1200, ctx.currentTime + 0.1);
+            gain.gain.setValueAtTime(0.1, ctx.currentTime);
+            gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.5);
+            osc.start(ctx.currentTime);
+            osc.stop(ctx.currentTime + 0.5);
+            
+            document.body.classList.add('ring-4', 'ring-red-600', 'ring-inset', 'transition-all', 'duration-100');
+            setTimeout(() => document.body.classList.remove('ring-4', 'ring-red-600', 'ring-inset'), 800);
+        }
+
+        // ── Constantes y Estado Global ────────────────────────────────────────────────
+        const TOKEN_KEY = 'vtv_token';
+        const ROLE_KEY = 'vtv_role';
+        const USER_KEY = 'vtv_user';
+        const SESSION_KEY = 'vtv_session';
+        const EXPIRE_KEY = 'vtv_exp';
+        const SESSION_HOURS = 8;
+        const MAX_FAILS = 5;
+
+        let TOKEN = null, failCount = 0, logAutoTimer = null;
+        let ROLE = null;
+        let USERNAME = null, SESSION_ID = null;
+        let metricsTimer = null, statusTimer = null;
+        let activePreviewId = null;
+        let _lastLogSize = { '1': 0, '2': 0 };
+        let _lastProcHash = null;
+
+        let channels = {
+            '1': { running: false, elapsed: 0, timer: null, cfg: null, sch_start: null, sch_stop: null, auto: false, init_ui: false },
+            '2': { running: false, elapsed: 0, timer: null, cfg: null, sch_start: null, sch_stop: null, auto: false, init_ui: false }
+        };
+
+        // ── Auto-Logout por Inactividad ───────────────────────────────────────────────
+        let idleSeconds = 0;
+        function resetIdleTimer() { idleSeconds = 0; }
+        ['mousemove', 'mousedown', 'keypress', 'scroll', 'touchstart'].forEach(e => {
+            window.addEventListener(e, resetIdleTimer, true);
+        });
+        
+        setInterval(() => {
+            if (!TOKEN) return;
+            idleSeconds++;
+            if (idleSeconds >= 180) { // 3 minutos
+                showToast("Sesión expirada por inactividad (3 minutos).", "warning");
+                logout();
+            }
+        }, 1000);
+
+        // ── Init ──────────────────────────────────────────────────────────────────────
+        (function init() {
+            const t = localStorage.getItem(TOKEN_KEY);
+            const exp = parseInt(localStorage.getItem(EXPIRE_KEY) || '0', 10);
+            if (t && Date.now() < exp) { TOKEN = t; showDashboard(); }
+            else clearSession();
+        })();
+
+        function selectRole(role) {
+            document.getElementById('roleSelector').classList.add('hidden');
+            document.getElementById('passwordForm').classList.remove('hidden');
+            document.getElementById('user').value = role;
+            document.getElementById('loginRoleLabel').textContent = "Ingresando como: " + role;
+            setTimeout(() => document.getElementById('pass').focus(), 100);
+        }
+
+        function backToRoles() {
+            document.getElementById('roleSelector').classList.remove('hidden');
+            document.getElementById('passwordForm').classList.add('hidden');
+            document.getElementById('pass').value = '';
+            document.getElementById('loginError').classList.add('hidden');
+        }
+
+        function restrictUIByRole() {
+            const role = localStorage.getItem(ROLE_KEY);
+            const isAdmin = role === 'admin';
+            
+            // Elementos Globales (Limpiar Disco)
+            const btnClean = document.getElementById('btnCleanupConfig');
+            if(btnClean) {
+                btnClean.disabled = !isAdmin;
+                if(!isAdmin) btnClean.classList.add('hidden');
+            }
+
+            // Ocultar todos los bloques UI administrativos
+            if (!isAdmin) {
+                document.querySelectorAll('.admin-ui-block').forEach(el => el.classList.add('hidden'));
+                
+                // Compactar tarjetas y reordenar Columnas
+                document.querySelectorAll('.glass-panel.h-full').forEach(el => el.classList.remove('h-full'));
+                document.querySelectorAll('.mt-auto').forEach(el => el.classList.remove('mt-auto'));
+                
+                const grid = document.getElementById('gridCards');
+                if(grid) {
+                    grid.classList.remove('xl:grid-cols-[1fr_1fr_260px]');
+                    grid.classList.add('xl:grid-cols-[1fr_1fr]');
+                }
+                const resPanel = document.getElementById('resPanel');
+                if(resPanel) {
+                    resPanel.classList.add('lg:col-span-2', 'xl:col-span-2', 'mt-4');
+                    
+                    const resGlass = resPanel.querySelector('.glass-panel');
+                    if(resGlass) {
+                        resGlass.classList.remove('p-6');
+                        resGlass.classList.add('p-3', 'md:p-4');
+                    }
+                    
+                    const metricsContainer = resPanel.querySelector('.flex.flex-col.gap-3');
+                    if(metricsContainer) {
+                        metricsContainer.className = 'grid grid-cols-2 md:grid-cols-3 xl:grid-cols-6 gap-x-6 gap-y-4 px-2';
+                    }
+                }
+            }
+        }
+
+        function showDashboard() {
+            document.getElementById('loginSection').classList.add('hidden');
+            document.getElementById('mainSection').classList.remove('hidden');
+            USERNAME = localStorage.getItem(USER_KEY) || '';
+            SESSION_ID = localStorage.getItem(SESSION_KEY) || '';
+            document.getElementById('roleBadge').textContent = USERNAME;
+            // Mostrar IP dinámica del host actual en vez de una IP hardcodeada
+            const ipLabel = document.getElementById('networkIpLabel');
+            if (ipLabel) ipLabel.textContent = 'IP: ' + (window.location.hostname || 'localhost');
+            restrictUIByRole();
+            renderAllChannels();
+            startUpdates();
+        }
+
+        function clearSession() {
+            [TOKEN_KEY, ROLE_KEY, USER_KEY, SESSION_KEY, EXPIRE_KEY].forEach(k => localStorage.removeItem(k));
+            TOKEN = null; USERNAME = null; SESSION_ID = null;
+            if(typeof backToRoles === 'function') backToRoles();
+        }
+
+        // ── Interfaz Multi-Canal ──────────────────────────────────────────────────────
+        function renderAllChannels() {
+            ['1', '2'].forEach(id => {
+                const c = channels[id];
+                const isAdmin = localStorage.getItem(ROLE_KEY) === 'admin';
+
+                const sStart = document.getElementById('scheduleStart_' + id);
+                const sStop = document.getElementById('scheduleStop_' + id);
+                if (sStart && document.activeElement !== sStart && c.sch_start) sStart.value = c.sch_start.substring(11, 16);
+                if (sStop && document.activeElement !== sStop && c.sch_stop) sStop.value = c.sch_stop.substring(11, 16);
+
+                const b = document.getElementById('bitrate_' + id);
+                const m = document.getElementById('minutes_' + id);
+                const dp = document.getElementById('destPath_' + id);
+                if (b) b.disabled = c.running || !isAdmin;
+                if (m) m.disabled = c.running || !isAdmin;
+                if (dp) dp.disabled = c.running || !isAdmin;
+
+                const btnD = document.getElementById('btnMinDec_' + id);
+                const btnI = document.getElementById('btnMinInc_' + id);
+                if (btnD) btnD.disabled = c.running || !isAdmin;
+                if (btnI) btnI.disabled = c.running || !isAdmin;
+
+                const btnReset = document.getElementById('btnResetDest_' + id);
+                if (btnReset) btnReset.disabled = c.running || !isAdmin;
+
+                const btnS = document.getElementById('btnStart_' + id);
+                const btnSt = document.getElementById('btnStop_' + id);
+                if (btnS) btnS.disabled = c.running || !isAdmin;
+                if (btnSt) btnSt.disabled = !c.running || !isAdmin;
+
+                const btnP = document.getElementById('btnPreview_' + id);
+                if (btnP) btnP.disabled = c.running;
+
+                const durBox = document.getElementById('durationBox_' + id);
+                if (durBox) {
+                    if (c.running) {
+                        durBox.classList.remove('opacity-50');
+                        durBox.classList.add('opacity-100');
+                        const dVal = document.getElementById('durationVal_' + id);
+                        if (dVal) dVal.textContent = fmtDuration(c.elapsed);
+                    } else {
+                        durBox.classList.remove('opacity-100');
+                        durBox.classList.add('opacity-50');
+                        const dVal = document.getElementById('durationVal_' + id);
+                        if (dVal) dVal.textContent = "00:00:00";
+                    }
+                }
+
+                const ab = document.getElementById('autoRestartBanner_' + id);
+                if (ab) ab.classList.toggle('hidden', !c.auto);
+
+                const sb = document.getElementById('scheduleBanner_' + id);
+                if (sb) {
+                    if (c.sch_start || c.sch_stop) {
+                        let msg = `⏰ P. Activa:`;
+                        if (c.sch_start) msg += ` Inicio ${fmtIso(c.sch_start)}`;
+                        if (c.sch_stop) msg += ` | Stop ${fmtIso(c.sch_stop)}`;
+                        sb.textContent = msg; sb.classList.remove('hidden');
+                    } else { sb.classList.add('hidden'); }
+                }
+            });
+
+            if (logAutoTimer || (!document.getElementById('logBox_1').textContent && !document.getElementById('logBox_2').textContent)) loadLog();
+        }
+
+        // ── Auth ────────────────────────────────────────────────────────────────────
+        async function login(force = false) {
+            const btn = document.getElementById('btnLogin');
+            const u = document.getElementById('user').value;
+            const p = document.getElementById('pass').value;
+            const err = document.getElementById('loginError');
+            if (!u || !p) { err.textContent = 'Llena todos los campos'; err.classList.remove('hidden'); return; }
+
+            btn.disabled = true; btn.innerHTML = '<span class="spinner"></span>Verificando…';
+            err.classList.add('hidden');
+
+            try {
+                const res = await fetch('/api/login', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ username: u, password: p, force: force })
+                });
+
+                if (!res.ok) {
+                    const e = await res.json();
+                    err.textContent = res.status === 429 ? "Bloqueo por seguridad (Intenta en 5 min)." : e.detail; 
+                    err.classList.remove('hidden');
+                    btn.disabled = false; btn.innerHTML = 'Iniciar Sesión';
+                    if(res.status === 429) {
+                        playErrorBeep(); // Trigger the red visual screen and beep
+                    }
+                    return;
+                }
+                const data = await res.json();
+                TOKEN = data.token;
+                ROLE = data.role;
+                USERNAME = data.username;
+                SESSION_ID = data.session_id;
+
+                localStorage.setItem(TOKEN_KEY, TOKEN);
+                localStorage.setItem(ROLE_KEY, ROLE);
+                localStorage.setItem(USER_KEY, USERNAME);
+                localStorage.setItem('vtv_session', SESSION_ID);
+                localStorage.setItem(EXPIRE_KEY, Date.now() + SESSION_HOURS * 3600 * 1000); // Set expiration
+
+                showDashboard();
+                showToast("¡Sesión iniciada correctamente!", "success");
+            } catch (_) {
+                err.textContent = 'Error de conexión con el servidor.'; err.classList.remove('hidden');
+            } finally {
+                btn.disabled = false; btn.innerHTML = 'Iniciar Sesión';
+            }
+        }
+        function showLoginErr(msg) {
+            const el = document.getElementById('loginError');
+            if (el) { el.textContent = msg; el.classList.remove('hidden'); }
+        }
+        ['user', 'pass'].forEach(id => {
+            document.getElementById(id)?.addEventListener('keydown', e => { if (e.key === 'Enter') login(); });
+        });
+
+        // ── Logout ────────────────────────────────────────────────────────────────────
+        function logout() {
+            clearInterval(metricsTimer); clearInterval(statusTimer);
+            clearInterval(logAutoTimer);
+            Object.values(channels).forEach(c => clearInterval(c.timer));
+            clearSession(); location.reload();
+        }
+
+        // ── Polling Global y Mantenimiento ─────────────────────────────────────────────
+        function startUpdates() {
+            updateMetrics(); updateStatus(); updateProcesses();
+            metricsTimer = setInterval(() => { updateMetrics(); updateProcesses(); }, 2000);
+            statusTimer = setInterval(updateStatus, 5000);
+        }
+
+        function onNetOk() { if (failCount > 0) { failCount = 0; document.getElementById('networkError').classList.add('hidden'); } }
+        function onNetFail() {
+            failCount++;
+            document.getElementById('networkError').classList.remove('hidden');
+            if (failCount >= MAX_FAILS) {
+                clearInterval(metricsTimer); clearInterval(statusTimer);
+                document.getElementById('networkError').textContent = '⚠ Servidor no responde. Recarga la página para reintentar.';
+            }
+        }
+
+        async function updateMetrics() {
+            try {
+                const res = await fetch('/api/metrics', { headers: { 'X-Token': TOKEN, 'X-Username': USERNAME || '', 'X-Session-Id': SESSION_ID || '' } });
+                if (res.status === 403) {
+                    logout();
+                    alert("Sesión finalizada.");
+                    return;
+                }
+                if (!res.ok) { onNetFail(); return; }
+                const d = await res.json();
+                updateBar('cpu', d.cpu, 'cpu'); updateBar('ram', d.ram, 'ram');
+                updateBar('gpu', d.gpu, 'gpu'); updateBar('vram', d.vram, 'vram');
+                updateBar('disk', d.disk, 'disk');
+
+                // Lógica de Tiempo Restante Predictivo
+                const freeGB = d.disk_total * (1 - (d.disk / 100));
+                let br1 = document.getElementById('bitrate_1')?.value || "15M";
+                let br2 = document.getElementById('bitrate_2')?.value || "15M";
+                let num1 = parseInt(br1.replace('M',''));
+                let num2 = parseInt(br2.replace('M',''));
+                
+                let isC1Running = channels['1']?.running ? 1 : 0;
+                let isC2Running = channels['2']?.running ? 1 : 0;
+                
+                let activeBitrateMbps = (num1 * isC1Running) + (num2 * isC2Running);
+                if (activeBitrateMbps === 0) activeBitrateMbps = num1; // Si ambos parados, dar estimado base
+                
+                let MBps = (activeBitrateMbps * 1.5) / 8; // x1.5 x maxrate de ffmpeg vbr
+                if (MBps === 0) MBps = 1;
+                
+                let hoursLeft = (freeGB * 1024) / MBps / 3600;
+                
+                const dr = document.getElementById('diskRemaining');
+                if (dr) {
+                    if (hoursLeft > 99) dr.textContent = "⏱ +99h restantes";
+                    else if (hoursLeft < 1) dr.textContent = "⏱ " + Math.floor(hoursLeft * 60) + "min restantes";
+                    else dr.textContent = "⏱ " + hoursLeft.toFixed(1) + "h restantes";
+                    
+                    if (freeGB < 50 && (isC1Running + isC2Running) > 0) playErrorBeep();
+                }
+
+                // Network specific update
+                const nV = document.getElementById('netVal'); if (nV) nV.textContent = d.net_mbps + ' Mbps';
+                const nB = document.getElementById('netBar'); if (nB) nB.style.width = d.net + '%';
+
+                const cM = document.getElementById('cpuModel'); if (cM) cM.textContent = d.cpu_name || 'N/A';
+                const rM = document.getElementById('ramModel'); if (rM) rM.textContent = (d.ram_total || '0') + ' GB';
+                const gM = document.getElementById('gpuModel'); if (gM) gM.textContent = d.gpu_name || 'N/A';
+                const vM = document.getElementById('vramModel'); if (vM) vM.textContent = (d.vram_total || '0') + ' GB';
+                const dM = document.getElementById('diskModel'); if (dM) dM.textContent = (d.disk_total || '0') + ' GB';
+
+                onNetOk();
+            } catch (_) { onNetFail(); }
+        }
+
+        async function updateStatus() {
+            try {
+                const [r1, r2] = await Promise.all([
+                    fetch('/api/status/1', { headers: { 'X-Token': TOKEN } }),
+                    fetch('/api/status/2', { headers: { 'X-Token': TOKEN } })
+                ]);
+                if (!r1.ok || !r2.ok) { onNetFail(); return; }
+
+                applyStatusData('1', await r1.json());
+                applyStatusData('2', await r2.json());
+
+                renderAllChannels();
+                onNetOk();
+            } catch (_) { onNetFail(); }
+        }
+
+        function applyStatusData(id, data) {
+            let c = channels[id];
+            c.running = data.running;
+            c.sch_start = data.scheduled_start;
+            c.sch_stop = data.scheduled_stop;
+            c.auto = data.auto_restarted;
+
+            // Deshabilitar Vista Previa si ya está grabando
+            const btnP = document.getElementById('btnPreview_' + id);
+            if (btnP) btnP.disabled = c.running;
+
+            if (data.config) {
+                c.cfg = data.config;
+                if (!c.init_ui || c.running) {
+                    const b = document.getElementById('bitrate_' + id);
+                    const m = document.getElementById('minutes_' + id);
+                    const d = document.getElementById('destPath_' + id);
+                    if (b && c.cfg.bitrate) b.value = c.cfg.bitrate;
+                    if (m && c.cfg.segment_minutes) m.value = c.cfg.segment_minutes;
+                    if (d && c.cfg.dest_path) d.value = c.cfg.dest_path;
+                    c.init_ui = true;
+                }
+            }
+
+            const b = document.getElementById(`badgeCH${id}`);
+            if (b) {
+                if (c.running) {
+                    b.className = 'px-3 py-1 rounded border border-red-500 bg-red-600 text-white animate-pulse font-black text-[10px] tracking-widest';
+                    b.innerText = `● GRABANDO ${id}`;
+                } else {
+                    b.className = 'px-3 py-1 rounded border border-slate-600 bg-slate-700 text-slate-400 font-bold text-[10px] tracking-widest';
+                    b.innerText = `GRABANDO ${id}`;
+                }
+            }
+
+            if (c.running) {
+                let base = data.elapsed_seconds || 0;
+                if (!c.timer || Math.abs(c.elapsed - base) > 3) {
+                    clearInterval(c.timer);
+                    c.elapsed = base;
+                    c.timer = setInterval(() => {
+                        c.elapsed++;
+                        const el = document.getElementById('durationVal_' + id);
+                        if (el) el.textContent = fmtDuration(c.elapsed);
+                    }, 1000);
+                }
+            } else {
+                clearInterval(c.timer); c.timer = null; c.elapsed = 0;
+            }
+        }
+
+        // ── Barras con alertas de umbral ──────────────────────────────────────────────
+        function updateBar(id, val, type) {
+            const rounded = Math.round(val);
+            const vEl = document.getElementById(id + 'Val');
+            if (vEl) vEl.textContent = rounded + '%';
+            const bar = document.getElementById(id + 'Bar');
+            if (bar) bar.style.width = rounded + '%';
+
+            if (type === 'disk') {
+                const title = document.getElementById('diskTitle');
+                const alert = document.getElementById('diskAlert');
+                if (title && alert) {
+                    title.classList.remove('text-green-500', 'text-yellow-500', 'text-red-500');
+                    if (rounded >= 59) {
+                        title.classList.add('text-red-500');
+                        alert.classList.remove('hidden');
+                    } else if (rounded >= 36) {
+                        title.classList.add('text-yellow-500');
+                        alert.classList.add('hidden');
+                    } else {
+                        title.classList.add('text-green-500');
+                        alert.classList.add('hidden');
+                    }
+                }
+            }
+
+            const colors = {
+                cpu: rounded >= 95 ? 'bg-red-600' : rounded >= 85 ? 'bg-orange-500' : 'bg-green-500',
+                ram: rounded >= 95 ? 'bg-red-600' : rounded >= 85 ? 'bg-orange-500' : 'bg-blue-500',
+                disk: rounded >= 59 ? 'bg-red-600' : rounded >= 36 ? 'bg-yellow-500' : 'bg-green-500',
+                gpu: 'bg-red-600',
+                vram: 'bg-red-400',
+            };
+            if (bar) bar.className = `bar h-full ${colors[type] || 'bg-slate-500'}`;
+        }
+
+        // ── Monitor de procesos ───────────────────────────────────────────────────────
+        const PROC_COLORS = { ffmpeg: 'text-red-400', python: 'text-blue-400', python3: 'text-blue-400', nvenc: 'text-yellow-400' };
+        function procColor(name) {
+            const n = (name || '').toLowerCase();
+            for (const [key, cls] of Object.entries(PROC_COLORS)) { if (n.includes(key)) return cls; }
+            return 'text-slate-300';
+        }
+        function procStatusDot(status) {
+            if (status === 'running') return '<span class="text-green-400">●</span>';
+            if (status === 'sleeping') return '<span class="text-slate-500">●</span>';
+            return '<span class="text-yellow-400">●</span>';
+        }
+        async function updateProcesses() {
+            try {
+                const res = await fetch('/api/processes', { headers: { 'X-Token': TOKEN } });
+                if (!res.ok) return;
+                const d = await res.json();
+
+                // Prevent unnecessary DOM Reflows/Repaints
+                const rawString = JSON.stringify(d.processes);
+                if (_lastProcHash === rawString) return;
+                _lastProcHash = rawString;
+
+                const cnt = document.getElementById('procCount');
+                if (cnt) cnt.textContent = `${d.count} proceso(s)`;
+                const el = document.getElementById('procList');
+                if (!el) return;
+                if (!d.processes.length) { el.innerHTML = '<p class="text-slate-600 italic">Sin procesos detectados.</p>'; return; }
+                el.innerHTML = d.processes.map(p => `
+            <div class="flex items-center justify-between bg-slate-900/60 rounded-lg px-3 py-1.5 border border-slate-700/40">
+                <div class="flex items-center gap-2 min-w-0">
+                    ${procStatusDot(p.status)}
+                    <span class="font-bold ${procColor(p.name)} truncate max-w-[80px]">${p.name}</span>
+                    <span class="text-slate-600 text-[10px]">PID ${p.pid}</span>
+                </div>
+                <div class="flex gap-2 text-slate-400 shrink-0 ml-1 tabular-nums">
+                    <span title="CPU" class="w-12 text-right text-[10px]">⚡${p.cpu}%</span>
+                    <span title="RAM" class="w-16 text-right text-[10px]">🧠${p.mem_mb}MB</span>
+                </div>
+            </div>`).join('');
+            } catch (_) { }
+        }
+
+        // ── Acciones (Por Canal) ──────────────────────────────────────────────────────
+        async function execute(id, type) {
+            const bs = document.getElementById('btnStart_' + id), bd = document.getElementById('btnStop_' + id);
+            if (bs) bs.disabled = true;
+            if (bd) bd.disabled = true;
+            try {
+                const body = type === 'start' ? JSON.stringify({
+                    bitrate: document.getElementById('bitrate_' + id).value,
+                    segment_minutes: parseInt(document.getElementById('minutes_' + id).value, 10),
+                    dest_path: document.getElementById('destPath_' + id).value.trim() || '/home/administrador/Capturas',
+                }) : null;
+
+                channels[id].running = (type === 'start');
+                renderAllChannels();
+
+                const res = await fetch(`/api/${type}/${id}`, {
+                    method: 'POST', headers: { 'Content-Type': 'application/json', 'X-Token': TOKEN }, body
+                });
+                if (!res.ok) { 
+                    try {
+                        const e = await res.json(); 
+                        showToast('Error: ' + (typeof e.detail === 'string' ? e.detail : JSON.stringify(e.detail)), 'error'); 
+                    } catch (parserErr) {
+                        showToast('Error HTTP ' + res.status, 'error');
+                    }
+                }
+            } catch (err) { showToast('Fallo Interno UI: ' + err.message, 'error'); console.error(err); }
+            finally { updateStatus(); }
+        }
+
+        async function setSchedule(id) {
+            const start = document.getElementById('scheduleStart_' + id).value;
+            const stop = document.getElementById('scheduleStop_' + id).value;
+            if (!start && !stop) { showToast('Ingresa al menos un horario para programar.', 'warning'); return; }
+            try {
+                const body = {
+                    start_time: start || null,
+                    stop_time: stop || null,
+                    config: start ? {
+                        bitrate: document.getElementById('bitrate_' + id).value,
+                        segment_minutes: parseInt(document.getElementById('minutes_' + id).value, 10),
+                        dest_path: document.getElementById('destPath_' + id).value.trim() || '/home/administrador/Capturas',
+                    } : null
+                };
+                const res = await fetch(`/api/schedule/${id}`, {
+                    method: 'POST', headers: { 'Content-Type': 'application/json', 'X-Token': TOKEN },
+                    body: JSON.stringify(body)
+                });
+                if (res.ok) { showToast(`Programación CH${id} guardada.`, 'success'); updateStatus(); }
+                else { const e = await res.json(); showToast('Error: ' + (e.detail || 'Desconocido'), 'error'); }
+            } catch (_) { showToast('Error de conexión.', 'error'); }
+        }
+
+        async function cancelSchedule(id) {
+            try {
+                await fetch(`/api/schedule/cancel/${id}`, { method: 'POST', headers: { 'X-Token': TOKEN } });
+                document.getElementById('scheduleStart_' + id).value = '';
+                document.getElementById('scheduleStop_' + id).value = '';
+                updateStatus();
+            } catch (_) { showToast('Error al cancelar programación.', 'error'); }
+        }
+
+        // ── Log viewer ────────────────────────────────────────────────────────────────
+        window._lastLogSize = { '1': 0, '2': 0 };
+        async function loadLog() {
+            const lines = document.getElementById('logLines').value;
+            await Promise.all(['1', '2'].map(async (id) => {
+                try {
+                    const res = await fetch(`/api/log/${id}?lines=${lines}`, { headers: { 'X-Token': TOKEN } });
+                    if (!res.ok) return;
+                    const d = await res.json();
+
+                    if (d.size_bytes === _lastLogSize[id]) return; // Reflow optimization
+                    _lastLogSize[id] = d.size_bytes;
+
+                    const box = document.getElementById('logBox_' + id);
+                    if (box) {
+                        box.textContent = d.lines.join('\n') || `(log vacío para CH${id})`;
+                        box.scrollTop = box.scrollHeight;
+                    }
+                    const sz = document.getElementById('logSize_' + id);
+                    if (sz) sz.textContent = `[${fmtBytes(d.size_bytes)} — ${d.total_lines_shown} líneas]`;
+                } catch (_) { }
+            }));
+        }
+        function toggleLogAuto() {
+            clearInterval(logAutoTimer); logAutoTimer = null;
+            const chk = document.getElementById('logAutoRefresh');
+            if (chk && chk.checked) {
+                loadLog(); logAutoTimer = setInterval(loadLog, 5000);
+            }
+        }
+
+        // ── Historial de archivos ─────────────────────────────────────────────────────
+        async function loadFiles() {
+            const el = document.getElementById('filesTable');
+            if (!el) return;
+            el.innerHTML = '<span class="italic text-slate-500">Cargando...</span>';
+            try {
+                const res = await fetch('/api/files', { headers: { 'X-Token': TOKEN } });
+                if (!res.ok) { el.innerHTML = '<span class="text-red-400">Error al cargar archivos.</span>'; return; }
+                const d = await res.json();
+                const cnt = document.getElementById('filesCount');
+                if (cnt) cnt.textContent = `${d.count} archivo(s) en ${d.dest_path}`;
+                if (!d.files.length) { el.innerHTML = '<span class="italic text-slate-500">No hay archivos grabados aún.</span>'; return; }
+                const isOp = localStorage.getItem(ROLE_KEY) === 'operator';
+                el.innerHTML = `<div class="overflow-x-auto"><table class="w-full text-xs min-w-[600px]">
+            <thead><tr class="text-left text-slate-500 border-b border-slate-700 pb-2">
+                <th class="pb-3 pr-4 uppercase">Archivo (Pestaña Global)</th>
+                <th class="pb-3 pr-4 uppercase text-right">Duración</th>
+                <th class="pb-3 pr-4 uppercase text-right">Tamaño</th>
+                <th class="pb-3 pr-4 uppercase text-right">Fecha</th>
+                <th class="pb-3 uppercase text-right">Acciones</th>
+            </tr></thead>
+            <tbody>${d.files.map(f => {
+                const enc = encodeURIComponent(f.name);
+                return `
+            <tr class="border-b border-slate-700/30 hover:bg-slate-700/20 transition-colors">
+                <td class="py-2 pr-4 flex-1 truncate max-w-[200px] ${f.name.includes('CH1') ? 'text-red-400' : f.name.includes('CH2') ? 'text-blue-400' : 'text-green-400'}">${f.name}</td>
+                <td class="py-2 pr-4 text-slate-400 text-right font-bold whitespace-nowrap">${f.duration > 0 ? fmtDuration(Math.round(f.duration)) : 'N/A'}</td>
+                <td class="py-2 pr-4 text-slate-300 text-right whitespace-nowrap">${fmtBytes(f.size_bytes)}</td>
+                <td class="py-2 pr-4 text-slate-400 text-right whitespace-nowrap">${fmtIso(f.created)}</td>
+                <td class="py-2 text-right whitespace-nowrap flex gap-1 justify-end">
+                    <button onclick="playVideo('${enc}')" class="bg-blue-600/20 hover:bg-blue-600 text-blue-400 hover:text-white px-2 py-1 rounded transition-colors" title="Reproducir">▶️</button>
+                    <a href="/api/files/download?file=${enc}&token=${TOKEN}" class="bg-green-600/20 hover:bg-green-600 text-green-400 hover:text-white px-2 py-1 rounded transition-colors" title="Descargar" download>⬇️</a>
+                    ${!isOp ? `<button onclick="deleteVideo('${enc}')" class="bg-red-600/20 hover:bg-red-600 text-red-400 hover:text-white px-2 py-1 rounded transition-colors" title="Eliminar"><svg class="w-4 h-4 inline-block" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg></button>` : ''}
+                </td>
+            </tr>`}).join('')}
+            </tbody></table></div>`;
+            } catch (_) { el.innerHTML = '<span class="text-red-400">Error de conexión.</span>'; }
+        }
+
+        // ── Collapsibles y Utilidades ─────────────────────────────────────────────────
+        function toggleSection(id) {
+            const body = document.getElementById(id);
+            if (!body) return;
+            const isOpen = body.classList.contains('open');
+            body.classList.toggle('open', !isOpen);
+            body.classList.toggle('closed', isOpen);
+            const baseId = id.replace('Body', '');
+            const chevron = document.getElementById(baseId + 'Chevron') || document.getElementById(id + 'Chevron');
+            if (chevron) chevron.textContent = isOpen ? '▼' : '▲';
+        }
+
+        function fmtDuration(s) {
+            const h = Math.floor(s / 3600), m = Math.floor((s % 3600) / 60), sec = s % 60;
+            return `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}:${String(sec).padStart(2, '0')}`;
+        }
+        function fmtBytes(b) {
+            if (b < 1024) return b + ' B';
+            if (b < 1048576) return (b / 1024).toFixed(1) + ' KB';
+            if (b < 1073741824) return (b / 1048576).toFixed(1) + ' MB';
+            return (b / 1073741824).toFixed(2) + ' GB';
+        }
+        function fmtIso(iso) {
+            try { return new Date(iso).toLocaleString('es-VE', { hour12: false }); } catch (_) { return iso; }
+        }
+
+
+        function adjMin(id, delta) {
+            const el = document.getElementById('minutes_' + id);
+            if (!el || el.disabled) return;
+            let val = parseInt(el.value, 10);
+            if (isNaN(val)) val = 1;
+            val += delta;
+            if (val < 1) val = 1;
+            if (val > 120) val = 120;
+            el.value = val;
+        }
+
+        function resetDestPath(id) {
+            const el = document.getElementById('destPath_' + id);
+            if (el && !el.disabled) el.value = '/home/administrador/Capturas';
+        }
+
+        // --- GESTORIAL DE LIMPIEZA ---
+        async function openCleanupModal() {
+            const res = await fetch('/api/cleanup/config', { headers: { 'X-Token': TOKEN } });
+            const cfg = await res.json();
+            document.getElementById('cleanupDays').value = cfg.retention_days;
+            document.getElementById('modalCleanup').classList.remove('hidden');
+        }
+        function closeCleanupModal() {
+            document.getElementById('modalCleanup').classList.add('hidden');
+            document.getElementById('cleanupPass').value = '';
+        }
+        function changeCleanupDays(delta) {
+            const input = document.getElementById('cleanupDays');
+            let val = parseInt(input.value) + delta;
+            if (val < 1) val = 1; if (val > 30) val = 30;
+            input.value = val;
+        }
+        async function saveCleanupConfig() {
+            const pass = document.getElementById('cleanupPass').value;
+            if (!pass) { showToast('Ingresa la contraseña de administrador.', 'warning'); return; }
+
+            // Verificación en el SERVIDOR, nunca en el cliente
+            try {
+                const chk = await fetch('/api/verify-password', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json', 'X-Token': TOKEN },
+                    body: JSON.stringify({ password: pass })
+                });
+                if (!chk.ok) { showToast('Contraseña incorrecta.', 'error'); return; }
+            } catch (_) { showToast('Error de conexión al verificar contraseña.', 'error'); return; }
+
+            const days = parseInt(document.getElementById('cleanupDays').value);
+            await fetch('/api/cleanup/config', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', 'X-Token': TOKEN },
+                body: JSON.stringify({ retention_days: days })
+            });
+            showToast('Configuración guardada y protegida.', 'success');
+            closeCleanupModal();
+        }
+        async function runManualCleanup() {
+            const pass = document.getElementById('cleanupPass').value;
+            if (!pass) { showToast('Ingresa la contraseña de administrador.', 'warning'); return; }
+
+            // Verificación en el SERVIDOR
+            try {
+                const chk = await fetch('/api/verify-password', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json', 'X-Token': TOKEN },
+                    body: JSON.stringify({ password: pass })
+                });
+                if (!chk.ok) { showToast('Contraseña incorrecta.', 'error'); return; }
+            } catch (_) { showToast('Error de conexión al verificar contraseña.', 'error'); return; }
+
+            if (!confirm('¿Estás seguro de querer borrar todos los videos anteriores a hoy?')) return;
+            const btn = document.getElementById('btnManualCleanup');
+            const oldText = btn.textContent;
+            btn.disabled = true; btn.textContent = 'Borrando Todo...';
+            try {
+                // El backend ejecuta el script con el config actual.
+                // Para asegurar que borre "todo" el pasado, primero guardamos config con 1 dia si es necesario.
+                // O mejor, pasamos un parametro al backend.
+                const res = await fetch('/api/cleanup/execute?force_all=true', { method: 'POST', headers: { 'X-Token': TOKEN } });
+                const data = await res.json();
+                showToast('Limpieza profunda completada.', 'success');
+            } catch (e) { showToast('Error: ' + e, 'error'); }
+            finally { btn.disabled = false; btn.textContent = oldText; }
+        }
+
+        function playVideo(encName) {
+            const decName = decodeURIComponent(encName);
+            const modal = document.getElementById('modalPlayer');
+            const video = document.getElementById('vodPlayer');
+            const title = document.getElementById('playerTitle');
+            
+            title.textContent = `▶️ ${decName}`;
+            video.src = `/api/files/stream?file=${encName}&token=${TOKEN}`;
+            modal.classList.remove('hidden');
+            video.play().catch(e => showToast("Reproducción automática bloqueada. Usa play manual.", "warning"));
+        }
+        
+        function closePlayer() {
+            const modal = document.getElementById('modalPlayer');
+            const video = document.getElementById('vodPlayer');
+            video.pause();
+            video.src = "";
+            modal.classList.add('hidden');
+        }
+
+        async function deleteVideo(encName) {
+            const pass = prompt(`Para borrar este archivo, ingresa clave de Operador/Admin:`);
+            if (!pass) return;
+            try {
+                const res = await fetch('/api/files/delete', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json', 'X-Token': TOKEN },
+                    body: JSON.stringify({ filename: decodeURIComponent(encName), password: pass })
+                });
+                if (res.ok) {
+                    showToast('Archivo eliminado exitosamente.', 'success');
+                    loadFiles();
+                } else {
+                    const e = await res.json();
+                    showToast('Error borrando archivo: ' + e.detail, 'error');
+                }
+            } catch (e) { showToast('Error de conexión', 'error'); }
+        }
+
+        // --- VISTA PREVIA ---
+        function openPreview(id) {
+            activePreviewId = id;
+            const modal = document.getElementById('modalPreview');
+            const img = document.getElementById('previewImg');
+            const loader = document.getElementById('previewLoader');
+            const title = document.getElementById('previewTitle');
+
+            title.textContent = `Señal en Vivo: Canal ${id}`;
+            img.onload = () => { loader.classList.add('hidden'); };
+            img.onerror = () => {
+                showToast('No se pudo cargar la vista previa. Asegúrate de que el canal no esté ocupado.', 'error');
+                closePreview();
+            };
+
+            // El token se pasa por query string porque es un <img>. Añadimos cache-buster.
+            img.src = `/api/preview/${id}?token=${TOKEN}&t=${Date.now()}`;
+            modal.classList.remove('hidden');
+        }
+
+        async function closePreview() {
+            const modal = document.getElementById('modalPreview');
+            const img = document.getElementById('previewImg');
+            const loader = document.getElementById('previewLoader');
+
+            // Desvincular eventos antes de limpiar la fuente para evitar el bucle de "onerror"
+            img.onload = null;
+            img.onerror = null;
+            img.src = ""; // Detiene el stream en el cliente
+            
+            modal.classList.add('hidden');
+            loader.classList.remove('hidden');
+
+            if (activePreviewId) {
+                try {
+                    await fetch('/api/preview/stop/' + activePreviewId, { method: 'POST', headers: { 'X-Token': TOKEN } });
+                } catch (e) { console.error("Error stopping preview:", e); }
+                activePreviewId = null;
+            }
+        }
+    </script>
+</body>
+
+</html>
