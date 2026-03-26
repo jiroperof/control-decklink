@@ -154,5 +154,17 @@
     "username": "administrador",
     "ip": "192.168.22.203",
     "role": "admin"
+  },
+  {
+    "timestamp": 1774547252.707972,
+    "username": "eblanco",
+    "ip": "192.168.22.250",
+    "role": "group2"
+  },
+  {
+    "timestamp": 1774547278.4650183,
+    "username": "administrador",
+    "ip": "192.168.22.250",
+    "role": "admin"
   }
 ]
