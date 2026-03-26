@@ -166,5 +166,17 @@
     "username": "administrador",
     "ip": "192.168.22.250",
     "role": "admin"
+  },
+  {
+    "timestamp": 1774548908.3338957,
+    "username": "administrador",
+    "ip": "192.168.22.117",
+    "role": "admin"
+  },
+  {
+    "timestamp": 1774549108.701279,
+    "username": "jcontreras",
+    "ip": "192.168.22.117",
+    "role": "group1"
   }
 ]
