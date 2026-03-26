@@ -178,5 +178,17 @@
     "username": "jcontreras",
     "ip": "192.168.22.117",
     "role": "group1"
+  },
+  {
+    "timestamp": 1774549290.116134,
+    "username": "jropero",
+    "ip": "192.168.22.203",
+    "role": "fallido"
+  },
+  {
+    "timestamp": 1774549293.9737327,
+    "username": "jropero",
+    "ip": "192.168.22.203",
+    "role": "group2"
   }
 ]
