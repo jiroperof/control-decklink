@@ -210,25 +210,18 @@
             <img src="logo.png" alt="VTV" class="h-20 mx-auto mb-6 drop-shadow-lg">
             <h2 class="text-3xl font-bold mb-6 uppercase text-white italic"
                 style="font-family:'Segoe UI',system-ui,-apple-system,sans-serif;">Capturadora VTV 2.0</h2>
-            <div id="roleSelector" class="space-y-3 mb-4">
-                <button onclick="selectRole('admin')" class="w-full bg-slate-800 hover:bg-red-600/80 border border-slate-600 hover:border-red-400 py-3 rounded-xl font-black uppercase tracking-widest text-slate-300 hover:text-white transition-all duration-300 shadow-md text-center">
-                    Administrador
-                </button>
-                <button onclick="selectRole('operador')" class="w-full bg-slate-800/60 hover:bg-slate-700/80 border border-slate-700 hover:border-slate-500 py-3 rounded-xl font-bold uppercase tracking-widest text-slate-400 hover:text-white transition-all duration-300 shadow-md text-center">
-                    Operador
-                </button>
-            </div>
+            <div class="space-y-4">
+                <!-- Hidden elements kept for modal compatibility -->
+                <span id="btnRoleG1Label" class="hidden">Capturadora2.0I</span>
+                <span id="btnRoleG2Label" class="hidden">Capturadora2.0II</span>
 
-            <div id="passwordForm" class="hidden space-y-4">
-                <div class="flex items-center justify-between mb-1 px-1">
-                    <span id="loginRoleLabel" class="text-slate-400 font-bold uppercase text-[10px] tracking-widest"></span>
-                    <button onclick="backToRoles()" class="text-red-400 hover:text-red-300 text-[10px] font-black uppercase tracking-widest hover:underline transition-all active:scale-95">Cambiar</button>
+                <div>
+                    <input type="text" id="user" placeholder="Usuario"
+                        class="w-full p-4 rounded-xl outline-none font-mono bg-slate-900/80 border-2 border-slate-700 text-white focus:border-red-500 transition-all text-center tracking-widest text-lg" autocomplete="username">
                 </div>
-                
-                <input type="hidden" id="user" value="">
-                
+
                 <div class="relative w-full">
-                    <input type="password" id="pass" placeholder="Password"
+                    <input type="password" id="pass" placeholder="Contraseña"
                         class="w-full p-4 rounded-xl outline-none font-mono bg-slate-900/80 border-2 border-slate-700 text-white focus:border-red-500 transition-all text-center tracking-[0.2em] text-lg" autocomplete="current-password">
                     <button type="button" onmousedown="document.getElementById('pass').type='text'" onmouseup="document.getElementById('pass').type='password'" onmouseleave="document.getElementById('pass').type='password'" ontouchstart="document.getElementById('pass').type='text'" ontouchend="document.getElementById('pass').type='password'" class="absolute right-4 top-1/2 -translate-y-1/2 text-slate-500 hover:text-white p-2 cursor-pointer transition-colors" title="Mantener para ver clave">
                         <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -293,16 +286,22 @@
                     <div class="flex flex-col items-end gap-2 border-l border-slate-700/50 pl-5">
                         <span id="roleBadge"
                             class="px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest bg-slate-800/40 backdrop-blur-md text-slate-300 border border-slate-700/50 shadow-md"></span>
-                        <button onclick="logout()"
-                            class="group flex items-center gap-2 bg-slate-800/40 hover:bg-red-500/15 text-slate-400 hover:text-red-400 px-3 py-1.5 rounded-lg border border-slate-700/50 hover:border-red-500/40 transition-all duration-300 font-bold uppercase tracking-widest text-[9px] shadow-sm backdrop-blur-sm active:scale-95">
-                            <svg class="w-3.5 h-3.5 group-hover:translate-x-0.5 transition-transform" fill="none"
-                                stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                    d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1">
-                                </path>
-                            </svg>
-                            <span>Cerrar Sesión</span>
-                        </button>
+                        <div class="flex items-center gap-2">
+                            <button id="btnAdminPanel" onclick="openAdminModal()" class="hidden group flex items-center gap-2 bg-indigo-800/40 hover:bg-indigo-500/20 text-indigo-400 hover:text-indigo-300 px-3 py-1.5 rounded-lg border border-indigo-700/50 hover:border-indigo-500/60 transition-all duration-300 font-bold uppercase tracking-widest text-[9px] shadow-sm backdrop-blur-sm active:scale-95">
+                                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"></path></svg>
+                                <span>Administración</span>
+                            </button>
+                            <button onclick="logout()"
+                                class="group flex items-center gap-2 bg-slate-800/40 hover:bg-red-500/15 text-slate-400 hover:text-red-400 px-3 py-1.5 rounded-lg border border-slate-700/50 hover:border-red-500/40 transition-all duration-300 font-bold uppercase tracking-widest text-[9px] shadow-sm backdrop-blur-sm active:scale-95">
+                                <svg class="w-3.5 h-3.5 group-hover:translate-x-0.5 transition-transform" fill="none"
+                                    stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                        d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1">
+                                    </path>
+                                </svg>
+                                <span>Cerrar Sesión</span>
+                            </button>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -318,7 +317,7 @@
 
 
             <!-- CONFIG: CH1 -->
-            <div class="glass-panel rounded-3xl font-mono flex flex-col overflow-hidden h-full shadow-lg">
+            <div id="cardCH1" class="glass-panel rounded-3xl font-mono flex flex-col overflow-hidden h-full shadow-lg">
                 <div
                     class="bg-slate-900/40 px-5 py-4 border-b border-slate-700/50 font-black text-white uppercase tracking-widest flex justify-between items-center">
                     <span class="text-red-500">🔴 DeckLink Duo (1)</span><span id="autoRestartBanner_1"
@@ -426,10 +425,10 @@
             </div>
 
             <!-- CONFIG: CH2 -->
-            <div class="glass-panel rounded-3xl font-mono flex flex-col overflow-hidden h-full">
+            <div id="cardCH2" class="glass-panel rounded-3xl font-mono flex flex-col overflow-hidden h-full">
                 <div
                     class="bg-slate-900/40 px-5 py-4 border-b border-slate-700/50 font-black text-white uppercase tracking-widest flex justify-between items-center">
-                    <span class="text-blue-500">🔴 DeckLink Duo (2)</span><span id="autoRestartBanner_2"
+                    <span id="titleCH2" class="text-blue-500">🔴 DeckLink Duo (2)</span><span id="autoRestartBanner_2"
                         class="hidden text-orange-400 text-[9px] bg-orange-900/30 px-2 py-1 rounded border border-orange-700/50">🔄
                         Auto-Rec Injected</span></div>
                 <div class="p-4 flex-1 flex flex-col">
@@ -756,6 +755,78 @@
         </div>
     </div>
 
+    <!-- MODAL ADMIN: GESTIÓN DE USUARIOS Y GRUPOS -->
+    <div id="modalAdmin" class="fixed inset-0 z-[65] hidden flex items-center justify-center bg-slate-950/85 backdrop-blur-md p-6">
+        <div class="glass-panel w-full max-w-lg p-0 rounded-3xl shadow-2xl animate-fade-in-up overflow-hidden" style="max-height:90vh;overflow-y:auto">
+            <!-- Header Modal -->
+            <div class="flex justify-between items-center px-8 py-5 bg-indigo-900/30 border-b border-indigo-700/40">
+                <h3 class="text-sm font-black uppercase tracking-widest text-indigo-200 italic">⚙ Administración del Sistema</h3>
+                <button onclick="closeAdminModal()" class="text-slate-400 hover:text-white transition-colors text-lg font-bold">✕</button>
+            </div>
+            <!-- Tabs -->
+            <div class="flex border-b border-slate-700/50">
+                <button id="tabBtnGrupos" onclick="switchAdminTab('grupos')" class="flex-1 py-3 text-[11px] font-black uppercase tracking-widest transition-all tab-active">👥 Grupos</button>
+                <button id="tabBtnUsuarios" onclick="switchAdminTab('usuarios')" class="flex-1 py-3 text-[11px] font-black uppercase tracking-widest transition-all tab-inactive">👤 Usuarios</button>
+            </div>
+
+            <!-- Tab Grupos -->
+            <div id="tabGrupos" class="px-8 py-6 space-y-5">
+                <p class="text-[10px] text-slate-500 uppercase font-bold tracking-widest">Cambiar nombres de las interfaces de grupo</p>
+                <div class="space-y-3">
+                    <div>
+                        <label class="block text-[9px] font-bold text-indigo-400 mb-1 uppercase">Grupo 1 (Canal 1)</label>
+                        <input type="text" id="inputG1Name" placeholder="Capturadora2.0I"
+                            class="w-full p-3 rounded-xl outline-none font-mono text-sm bg-slate-900 border border-indigo-700/50 focus:border-indigo-400 text-white transition-all" />
+                    </div>
+                    <div>
+                        <label class="block text-[9px] font-bold text-cyan-400 mb-1 uppercase">Grupo 2 (Canal 2)</label>
+                        <input type="text" id="inputG2Name" placeholder="Capturadora2.0II"
+                            class="w-full p-3 rounded-xl outline-none font-mono text-sm bg-slate-900 border border-cyan-700/50 focus:border-cyan-400 text-white transition-all" />
+                    </div>
+                </div>
+                <button onclick="saveGroupNames()" class="w-full bg-indigo-600 hover:bg-indigo-500 py-3 rounded-xl font-bold uppercase tracking-widest text-[10px] shadow-lg transition-all active:scale-95">Guardar Nombres</button>
+            </div>
+
+            <!-- Tab Usuarios -->
+            <div id="tabUsuarios" class="hidden px-8 py-6 space-y-6">
+                <!-- Crear usuario -->
+                <div class="bg-slate-900/60 rounded-2xl p-5 border border-slate-700/50 space-y-4">
+                    <p class="text-[10px] font-black text-slate-300 uppercase tracking-widest">➕ Crear Nuevo Usuario</p>
+                    <div class="grid grid-cols-2 gap-3">
+                        <div>
+                            <label class="block text-[9px] font-bold text-slate-400 mb-1 uppercase">Usuario</label>
+                            <input type="text" id="newUserName" placeholder="nombre_usuario"
+                                class="w-full p-2.5 rounded-xl outline-none font-mono text-sm bg-slate-800 border border-slate-600 focus:border-indigo-400 text-white transition-all" />
+                        </div>
+                        <div>
+                            <label class="block text-[9px] font-bold text-slate-400 mb-1 uppercase">Contraseña</label>
+                            <input type="password" id="newUserPass" placeholder="••••••••"
+                                class="w-full p-2.5 rounded-xl outline-none font-mono text-sm bg-slate-800 border border-slate-600 focus:border-indigo-400 text-white transition-all" />
+                        </div>
+                    </div>
+                    <div>
+                        <label class="block text-[9px] font-bold text-slate-400 mb-1 uppercase">Asignar a Grupo</label>
+                        <select id="newUserGroup" class="w-full p-2.5 rounded-xl outline-none font-bold text-sm bg-slate-800 border border-slate-600 text-white">
+                            <option value="1" id="newUserGroupOpt1">Grupo 1 — Capturadora2.0I</option>
+                            <option value="2" id="newUserGroupOpt2">Grupo 2 — Capturadora2.0II</option>
+                        </select>
+                    </div>
+                    <button onclick="createUser()" class="w-full bg-green-700 hover:bg-green-600 py-2.5 rounded-xl font-bold uppercase tracking-widest text-[10px] shadow-lg transition-all active:scale-95">Crear Usuario</button>
+                </div>
+                <!-- Lista usuarios -->
+                <div>
+                    <div class="flex justify-between items-center mb-3">
+                        <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest">Usuarios Creados</p>
+                        <button onclick="loadAdminUsers()" class="text-[9px] text-slate-500 hover:text-white font-bold uppercase tracking-widest transition-all">🔄 Recargar</button>
+                    </div>
+                    <div id="adminUsersList" class="space-y-2 max-h-[240px] overflow-y-auto pr-1">
+                        <p class="text-slate-600 italic text-xs">Cargando...</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <!-- MODAL VISTA PREVIA -->
     <div id="modalPreview" class="fixed inset-0 z-[70] hidden flex items-center justify-center bg-slate-950/90 backdrop-blur-lg p-4">
         <div class="glass-panel w-full max-w-4xl rounded-3xl overflow-hidden shadow-2xl border border-white/10 animate-fade-in-up">
@@ -862,12 +933,14 @@
         const USER_KEY = 'vtv_user';
         const SESSION_KEY = 'vtv_session';
         const EXPIRE_KEY = 'vtv_exp';
+        const CHANNEL_KEY = 'vtv_channel';
         const SESSION_HOURS = 8;
         const MAX_FAILS = 5;
 
         let TOKEN = null, failCount = 0, logAutoTimer = null;
         let ROLE = null;
         let USERNAME = null, SESSION_ID = null;
+        let USER_CHANNEL = null; // "1", "2", or null
         let metricsTimer = null, statusTimer = null;
         let activePreviewId = null;
         let _lastLogSize = { '1': 0, '2': 0 };
@@ -899,28 +972,53 @@
             const t = localStorage.getItem(TOKEN_KEY);
             const exp = parseInt(localStorage.getItem(EXPIRE_KEY) || '0', 10);
             if (t && Date.now() < exp) { TOKEN = t; showDashboard(); }
-            else clearSession();
+            else {
+                clearSession();
+                const u = document.getElementById('user');
+                if (u) {
+                    u.addEventListener('keydown', e => { if (e.key === 'Enter') document.getElementById('pass').focus(); });
+                }
+                const p = document.getElementById('pass');
+                if (p) {
+                    p.addEventListener('keydown', e => { if (e.key === 'Enter') login(); });
+                }
+            }
         })();
 
-        function selectRole(role) {
-            document.getElementById('roleSelector').classList.add('hidden');
-            document.getElementById('passwordForm').classList.remove('hidden');
-            document.getElementById('user').value = role;
-            document.getElementById('loginRoleLabel').textContent = "Ingresando como: " + role;
-            setTimeout(() => document.getElementById('pass').focus(), 100);
+        // Carga los nombres de grupos desde el servidor para el login
+        async function loadGroupNamesIntoLogin() {
+            try {
+                const res = await fetch('/api/admin/groups', { headers: { 'X-Token': 'public' } });
+                // Si responde 401 normal (sin token), intentamos sin header
+                const r2 = res.ok ? res : await fetch('/api/health');
+                if (!res.ok) return;
+                const d = await res.json();
+                const g1 = document.getElementById('btnRoleG1Label');
+                const g2 = document.getElementById('btnRoleG2Label');
+                const o1 = document.getElementById('newUserGroupOpt1');
+                const o2 = document.getElementById('newUserGroupOpt2');
+                const i1 = document.getElementById('inputG1Name');
+                const i2 = document.getElementById('inputG2Name');
+                if (g1) g1.textContent = d.group1_name;
+                if (g2) g2.textContent = d.group2_name;
+                if (o1) o1.textContent = `Grupo 1 — ${d.group1_name}`;
+                if (o2) o2.textContent = `Grupo 2 — ${d.group2_name}`;
+                if (i1) i1.value = d.group1_name;
+                if (i2) i2.value = d.group2_name;
+            } catch(_) {}
         }
 
-        function backToRoles() {
-            document.getElementById('roleSelector').classList.remove('hidden');
-            document.getElementById('passwordForm').classList.add('hidden');
-            document.getElementById('pass').value = '';
-            document.getElementById('loginError').classList.add('hidden');
-        }
 
         function restrictUIByRole() {
             const role = localStorage.getItem(ROLE_KEY);
             const isAdmin = role === 'admin';
+            const isGroup = role === 'group1' || role === 'group2';
+            USER_CHANNEL = localStorage.getItem(CHANNEL_KEY) || null;
             
+            // Mostrar botón Administración solo al admin
+            const btnAdmin = document.getElementById('btnAdminPanel');
+            if (btnAdmin) btnAdmin.classList.toggle('hidden', !isAdmin);
+
             // Elementos Globales (Limpiar Disco)
             const btnClean = document.getElementById('btnCleanupConfig');
             if(btnClean) {
@@ -928,34 +1026,60 @@
                 if(!isAdmin) btnClean.classList.add('hidden');
             }
 
-            // Ocultar todos los bloques UI administrativos
+            // Elementos de Layout Compartidos
+            const grid = document.getElementById('gridCards');
+
+            // Reset layout to defaults first
+            if (grid) {
+                grid.classList.remove('xl:grid-cols-[1fr_1fr]', 'xl:grid-cols-[1fr_260px]', 'lg:grid-cols-[1fr_260px]');
+                grid.classList.add('xl:grid-cols-[1fr_1fr_260px]', 'lg:grid-cols-[1fr_1fr]');
+                grid.style.maxWidth = 'none';
+                grid.style.margin = '0';
+            }
+
             if (!isAdmin) {
+                // Para operator: ocultar bloques admin
+                // Para group1/group2: también ocultar bloques admin (tienen sus propios permisos via API)
                 document.querySelectorAll('.admin-ui-block').forEach(el => el.classList.add('hidden'));
-                
-                // Compactar tarjetas y reordenar Columnas
-                document.querySelectorAll('.glass-panel.h-full').forEach(el => el.classList.remove('h-full'));
-                document.querySelectorAll('.mt-auto').forEach(el => el.classList.remove('mt-auto'));
-                
-                const grid = document.getElementById('gridCards');
-                if(grid) {
-                    grid.classList.remove('xl:grid-cols-[1fr_1fr_260px]');
-                    grid.classList.add('xl:grid-cols-[1fr_1fr]');
-                }
-                const resPanel = document.getElementById('resPanel');
-                if(resPanel) {
-                    resPanel.classList.add('lg:col-span-2', 'xl:col-span-2', 'mt-4');
-                    
-                    const resGlass = resPanel.querySelector('.glass-panel');
-                    if(resGlass) {
-                        resGlass.classList.remove('p-6');
-                        resGlass.classList.add('p-3', 'md:p-4');
+
+                if (!isGroup) {
+                    // Solo operador: compactar layout
+                    document.querySelectorAll('.glass-panel.h-full').forEach(el => el.classList.remove('h-full'));
+                    document.querySelectorAll('.mt-auto').forEach(el => el.classList.remove('mt-auto'));
+                    if(grid) {
+                        grid.classList.remove('xl:grid-cols-[1fr_1fr_260px]');
+                        grid.classList.add('xl:grid-cols-[1fr_1fr]');
                     }
-                    
-                    const metricsContainer = resPanel.querySelector('.flex.flex-col.gap-3');
-                    if(metricsContainer) {
-                        metricsContainer.className = 'grid grid-cols-2 md:grid-cols-3 xl:grid-cols-6 gap-x-6 gap-y-4 px-2';
+                    const resPanel = document.getElementById('resPanel');
+                    if(resPanel) {
+                        resPanel.classList.add('lg:col-span-2', 'xl:col-span-2', 'mt-4');
+                        const resGlass = resPanel.querySelector('.glass-panel');
+                        if(resGlass) {
+                            resGlass.classList.remove('p-6');
+                            resGlass.classList.add('p-3', 'md:p-4');
+                        }
+                        const metricsContainer = resPanel.querySelector('.flex.flex-col.gap-3');
+                        if(metricsContainer) {
+                            metricsContainer.className = 'grid grid-cols-2 md:grid-cols-3 xl:grid-cols-6 gap-x-6 gap-y-4 px-2';
+                        }
                     }
                 }
+            }
+
+            // Para grupos: mostrar bloques admin (ellos SÍ pueden iniciar/detener)
+            if (isGroup) {
+                document.querySelectorAll('.admin-ui-block').forEach(el => el.classList.remove('hidden'));
+                
+                // Ajustar grid para centrar el único canal visible
+                if (grid) {
+                    grid.classList.remove('xl:grid-cols-[1fr_1fr_260px]', 'lg:grid-cols-[1fr_1fr]');
+                    grid.classList.add('xl:grid-cols-[1fr_260px]', 'lg:grid-cols-[1fr_260px]');
+                    grid.style.maxWidth = '1000px';
+                    grid.style.margin = '0 auto';
+                }
+
+                // Ocultar el canal que NO les pertenece
+                applyChannelFilter();
             }
         }
 
@@ -964,6 +1088,7 @@
             document.getElementById('mainSection').classList.remove('hidden');
             USERNAME = localStorage.getItem(USER_KEY) || '';
             SESSION_ID = localStorage.getItem(SESSION_KEY) || '';
+            USER_CHANNEL = localStorage.getItem(CHANNEL_KEY) || null;
             document.getElementById('roleBadge').textContent = USERNAME;
             // Mostrar IP dinámica del host actual en vez de una IP hardcodeada
             const ipLabel = document.getElementById('networkIpLabel');
@@ -974,9 +1099,18 @@
         }
 
         function clearSession() {
-            [TOKEN_KEY, ROLE_KEY, USER_KEY, SESSION_KEY, EXPIRE_KEY].forEach(k => localStorage.removeItem(k));
-            TOKEN = null; USERNAME = null; SESSION_ID = null;
-            if(typeof backToRoles === 'function') backToRoles();
+            [TOKEN_KEY, ROLE_KEY, USER_KEY, SESSION_KEY, EXPIRE_KEY, CHANNEL_KEY].forEach(k => localStorage.removeItem(k));
+            TOKEN = null; USERNAME = null; SESSION_ID = null; USER_CHANNEL = null;
+            // Reset login form
+            const u = document.getElementById('user');
+            const p = document.getElementById('pass');
+            if (u) u.value = '';
+            if (p) p.value = '';
+            const err = document.getElementById('loginError');
+            if (err) err.classList.add('hidden');
+            document.getElementById('loginSection').classList.remove('hidden');
+            document.getElementById('mainSection').classList.add('hidden');
+            setTimeout(() => { if (u) u.focus(); }, 100);
         }
 
         // ── Interfaz Multi-Canal ──────────────────────────────────────────────────────
@@ -993,22 +1127,22 @@
                 const b = document.getElementById('bitrate_' + id);
                 const m = document.getElementById('minutes_' + id);
                 const dp = document.getElementById('destPath_' + id);
-                if (b) b.disabled = c.running || !isAdmin;
-                if (m) m.disabled = c.running || !isAdmin;
-                if (dp) dp.disabled = c.running || !isAdmin;
+                if (b) b.disabled = c.running || (!isAdmin && USER_CHANNEL !== id);
+                if (m) m.disabled = c.running || (!isAdmin && USER_CHANNEL !== id);
+                if (dp) dp.disabled = c.running || (!isAdmin && USER_CHANNEL !== id);
 
                 const btnD = document.getElementById('btnMinDec_' + id);
                 const btnI = document.getElementById('btnMinInc_' + id);
-                if (btnD) btnD.disabled = c.running || !isAdmin;
-                if (btnI) btnI.disabled = c.running || !isAdmin;
+                if (btnD) btnD.disabled = c.running || (!isAdmin && USER_CHANNEL !== id);
+                if (btnI) btnI.disabled = c.running || (!isAdmin && USER_CHANNEL !== id);
 
                 const btnReset = document.getElementById('btnResetDest_' + id);
-                if (btnReset) btnReset.disabled = c.running || !isAdmin;
+                if (btnReset) btnReset.disabled = c.running || (!isAdmin && USER_CHANNEL !== id);
 
                 const btnS = document.getElementById('btnStart_' + id);
                 const btnSt = document.getElementById('btnStop_' + id);
-                if (btnS) btnS.disabled = c.running || !isAdmin;
-                if (btnSt) btnSt.disabled = !c.running || !isAdmin;
+                if (btnS) btnS.disabled = c.running || (!isAdmin && USER_CHANNEL !== id);
+                if (btnSt) btnSt.disabled = !c.running || (!isAdmin && USER_CHANNEL !== id);
 
                 const btnP = document.getElementById('btnPreview_' + id);
                 if (btnP) btnP.disabled = c.running;
@@ -1048,10 +1182,10 @@
         // ── Auth ────────────────────────────────────────────────────────────────────
         async function login(force = false) {
             const btn = document.getElementById('btnLogin');
-            const u = document.getElementById('user').value;
+            const roleVal = document.getElementById('user').value;
             const p = document.getElementById('pass').value;
             const err = document.getElementById('loginError');
-            if (!u || !p) { err.textContent = 'Llena todos los campos'; err.classList.remove('hidden'); return; }
+            if (!roleVal || !p) { err.textContent = 'Llena todos los campos'; err.classList.remove('hidden'); return; }
 
             btn.disabled = true; btn.innerHTML = '<span class="spinner"></span>Verificando…';
             err.classList.add('hidden');
@@ -1060,7 +1194,7 @@
                 const res = await fetch('/api/login', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ username: u, password: p, force: force })
+                    body: JSON.stringify({ username: roleVal, password: p, force: force })
                 });
 
                 if (!res.ok) {
@@ -1069,7 +1203,7 @@
                     err.classList.remove('hidden');
                     btn.disabled = false; btn.innerHTML = 'Iniciar Sesión';
                     if(res.status === 429) {
-                        playErrorBeep(); // Trigger the red visual screen and beep
+                        playErrorBeep();
                     }
                     return;
                 }
@@ -1078,12 +1212,15 @@
                 ROLE = data.role;
                 USERNAME = data.username;
                 SESSION_ID = data.session_id;
+                USER_CHANNEL = data.channel || null;
 
                 localStorage.setItem(TOKEN_KEY, TOKEN);
                 localStorage.setItem(ROLE_KEY, ROLE);
                 localStorage.setItem(USER_KEY, USERNAME);
                 localStorage.setItem('vtv_session', SESSION_ID);
-                localStorage.setItem(EXPIRE_KEY, Date.now() + SESSION_HOURS * 3600 * 1000); // Set expiration
+                localStorage.setItem(EXPIRE_KEY, Date.now() + SESSION_HOURS * 3600 * 1000);
+                if (USER_CHANNEL) localStorage.setItem(CHANNEL_KEY, USER_CHANNEL);
+                else localStorage.removeItem(CHANNEL_KEY);
 
                 showDashboard();
                 showToast("¡Sesión iniciada correctamente!", "success");
@@ -1390,16 +1527,18 @@
         }
 
         // ── Log viewer ────────────────────────────────────────────────────────────────
-        window._lastLogSize = { '1': 0, '2': 0 };
         async function loadLog() {
-            const lines = document.getElementById('logLines').value;
-            await Promise.all(['1', '2'].map(async (id) => {
+            const linesEl = document.getElementById('logLines');
+            const lines = linesEl ? linesEl.value : 100;
+            // Para usuarios de grupo, solo cargar el log de su canal
+            const channelsToLoad = USER_CHANNEL ? [USER_CHANNEL] : ['1', '2'];
+            await Promise.all(channelsToLoad.map(async (id) => {
                 try {
                     const res = await fetch(`/api/log/${id}?lines=${lines}`, { headers: { 'X-Token': TOKEN } });
                     if (!res.ok) return;
                     const d = await res.json();
 
-                    if (d.size_bytes === _lastLogSize[id]) return; // Reflow optimization
+                    if (d.size_bytes === _lastLogSize[id]) return;
                     _lastLogSize[id] = d.size_bytes;
 
                     const box = document.getElementById('logBox_' + id);
@@ -1430,8 +1569,15 @@
                 if (!res.ok) { el.innerHTML = '<span class="text-red-400">Error al cargar archivos.</span>'; return; }
                 const d = await res.json();
                 const cnt = document.getElementById('filesCount');
-                if (cnt) cnt.textContent = `${d.count} archivo(s) en ${d.dest_path}`;
-                if (!d.files.length) { el.innerHTML = '<span class="italic text-slate-500">No hay archivos grabados aún.</span>'; return; }
+
+                // Filtrar por canal si el usuario es de un grupo
+                let files = d.files;
+                if (USER_CHANNEL) {
+                    files = files.filter(f => f.name.includes(`CH${USER_CHANNEL}`));
+                }
+
+                if (cnt) cnt.textContent = `${files.length} archivo(s) en ${d.dest_path}`;
+                if (!files.length) { el.innerHTML = '<span class="italic text-slate-500">No hay archivos grabados aún.</span>'; return; }
                 const isOp = localStorage.getItem(ROLE_KEY) === 'operator';
                 el.innerHTML = `<div class="overflow-x-auto"><table class="w-full text-xs min-w-[600px]">
             <thead><tr class="text-left text-slate-500 border-b border-slate-700 pb-2">
@@ -1441,7 +1587,7 @@
                 <th class="pb-3 pr-4 uppercase text-right">Fecha</th>
                 <th class="pb-3 uppercase text-right">Acciones</th>
             </tr></thead>
-            <tbody>${d.files.map(f => {
+            <tbody>${files.map(f => {
                 const enc = encodeURIComponent(f.name);
                 return `
             <tr class="border-b border-slate-700/30 hover:bg-slate-700/20 transition-colors">
@@ -1649,6 +1795,135 @@
                 } catch (e) { console.error("Error stopping preview:", e); }
                 activePreviewId = null;
             }
+        }
+
+        // ── Filtro de Canal por Grupo ─────────────────────────────────────────────────
+        function applyChannelFilter() {
+            if (!USER_CHANNEL) return;
+            // Ocultar la tarjeta del canal que NO pertenece al grupo
+            const hiddenCh = USER_CHANNEL === '1' ? '2' : '1';
+
+            // Ocultar la tarjeta del canal ajeno mediante su ID estricto
+            const card = document.getElementById(`cardCH${hiddenCh}`);
+            if (card) card.classList.add('hidden');
+
+            // Ocultar el badge del canal ajeno en el header
+            const badge = document.getElementById(`badgeCH${hiddenCh}`);
+            if (badge) badge.classList.add('hidden');
+
+            // Ocultar el log del canal ajeno
+            const logSection = document.querySelector(`#logBox_${hiddenCh}`)?.closest('.flex.flex-col');
+            if (logSection) logSection.classList.add('hidden');
+        }
+
+        // ── Admin: Gestión de Usuarios ────────────────────────────────────────────────
+        function openAdminModal() {
+            document.getElementById('modalAdmin').classList.remove('hidden');
+            loadGroupNamesIntoModal();
+            loadAdminUsers();
+        }
+        function closeAdminModal() {
+            document.getElementById('modalAdmin').classList.add('hidden');
+        }
+        function switchAdminTab(tab) {
+            const isGrupos = tab === 'grupos';
+            document.getElementById('tabGrupos').classList.toggle('hidden', !isGrupos);
+            document.getElementById('tabUsuarios').classList.toggle('hidden', isGrupos);
+            document.getElementById('tabBtnGrupos').className = `flex-1 py-3 text-[11px] font-black uppercase tracking-widest transition-all ${isGrupos ? 'tab-active' : 'tab-inactive'}`;
+            document.getElementById('tabBtnUsuarios').className = `flex-1 py-3 text-[11px] font-black uppercase tracking-widest transition-all ${!isGrupos ? 'tab-active' : 'tab-inactive'}`;
+        }
+        async function loadGroupNamesIntoModal() {
+            try {
+                const res = await fetch('/api/admin/groups', { headers: { 'X-Token': TOKEN } });
+                if (!res.ok) return;
+                const d = await res.json();
+                const i1 = document.getElementById('inputG1Name');
+                const i2 = document.getElementById('inputG2Name');
+                if (i1) i1.value = d.group1_name;
+                if (i2) i2.value = d.group2_name;
+                // Update dropdown options
+                const o1 = document.getElementById('newUserGroupOpt1');
+                const o2 = document.getElementById('newUserGroupOpt2');
+                if (o1) o1.textContent = `Grupo 1 — ${d.group1_name}`;
+                if (o2) o2.textContent = `Grupo 2 — ${d.group2_name}`;
+            } catch(_) {}
+        }
+        async function saveGroupNames() {
+            const g1 = document.getElementById('inputG1Name').value.trim();
+            const g2 = document.getElementById('inputG2Name').value.trim();
+            if (!g1 || !g2) { showToast('Los nombres no pueden estar vacíos.', 'warning'); return; }
+            try {
+                const res = await fetch('/api/admin/groups', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json', 'X-Token': TOKEN },
+                    body: JSON.stringify({ group1_name: g1, group2_name: g2 })
+                });
+                if (res.ok) {
+                    showToast('Nombres de grupos actualizados.', 'success');
+                    // Update login buttons
+                    const l1 = document.getElementById('btnRoleG1Label');
+                    const l2 = document.getElementById('btnRoleG2Label');
+                    if (l1) l1.textContent = g1;
+                    if (l2) l2.textContent = g2;
+                    loadGroupNamesIntoModal();
+                } else { const e = await res.json(); showToast('Error: ' + e.detail, 'error'); }
+            } catch(_) { showToast('Error de conexión.', 'error'); }
+        }
+        async function loadAdminUsers() {
+            const container = document.getElementById('adminUsersList');
+            if (!container) return;
+            container.innerHTML = '<p class="text-slate-600 italic text-xs">Cargando...</p>';
+            try {
+                const res = await fetch('/api/admin/users', { headers: { 'X-Token': TOKEN } });
+                if (!res.ok) { container.innerHTML = '<p class="text-red-400 text-xs">Error al cargar usuarios.</p>'; return; }
+                const d = await res.json();
+                if (!d.users.length) {
+                    container.innerHTML = '<p class="text-slate-500 italic text-xs">No hay usuarios creados aún.</p>';
+                    return;
+                }
+                container.innerHTML = d.users.map(u => `
+                    <div class="flex items-center justify-between bg-slate-900/60 rounded-xl px-4 py-2.5 border border-slate-700/40">
+                        <div>
+                            <span class="font-black text-sm text-white">${u.username}</span>
+                            <span class="ml-2 text-[10px] font-bold px-2 py-0.5 rounded-full ${u.group === '1' ? 'bg-indigo-900/50 text-indigo-400 border border-indigo-700/50' : 'bg-cyan-900/50 text-cyan-400 border border-cyan-700/50'}">${u.group_name}</span>
+                        </div>
+                        <button onclick="deleteUser('${u.username}')" class="text-red-500/70 hover:text-red-400 transition-colors p-1.5 rounded-lg hover:bg-red-900/20" title="Eliminar">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
+                        </button>
+                    </div>`).join('');
+            } catch(_) { container.innerHTML = '<p class="text-red-400 text-xs">Error de conexión.</p>'; }
+        }
+        async function createUser() {
+            const username = document.getElementById('newUserName').value.trim();
+            const password = document.getElementById('newUserPass').value;
+            const group = document.getElementById('newUserGroup').value;
+            if (!username || !password) { showToast('Completa todos los campos.', 'warning'); return; }
+            try {
+                const res = await fetch('/api/admin/users', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json', 'X-Token': TOKEN },
+                    body: JSON.stringify({ username, password, group })
+                });
+                if (res.ok) {
+                    showToast(`Usuario "${username}" creado exitosamente.`, 'success');
+                    document.getElementById('newUserName').value = '';
+                    document.getElementById('newUserPass').value = '';
+                    loadAdminUsers();
+                } else { const e = await res.json(); showToast('Error: ' + e.detail, 'error'); }
+            } catch(_) { showToast('Error de conexión.', 'error'); }
+        }
+        async function deleteUser(username) {
+            if (!confirm(`¿Eliminar al usuario "${username}"? Esta acción no se puede deshacer.`)) return;
+            try {
+                const res = await fetch(`/api/admin/users/${encodeURIComponent(username)}`, {
+                    method: 'DELETE',
+                    headers: { 'X-Token': TOKEN }
+                });
+                if (res.ok) {
+                    showToast(`Usuario "${username}" eliminado.`, 'success');
+                    loadAdminUsers();
+                } else { const e = await res.json(); showToast('Error: ' + e.detail, 'error'); }
+            } catch(_) { showToast('Error de conexión.', 'error'); }
         }
     </script>
 </body>

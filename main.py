@@ -1,4 +1,4 @@
-import subprocess, os, re, signal, asyncio, logging, psutil, time, json, shlex, uuid
+import subprocess, os, re, signal, asyncio, logging, psutil, time, json, shlex, uuid, secrets
 from datetime import datetime, date, timedelta
 from datetime import time as dtime
 from pathlib import Path
@@ -73,6 +73,55 @@ USERS = {
     OPERATOR_USER:{"password": OPERATOR_PASS,"token": OPERATOR_TOKEN, "role": "operator"},
 }
 
+# ── Base de datos de usuarios dinámicos ───────────────────────────────────────
+_BASE_USERS_DIR = os.path.dirname(os.path.abspath(__file__))
+USERS_DB_FILE = os.path.join(_BASE_USERS_DIR, "users_db.json")
+
+DEFAULT_USERS_DB = {
+    "groups": {
+        "1": {"name": "Capturadora2.0I"},
+        "2": {"name": "Capturadora2.0II"}
+    },
+    "users": {}
+}
+
+def _load_users_db() -> dict:
+    try:
+        if os.path.exists(USERS_DB_FILE):
+            with open(USERS_DB_FILE, "r") as f:
+                data = json.load(f)
+                # Ensure structure integrity
+                if "groups" not in data:
+                    data["groups"] = DEFAULT_USERS_DB["groups"]
+                if "users" not in data:
+                    data["users"] = {}
+                return data
+    except Exception as e:
+        logger.error(f"Error cargando users_db: {e}")
+    return {"groups": dict(DEFAULT_USERS_DB["groups"]), "users": {}}
+
+def _save_users_db():
+    try:
+        with open(USERS_DB_FILE, "w") as f:
+            json.dump(USERS_DB, f, indent=2)
+    except Exception as e:
+        logger.error(f"Error guardando users_db: {e}")
+
+USERS_DB = _load_users_db()
+
+def _rebuild_dynamic_maps():
+    """Reconstruye TOKEN_TO_ROLE, TOKEN_TO_USER y ACTIVE_SESSIONS con usuarios dinámicos."""
+    global TOKEN_TO_ROLE, TOKEN_TO_USER
+    # Base estático
+    TOKEN_TO_ROLE = {u["token"]: u["role"] for u in USERS.values()}
+    TOKEN_TO_USER = {u["token"]: name for name, u in USERS.items()}
+    # Dinámico
+    for uname, udata in USERS_DB["users"].items():
+        TOKEN_TO_ROLE[udata["token"]] = udata["role"]
+        TOKEN_TO_USER[udata["token"]] = uname
+        if uname not in ACTIVE_SESSIONS:
+            ACTIVE_SESSIONS[uname] = []
+
 TOKEN_TO_ROLE = {u["token"]: u["role"] for u in USERS.values()}
 
 # Sessions for single-login per user
@@ -81,6 +130,9 @@ ACTIVE_SESSIONS = {
     OPERATOR_USER: {"session_id": None, "last_ping": 0}
 }
 TOKEN_TO_USER = {u["token"]: name for name, u in USERS.items()}
+
+# Inicializar con usuarios dinámicos existentes
+_rebuild_dynamic_maps()
 
 # Brute force protection
 LOGIN_ATTEMPTS = {}
@@ -116,6 +168,15 @@ class ScheduleRequest(BaseModel):
     stop_time:  Optional[str] = None
     config:     Optional[RecordConfig] = None
 
+class CreateUserRequest(BaseModel):
+    username: str
+    password: str
+    group: str  # "1" or "2"
+
+class GroupNamesRequest(BaseModel):
+    group1_name: str
+    group2_name: str
+
 # ── Auth ──────────────────────────────────────────────────────────────────────
 def verify_token(x_token: str = Header(None)):
     if x_token not in TOKEN_TO_ROLE:
@@ -126,6 +187,17 @@ def require_admin(token: str = Depends(verify_token)):
     if TOKEN_TO_ROLE.get(token) != "admin":
         raise HTTPException(status_code=403, detail="Permiso denegado. Se requiere cuenta de Administrador.")
     return token
+
+def require_channel_access(source_id: str, token: str):
+    """Returns True if the token has access to the given source_id channel."""
+    role = TOKEN_TO_ROLE.get(token, "")
+    if role == "admin":
+        return True
+    if role == "group1" and source_id == "1":
+        return True
+    if role == "group2" and source_id == "2":
+        return True
+    return False
 
 # ── RecordingManager Multicanal ───────────────────────────────────────────────
 class RecordingManager:
@@ -441,19 +513,27 @@ async def login(data: LoginRequest, request: Request):
     user_data = None
     real_user = data.username
     
-    # Buscar por coincidencia exacta o por el rol estático del botón JS
+    # Buscar en usuarios estáticos
     for uname, uinfo in USERS.items():
         if uname == data.username or (data.username == 'admin' and uinfo['role'] == 'admin') or (data.username == 'operador' and uinfo['role'] == 'operator'):
             user_data = uinfo
             real_user = uname
             break
 
+    # Buscar en usuarios dinámicos si no se encontró
+    if user_data is None:
+        dyn = USERS_DB["users"].get(data.username)
+        if dyn:
+            user_data = dyn
+            real_user = data.username
+
     if user_data and user_data["password"] == data.password:
         LOGIN_ATTEMPTS[ip] = {"count": 0, "lock_until": 0} # reset
         new_sess = str(uuid.uuid4())
         
         # Gestión de sesiones concurrentes por Rol
-        max_sess = 3 if user_data["role"] == "operator" else 1
+        role = user_data["role"]
+        max_sess = 3 if role == "operator" else 1
         sessions = ACTIVE_SESSIONS.get(real_user, [])
         
         # Retrocompatibilidad rápida para el viejo esquema en memoria
@@ -470,8 +550,19 @@ async def login(data: LoginRequest, request: Request):
             
         sessions.append({"session_id": new_sess, "last_ping": now})
         ACTIVE_SESSIONS[real_user] = sessions
+
+        # Determinar el canal asignado (para roles de grupo)
+        channel = None
+        if role == "group1":
+            channel = "1"
+        elif role == "group2":
+            channel = "2"
         
-        return {"token": user_data["token"], "role": user_data["role"], "username": real_user, "session_id": new_sess}
+        return {
+            "token": user_data["token"], "role": role,
+            "username": real_user, "session_id": new_sess,
+            "channel": channel
+        }
         
     # Failed attempt
     attempt["count"] += 1
@@ -486,15 +577,21 @@ async def api_metrics(x_username: str = Header(None), x_session_id: str = Header
         sessions = ACTIVE_SESSIONS.get(x_username, [])
         if isinstance(sessions, dict):
             sessions = [sessions]
-            
+
         my_session = next((s for s in sessions if type(s) is dict and s.get("session_id") == x_session_id), None)
-        
+
         if not my_session:
-            raise HTTPException(status_code=403, detail="Sesión terminada")
-            
-        my_session["last_ping"] = time.time()
-        ACTIVE_SESSIONS[x_username] = sessions # Guardar la conversión
-            
+            # Sesión no encontrada en memoria (p.ej. después de reinicio del servidor).
+            # El token ya fue validado, así que re-registramos la sesión en lugar de botar al usuario.
+            now = time.time()
+            sessions = [s for s in sessions if type(s) is dict and "last_ping" in s and now - s["last_ping"] < 240]
+            my_session = {"session_id": x_session_id, "last_ping": now}
+            sessions.append(my_session)
+            ACTIVE_SESSIONS[x_username] = sessions
+        else:
+            my_session["last_ping"] = time.time()
+            ACTIVE_SESSIONS[x_username] = sessions
+
     return cached_metrics
 
 @app.get("/api/processes")
@@ -515,19 +612,25 @@ async def api_status(source_id: str = FastAPIPath(..., pattern="^(1|2)$"), token
     }
 
 @app.post("/api/start/{source_id}")
-async def api_start(config: RecordConfig, source_id: str = FastAPIPath(..., pattern="^(1|2)$"), token: str = Depends(require_admin)):
+async def api_start(config: RecordConfig, source_id: str = FastAPIPath(..., pattern="^(1|2)$"), token: str = Depends(verify_token)):
+    if not require_channel_access(source_id, token):
+        raise HTTPException(status_code=403, detail="Acceso denegado a este canal.")
     mgr = get_mgr(source_id)
     ok, msg = await mgr.start(config)
     if not ok: raise HTTPException(status_code=400, detail=msg)
     return {"status": "ok", "message": msg}
 
 @app.post("/api/stop/{source_id}")
-async def api_stop(source_id: str = FastAPIPath(..., pattern="^(1|2)$"), token: str = Depends(require_admin)):
+async def api_stop(source_id: str = FastAPIPath(..., pattern="^(1|2)$"), token: str = Depends(verify_token)):
+    if not require_channel_access(source_id, token):
+        raise HTTPException(status_code=403, detail="Acceso denegado a este canal.")
     await get_mgr(source_id).stop_and_clean()
     return {"status": "ok"}
 
 @app.post("/api/schedule/{source_id}")
-async def api_schedule(req: ScheduleRequest, source_id: str = FastAPIPath(..., pattern="^(1|2)$"), token: str = Depends(require_admin)):
+async def api_schedule(req: ScheduleRequest, source_id: str = FastAPIPath(..., pattern="^(1|2)$"), token: str = Depends(verify_token)):
+    if not require_channel_access(source_id, token):
+        raise HTTPException(status_code=403, detail="Acceso denegado a este canal.")
     mgr = get_mgr(source_id)
     today = date.today()
     def parse_time(t: str) -> datetime:
@@ -541,7 +644,9 @@ async def api_schedule(req: ScheduleRequest, source_id: str = FastAPIPath(..., p
     return {"status": "ok"}
 
 @app.post("/api/schedule/cancel/{source_id}")
-async def api_schedule_cancel(source_id: str = FastAPIPath(..., pattern="^(1|2)$"), token: str = Depends(require_admin)):
+async def api_schedule_cancel(source_id: str = FastAPIPath(..., pattern="^(1|2)$"), token: str = Depends(verify_token)):
+    if not require_channel_access(source_id, token):
+        raise HTTPException(status_code=403, detail="Acceso denegado a este canal.")
     mgr = get_mgr(source_id)
     mgr.scheduled_start = mgr.scheduled_stop = mgr.scheduled_config = None
     return {"status": "ok"}
@@ -815,6 +920,73 @@ async def api_preview_stop(source_id: str, token: str = Depends(verify_token)):
             logger.error(f"[PREVIEW] Error al detener: {e}")
         finally:
             mgr.preview_process = None
+    return {"status": "ok"}
+
+# ── Admin: Gestión de Usuarios y Grupos ──────────────────────────────────────
+@app.get("/api/admin/groups")
+async def get_groups():
+    """Devuelve los nombres actuales de los grupos (público para la pantalla de login)."""
+    return {
+        "group1_name": USERS_DB["groups"]["1"]["name"],
+        "group2_name": USERS_DB["groups"]["2"]["name"]
+    }
+
+@app.post("/api/admin/groups")
+async def update_groups(req: GroupNamesRequest, token: str = Depends(require_admin)):
+    if not req.group1_name.strip() or not req.group2_name.strip():
+        raise HTTPException(status_code=400, detail="Los nombres de grupo no pueden estar vacíos.")
+    USERS_DB["groups"]["1"]["name"] = req.group1_name.strip()
+    USERS_DB["groups"]["2"]["name"] = req.group2_name.strip()
+    _save_users_db()
+    return {"status": "ok", "group1_name": req.group1_name.strip(), "group2_name": req.group2_name.strip()}
+
+@app.get("/api/admin/users")
+async def list_users(token: str = Depends(require_admin)):
+    users = []
+    for uname, udata in USERS_DB["users"].items():
+        users.append({
+            "username": uname,
+            "role": udata["role"],
+            "group": udata.get("group", ""),
+            "group_name": USERS_DB["groups"].get(udata.get("group", ""), {}).get("name", "")
+        })
+    return {"users": users}
+
+@app.post("/api/admin/users")
+async def create_user(req: CreateUserRequest, token: str = Depends(require_admin)):
+    if req.group not in ("1", "2"):
+        raise HTTPException(status_code=400, detail="El grupo debe ser '1' o '2'.")
+    if not req.username.strip():
+        raise HTTPException(status_code=400, detail="El nombre de usuario no puede estar vacío.")
+    if not req.password:
+        raise HTTPException(status_code=400, detail="La contraseña no puede estar vacía.")
+    uname = req.username.strip().lower()
+    # No se puede duplicar con usuarios estáticos
+    if uname in USERS or uname in USERS_DB["users"]:
+        raise HTTPException(status_code=409, detail=f"El usuario '{uname}' ya existe.")
+    new_token = secrets.token_hex(24)
+    role = f"group{req.group}"
+    USERS_DB["users"][uname] = {
+        "password": req.password,
+        "token": new_token,
+        "role": role,
+        "group": req.group
+    }
+    ACTIVE_SESSIONS[uname] = []
+    _save_users_db()
+    _rebuild_dynamic_maps()
+    logger.info(f"[ADMIN] Usuario creado: {uname} ({role})")
+    return {"status": "ok", "username": uname, "role": role}
+
+@app.delete("/api/admin/users/{username}")
+async def delete_user(username: str, token: str = Depends(require_admin)):
+    if username not in USERS_DB["users"]:
+        raise HTTPException(status_code=404, detail="Usuario no encontrado.")
+    del USERS_DB["users"][username]
+    ACTIVE_SESSIONS.pop(username, None)
+    _save_users_db()
+    _rebuild_dynamic_maps()
+    logger.info(f"[ADMIN] Usuario eliminado: {username}")
     return {"status": "ok"}
 
 app.mount("/", StaticFiles(directory="static", html=True), name="static")
