@@ -82,5 +82,29 @@
     "username": "jropero",
     "ip": "192.168.22.203",
     "role": "group2"
+  },
+  {
+    "timestamp": 1774543506.5331635,
+    "username": "administrador",
+    "ip": "192.168.22.203",
+    "role": "fallido"
+  },
+  {
+    "timestamp": 1774543506.5357232,
+    "username": "administrador",
+    "ip": "192.168.22.203",
+    "role": "fallido"
+  },
+  {
+    "timestamp": 1774543509.9958618,
+    "username": "administrador",
+    "ip": "192.168.22.203",
+    "role": "admin"
+  },
+  {
+    "timestamp": 1774543509.9984086,
+    "username": "administrador",
+    "ip": "192.168.22.203",
+    "role": "admin"
   }
 ]
