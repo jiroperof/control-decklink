@@ -238,5 +238,53 @@
     "username": "administrador",
     "ip": "192.168.22.203",
     "role": "admin"
+  },
+  {
+    "timestamp": 1774546475.4454408,
+    "username": "jropero",
+    "ip": "192.168.22.203",
+    "role": "fallido"
+  },
+  {
+    "timestamp": 1774546475.4484677,
+    "username": "jropero",
+    "ip": "192.168.22.203",
+    "role": "fallido"
+  },
+  {
+    "timestamp": 1774546477.0105333,
+    "username": "jropero",
+    "ip": "192.168.22.203",
+    "role": "group2"
+  },
+  {
+    "timestamp": 1774546477.015932,
+    "username": "jropero",
+    "ip": "192.168.22.203",
+    "role": "group2"
+  },
+  {
+    "timestamp": 1774546489.9154253,
+    "username": "administrador",
+    "ip": "192.168.22.203",
+    "role": "fallido"
+  },
+  {
+    "timestamp": 1774546489.9186115,
+    "username": "administrador",
+    "ip": "192.168.22.203",
+    "role": "fallido"
+  },
+  {
+    "timestamp": 1774546491.3317761,
+    "username": "administrador",
+    "ip": "192.168.22.203",
+    "role": "admin"
+  },
+  {
+    "timestamp": 1774546491.3344347,
+    "username": "administrador",
+    "ip": "192.168.22.203",
+    "role": "admin"
   }
 ]

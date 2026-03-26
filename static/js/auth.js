@@ -33,7 +33,7 @@
             if (type === 'error') { bg = 'bg-red-900/90'; border = 'border-red-600'; icon = '❌'; textColor = 'text-red-100'; }
             if (type === 'warning') { bg = 'bg-yellow-900/90'; border = 'border-yellow-600'; icon = '⚠️'; textColor = 'text-yellow-100'; }
             
-            t.className = `toast ${bg} ${border} ${textColor} border backdrop-blur-md shadow-2xl rounded-2xl p-4 flex items-center gap-3 text-sm font-bold w-[340px]`;
+            t.className = `toast ${bg} ${border} ${textColor} border shadow-2xl rounded-xl px-4 py-2.5 flex items-center gap-3 text-xs font-bold w-max max-w-[300px]`;
             t.innerHTML = `<span>${icon}</span><span>${msg}</span>`;
             
             container.appendChild(t);
@@ -314,9 +314,6 @@
             const el = document.getElementById('loginError');
             if (el) { el.textContent = msg; el.classList.remove('hidden'); }
         }
-        ['user', 'pass'].forEach(id => {
-            document.getElementById(id)?.addEventListener('keydown', e => { if (e.key === 'Enter') login(); });
-        });
 
         // ── Logout ────────────────────────────────────────────────────────────────────
         function logout() {
