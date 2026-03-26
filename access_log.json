@@ -196,5 +196,11 @@
     "username": "jropero",
     "ip": "192.168.22.203",
     "role": "group2"
+  },
+  {
+    "timestamp": 1774553397.9493732,
+    "username": "operador",
+    "ip": "192.168.22.203",
+    "role": "operator"
   }
 ]
