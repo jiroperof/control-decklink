@@ -106,5 +106,53 @@
     "username": "administrador",
     "ip": "192.168.22.203",
     "role": "admin"
+  },
+  {
+    "timestamp": 1774543754.3636222,
+    "username": "administrador",
+    "ip": "127.0.0.1",
+    "role": "admin"
+  },
+  {
+    "timestamp": 1774543768.7931836,
+    "username": "administrador",
+    "ip": "127.0.0.1",
+    "role": "admin"
+  },
+  {
+    "timestamp": 1774544197.943084,
+    "username": "administrador",
+    "ip": "192.168.22.203",
+    "role": "admin"
+  },
+  {
+    "timestamp": 1774544197.9458566,
+    "username": "administrador",
+    "ip": "192.168.22.203",
+    "role": "admin"
+  },
+  {
+    "timestamp": 1774544212.8536422,
+    "username": "jcontreras",
+    "ip": "192.168.22.203",
+    "role": "group1"
+  },
+  {
+    "timestamp": 1774544212.856398,
+    "username": "jcontreras",
+    "ip": "192.168.22.203",
+    "role": "group1"
+  },
+  {
+    "timestamp": 1774544738.4258168,
+    "username": "administrador",
+    "ip": "192.168.22.203",
+    "role": "admin"
+  },
+  {
+    "timestamp": 1774544738.428789,
+    "username": "administrador",
+    "ip": "192.168.22.203",
+    "role": "admin"
   }
 ]
