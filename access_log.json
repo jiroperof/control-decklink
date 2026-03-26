@@ -58,5 +58,29 @@
     "username": "eblanco",
     "ip": "192.168.22.250",
     "role": "group2"
+  },
+  {
+    "timestamp": 1774543394.4784498,
+    "username": "administrador",
+    "ip": "192.168.22.203",
+    "role": "admin"
+  },
+  {
+    "timestamp": 1774543394.481233,
+    "username": "administrador",
+    "ip": "192.168.22.203",
+    "role": "admin"
+  },
+  {
+    "timestamp": 1774543427.8043766,
+    "username": "jropero",
+    "ip": "192.168.22.203",
+    "role": "group2"
+  },
+  {
+    "timestamp": 1774543427.8070052,
+    "username": "jropero",
+    "ip": "192.168.22.203",
+    "role": "group2"
   }
 ]

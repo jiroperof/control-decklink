@@ -596,6 +596,15 @@ async def login(data: LoginRequest, request: Request):
     if attempt["count"] >= 5:
         attempt["lock_until"] = now + 300
     LOGIN_ATTEMPTS[ip] = attempt
+    
+    ACCESS_LOG.append({
+        "timestamp": now,
+        "username": data.username,
+        "ip": ip,
+        "role": "fallido"
+    })
+    _save_access_log()
+    
     raise HTTPException(status_code=401, detail="Credenciales incorrectas")
 
 @app.get("/api/metrics")

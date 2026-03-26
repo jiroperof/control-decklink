@@ -287,15 +287,19 @@
                     <div class="flex flex-col items-end gap-2 border-l border-slate-700/50 pl-5">
                         <span id="roleBadge"
                             class="px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest bg-slate-800/40 backdrop-blur-md text-slate-300 border border-slate-700/50 shadow-md"></span>
-                        <div class="flex items-center gap-2">
-                            <button id="btnStatsPanel" onclick="openStatsModal()" class="hidden group flex items-center gap-2 bg-emerald-800/40 hover:bg-emerald-500/20 text-emerald-400 hover:text-emerald-300 px-3 py-1.5 rounded-lg border border-emerald-700/50 hover:border-emerald-500/60 transition-all duration-300 font-bold uppercase tracking-widest text-[9px] shadow-sm backdrop-blur-sm active:scale-95">
-                                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path></svg>
-                                <span>Estadísticas</span>
-                            </button>
-                            <button id="btnAdminPanel" onclick="openAdminModal()" class="hidden group flex items-center gap-2 bg-indigo-800/40 hover:bg-indigo-500/20 text-indigo-400 hover:text-indigo-300 px-3 py-1.5 rounded-lg border border-indigo-700/50 hover:border-indigo-500/60 transition-all duration-300 font-bold uppercase tracking-widest text-[9px] shadow-sm backdrop-blur-sm active:scale-95">
-                                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"></path></svg>
-                                <span>Administración</span>
-                            </button>
+                        <div class="flex items-center gap-1.5">
+                            <!-- Admin Tools -->
+                            <div class="flex items-center gap-1.5 border-r border-slate-700/50 pr-3 mr-1.5">
+                                <button id="btnStatsPanel" onclick="openStatsModal()" class="hidden group flex items-center gap-2 bg-emerald-800/40 hover:bg-emerald-500/20 text-emerald-400 hover:text-emerald-300 px-3 py-1.5 rounded-lg border border-emerald-700/50 hover:border-emerald-500/60 transition-all duration-300 font-bold uppercase tracking-widest text-[9px] shadow-sm backdrop-blur-sm active:scale-95">
+                                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path></svg>
+                                    <span>Estadísticas</span>
+                                </button>
+                                <button id="btnAdminPanel" onclick="openAdminModal()" class="hidden group flex items-center gap-2 bg-indigo-800/40 hover:bg-indigo-500/20 text-indigo-400 hover:text-indigo-300 px-3 py-1.5 rounded-lg border border-indigo-700/50 hover:border-indigo-500/60 transition-all duration-300 font-bold uppercase tracking-widest text-[9px] shadow-sm backdrop-blur-sm active:scale-95">
+                                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"></path></svg>
+                                    <span>Administración</span>
+                                </button>
+                            </div>
+                            <!-- Logout -->
                             <button onclick="logout()"
                                 class="group flex items-center gap-2 bg-slate-800/40 hover:bg-red-500/15 text-slate-400 hover:text-red-400 px-3 py-1.5 rounded-lg border border-slate-700/50 hover:border-red-500/40 transition-all duration-300 font-bold uppercase tracking-widest text-[9px] shadow-sm backdrop-blur-sm active:scale-95">
                                 <svg class="w-3.5 h-3.5 group-hover:translate-x-0.5 transition-transform" fill="none"
@@ -661,7 +665,7 @@
         </div>
 
         <!-- LOG FFMPEG -->
-        <div class="admin-ui-block glass-panel rounded-3xl shadow-2xl mb-8 overflow-hidden animate-fade-in-up delay-300">
+        <div id="logSectionMain" class="admin-ui-block glass-panel rounded-3xl shadow-2xl mb-8 overflow-hidden animate-fade-in-up delay-300">
             <button onclick="toggleSection('logBody')"
                 class="w-full flex justify-between items-center px-8 py-5 text-xs font-black text-slate-400 uppercase tracking-widest hover:text-white transition-all">
                 <span>🖥 Log de FFmpeg en Vivo (Sincronizado)</span>
@@ -1033,6 +1037,10 @@
                 if(!isAdmin) btnClean.classList.add('hidden');
             }
 
+            // Ocultar sección completa de Logs para usuarios de grupos
+            const logSectionMain = document.getElementById('logSectionMain');
+            if (logSectionMain) logSectionMain.classList.toggle('hidden', isGroup);
+
             // Elementos de Layout Compartidos
             const grid = document.getElementById('gridCards');
 
@@ -1367,11 +1375,12 @@
 
             const b = document.getElementById(`badgeCH${id}`);
             if (b) {
+                const isHidden = b.classList.contains('hidden');
                 if (c.running) {
-                    b.className = 'px-3 py-1 rounded border border-red-500 bg-red-600 text-white animate-pulse font-black text-[10px] tracking-widest';
+                    b.className = 'px-3 py-1 rounded border border-red-500 bg-red-600 text-white animate-pulse font-black text-[10px] tracking-widest' + (isHidden ? ' hidden' : '');
                     b.innerText = `● GRABANDO ${id}`;
                 } else {
-                    b.className = 'px-3 py-1 rounded border border-slate-600 bg-slate-700 text-slate-400 font-bold text-[10px] tracking-widest';
+                    b.className = 'px-3 py-1 rounded border border-slate-600 bg-slate-700 text-slate-400 font-bold text-[10px] tracking-widest' + (isHidden ? ' hidden' : '');
                     b.innerText = `GRABANDO ${id}`;
                 }
             }
@@ -2123,7 +2132,8 @@
                     'admin': 'text-purple-400 bg-purple-900/30 px-2 py-0.5 rounded border border-purple-700/50',
                     'operator': 'text-yellow-400 bg-yellow-900/30 px-2 py-0.5 rounded border border-yellow-700/50',
                     'group1': 'text-indigo-400 bg-indigo-900/30 px-2 py-0.5 rounded border border-indigo-700/50',
-                    'group2': 'text-cyan-400 bg-cyan-900/30 px-2 py-0.5 rounded border border-cyan-700/50'
+                    'group2': 'text-cyan-400 bg-cyan-900/30 px-2 py-0.5 rounded border border-cyan-700/50',
+                    'fallido': 'text-red-400 bg-red-900/30 px-2 py-0.5 rounded border border-red-700/50'
                 };
                 const rStyle = roleColors[acc.role] || 'text-slate-400';
                 const fRole = acc.role.toUpperCase();
