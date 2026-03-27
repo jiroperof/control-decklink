@@ -95,27 +95,15 @@
             } catch(_) { showToast('Error de conexión.', 'error'); }
         }
         async function deleteUser(username) {
-            showConfirmDialog(
-                `¿Eliminar al usuario "${username}"? Esta acción no se puede deshacer.`,
-                async () => {
-                    showLoadingOverlay('Eliminando usuario...');
-                    try {
-                        const res = await fetch(`/api/admin/users/${encodeURIComponent(username)}`, {
-                            method: 'DELETE',
-                            headers: { 'X-Token': TOKEN }
-                        });
-                        hideLoadingOverlay();
-                        if (res.ok) {
-                            showToast(`Usuario "${username}" eliminado.`, 'success');
-                            loadAdminUsers();
-                        } else { 
-                            const e = await res.json(); 
-                            showToast('Error: ' + e.detail, 'error'); 
-                        }
-                    } catch(_) { 
-                        hideLoadingOverlay();
-                        showToast('Error de conexión.', 'error'); 
-                    }
-                }
-            );
+            if (!confirm(`¿Eliminar al usuario "${username}"? Esta acción no se puede deshacer.`)) return;
+            try {
+                const res = await fetch(`/api/admin/users/${encodeURIComponent(username)}`, {
+                    method: 'DELETE',
+                    headers: { 'X-Token': TOKEN }
+                });
+                if (res.ok) {
+                    showToast(`Usuario "${username}" eliminado.`, 'success');
+                    loadAdminUsers();
+                } else { const e = await res.json(); showToast('Error: ' + e.detail, 'error'); }
+            } catch(_) { showToast('Error de conexión.', 'error'); }
         }

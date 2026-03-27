@@ -1,70 +1,168 @@
 <div align="center">
-  <img src="static/logo.png" alt="VTV Logo" width="150" style="margin-right: 20px;"/>
-  <h1>VTV - Capturadora Multicanal 2.0</h1>
-  <p><strong>Sistema Avanzado de Grabación de Video SDI con Blackmagic DeckLink</strong></p>
+  <img src="static/logo.png" alt="VTV Logo" width="140"/>
+  <h1>VTV — Capturadora Multicanal 2.1</h1>
+  <p><strong>Sistema de grabación SDI en tiempo real con Blackmagic DeckLink + NVIDIA NVENC</strong></p>
+
+  ![Python](https://img.shields.io/badge/Python-3.12-blue?logo=python&logoColor=white)
+  ![FastAPI](https://img.shields.io/badge/FastAPI-0.100+-109989?logo=fastapi&logoColor=white)
+  ![FFmpeg](https://img.shields.io/badge/FFmpeg-DeckLink%20%2B%20NVENC-007808?logo=ffmpeg&logoColor=white)
+  ![TailwindCSS](https://img.shields.io/badge/Tailwind_CSS-3.x-38B2AC?logo=tailwind-css&logoColor=white)
+  ![Blackmagic](https://img.shields.io/badge/Hardware-Blackmagic_Design-black)
 </div>
 
 ---
 
 ## 📺 Acerca del Proyecto
 
-**Capturadora Multicanal 2.0** es una robusta plataforma web diseñada para la ingesta y codificación en tiempo real de señales de video SDI profesionales. Utilizando hardware **Blackmagic Design (DeckLink Duo)** y aceleración por GPU (**NVIDIA NVENC**), el sistema permite controlar de manera independiente múltiples canales de grabación.
-
-Esta herramienta está pensada para entornos *broadcast* de alta disponibilidad (24/7), garantizando una latencia mínima, protección frente a caídas y segmentación automática de archivos para flujos de trabajo en televisión.
+**Capturadora Multicanal 2.1** es una plataforma web para la ingesta y codificación en tiempo real de señales SDI profesionales. Diseñada para entornos *broadcast* 24/7, controla de forma independiente dos canales DeckLink con aceleración GPU NVENC, segmentación automática de archivos MP4, recuperación ante caídas y un panel de administración completo accesible desde el navegador.
 
 ---
 
-## ✨ Características Principales
+## ✨ Características
 
-*   **🎙️ Grabación Multicanal Independiente:** Control asíncrono sobre 2 o más señales DeckLink SDI.
-*   **🏎️ Codificación NVENC por Hardware:** Transcodificación `H.264` ultra eficiente (presets P4/HQ), que descarga la CPU enviando el trabajo a la tarjeta de video (ej. Nvidia Quadro).
-*   **🔐 Control de Acceso Multi-Usuario (RBAC):**
-    *   **Administradores:** Control total sobre todos los canales y gestión de usuarios.
-    *   **Operador (Master):** Visualización global del estado de todos los canales (solo lectura).
-    *   **Grupos Asignados (Canal 1 / Canal 2):** Cuentas limitadas estructuralmente. Solo pueden interactuar, ver telemetría y visualizar vistas previas del hardware que tienen específicamente asignado.
-*   **👁️ Vista Previa en Vivo (Live MJPEG):** Streaming en el navegador directamente desde la capturadora, sin interrumpir la grabación en curso.
-*   **📊 Telemetría de Sistemas en Tiempo Real:** Interfaz viva con lecturas de uso de CPU, VRAM, GPU, Discos y Red mediante *psutil*.
-*   **🛡️ Watchdog & Autorecovery:** Sistema de demonios en segundo plano que monitorea la salud de `FFmpeg` y resucita procesos huérfanos si la capturadora sufre un microcorte.
-*   **🧹 Rotación de Almacenamiento:** Módulo automático de limpieza que se encarga de eliminar ficheros `.mp4` obsoletos basándose en políticas de retención.
-*   **📈 Dashboard de Estadísticas:** Panel analítico reservado para el Administrador equipado con gráficas `Chart.js` para monitorear la distribución de almacenamiento, horas grabadas y el registro de accesos en tiempo real (Audit Log con rastreo de intentos fallidos).
+| Módulo | Descripción |
+|--------|-------------|
+| 🎙️ **Grabación dual** | Control asíncrono e independiente de 2 señales DeckLink SDI |
+| 🏎️ **NVENC H.264** | Codificación por hardware (preset P4/HQ + VBR), desentrelazado `bwdif`, 29.97 fps |
+| 🔐 **RBAC 4 roles** | `admin` · `operator` · `group1` · `group2` — permisos granulares por canal |
+| 👁️ **Live preview** | Stream MJPEG en el navegador sin interrumpir la grabación |
+| 📊 **Telemetría** | CPU · RAM · GPU · VRAM · Disco · Red en tiempo real (psutil + nvidia-smi) |
+| 🛡️ **Watchdog** | Daemon que detecta caídas de FFmpeg y relanza el proceso automáticamente |
+| 📅 **Scheduler** | Programación de inicio/stop por hora con configuración por canal |
+| 🧹 **Limpieza automática** | Script de retención configurable (N días), con opción de limpieza manual desde la UI |
+| 📈 **Panel estadísticas** | Gráficas Chart.js: almacenamiento, horas grabadas, audit log de accesos |
+| 🔒 **Brute-force protection** | Bloqueo temporal de IP tras 5 intentos fallidos (rate limiting) |
+| ⚡ **UI sin build step** | Vanilla JS + Tailwind CDN — sin Node.js, sin bundler |
 
 ---
 
 ## 🛠️ Stack Tecnológico
 
-![Python](https://img.shields.io/badge/Python-3.12-blue?logo=python&logoColor=white) 
-![FastAPI](https://img.shields.io/badge/FastAPI-0.100+-109989?logo=fastapi&logoColor=white) 
-![FFmpeg](https://img.shields.io/badge/FFmpeg-DeckLink%20%2B%20NVENC-007808?logo=ffmpeg&logoColor=white) 
-![TailwindCSS](https://img.shields.io/badge/Tailwind_CSS-3.0-38B2AC?logo=tailwind-css&logoColor=white)
-![Blackmagic](https://img.shields.io/badge/Hardware-Blackmagic_Design-black)
-
-### Estructura
-*   **Backend:** FastAPI (Python), sirviendo como orquestador asíncrono para subprocesos de FFmpeg y servidor de la base de datos de usuarios dinámica (`users_db.json`).
-*   **Frontend:** Vanilla JS (`index.html`) + Tailwind CSS, asegurando 0 dependencias de *build*, máxima ligereza y manipulación del DOM nativa.
+- **Backend:** FastAPI + Uvicorn (Python 3.12), asyncio nativo, `asyncio.to_thread` para todo I/O de bloqueo
+- **Frontend:** HTML5 · Vanilla JS · Tailwind CSS CDN · Chart.js
+- **Autenticación:** Token estático por usuario + UUID de sesión + bcrypt
+- **Proceso de grabación:** `subprocess.Popen` con FFmpeg, señal `q` a stdin para cierre limpio de segmentos MP4
+- **Hardware:** Blackmagic DeckLink Duo + NVIDIA Quadro (NVENC)
 
 ---
 
-## 🚀 Uso y Despliegue
+## 📁 Estructura del Proyecto
 
-La aplicación se sirve de forma segura en una red local bajo un daemon de `systemd` (`vtv-decklink.service`). 
+```
+control-decklink/
+├── main.py               # Aplicación FastAPI principal
+├── start_server.sh       # Script de arranque
+├── requirements.txt      # Dependencias Python
+├── README.md
+├── .env                  # Credenciales (NO en git)
+│
+├── static/               # Frontend
+│   ├── index.html
+│   └── js/
+│       ├── auth.js       # Autenticación, sesión, idle-logout
+│       ├── dashboard.js  # UI principal, polling, controles
+│       ├── admin.js      # Panel de administración de usuarios
+│       ├── stats.js      # Modal de estadísticas + Chart.js
+│       └── logs.js       # Visor de logs FFmpeg en vivo
+│
+├── data/                 # Datos de runtime (excluidos del repo)
+│   ├── users_db.json     # Usuarios dinámicos
+│   ├── access_log.json   # Audit log de accesos
+│   ├── cleanup_config.json
+│   └── duration_cache.json
+│
+├── logs/                 # Logs de aplicación (excluidos del repo)
+│   ├── server.log
+│   └── ffmpeg_debug_*.log
+│
+├── scripts/              # Scripts de shell
+│   ├── cleanup.sh        # Limpieza automática de grabaciones antiguas
+│   ├── kill_zombie_ffmpeg.sh
+│   ├── setup_https.sh
+│   └── update_env.sh
+│
+├── utils/                # Utilidades Python (gestión de contraseñas, tests)
+│   ├── hash_env_passwords.py
+│   ├── reset_admin_password.py
+│   ├── migrate_passwords.py
+│   └── test_api.py
+│
+├── docs/                 # Documentación interna
+└── certs/                # Certificados TLS locales (excluidos del repo)
+```
 
-1. **Instalación de Dependencias OS:** Es mandatorio instalar los **Desktop Video Drivers** de Blackmagic y un cliente `FFmpeg` compilado expresamente con soporte `--enable-decklink` y `--enable-nvenc`.
-2. **Entorno de Python:** El ambiente virtual `.venv` provee `uvicorn`, `fastapi`, `psutil`, etc.
-3. **🔒 HTTPS (Opcional pero Recomendado):** 
-   ```bash
-   ./setup_https.sh  # Configura certificados SSL locales con mkcert
-   ```
-   Ver [HTTPS_SETUP.md](HTTPS_SETUP.md) para más opciones.
-4. **Arranque:** `sudo systemctl start vtv-decklink`
+---
+
+## 🚀 Instalación y Arranque
+
+### Requisitos previos
+1. **Drivers Blackmagic Desktop Video** instalados y tarjeta DeckLink reconocida
+2. **FFmpeg** compilado con `--enable-decklink` y `--enable-nvenc`
+3. **Python 3.12+** y `pip`
+
+### Configuración
+
+```bash
+# 1. Clonar el repositorio
+git clone https://github.com/jiroperof/control-decklink.git
+cd control-decklink
+
+# 2. Crear entorno virtual e instalar dependencias
+python3 -m venv .venv
+source .venv/bin/activate
+pip install -r requirements.txt
+
+# 3. Crear el archivo .env con las credenciales
+cp .env.example .env   # editar con tus valores
+# Variables requeridas: ADMIN_USER, ADMIN_PASS (bcrypt), ACCESS_TOKEN,
+#                       OPERATOR_USER, OPERATOR_PASS (bcrypt), OPERATOR_TOKEN
+
+# 4. Arrancar el servidor
+./start_server.sh
+```
+
+> Las contraseñas en `.env` deben estar hasheadas con bcrypt.  
+> Usa `python3 utils/hash_env_passwords.py` para generarlas.
 
 ### Acceso
-- **HTTP:** `http://localhost:8000` (por defecto)
-- **HTTPS:** `https://localhost:8000` (si configuraste certificados)
 
-### Inicio de Sesión
-El sistema cuenta con prevención contra fuerza bruta (bloqueo automático temporal a IPs con 5 intentos fallidos). Los usuarios base (`Administrador` y `Operador` global) se inyectan a través del archivo de configuración `.env`. Las cuentas operativas limitadas por canal se administran visualmente mediante el botón de *"Administración"* dentro de la misma web app.
+| Protocolo | URL |
+|-----------|-----|
+| HTTP | `http://<IP-DEL-SERVIDOR>:8000` |
+| HTTPS (opcional) | `https://<IP-DEL-SERVIDOR>:8000` |
 
 ---
+
+## 👥 Roles de Usuario
+
+| Rol | Acceso |
+|-----|--------|
+| `admin` | Control total: todos los canales, gestión de usuarios, estadísticas, limpieza |
+| `operator` | Solo lectura: métricas y estado de canales |
+| `group1` | Canal 1 únicamente: iniciar/detener grabación, ver telemetría, preview |
+| `group2` | Canal 2 únicamente: igual que group1 |
+
+Los usuarios `group1`/`group2` se crean desde el panel de Administración dentro de la propia web app.
+
+---
+
+## ⚙️ Variables de Entorno (`.env`)
+
+```env
+ADMIN_USER=admin
+ADMIN_PASS=$2b$12$...        # bcrypt hash
+ACCESS_TOKEN=token-secreto-admin
+
+OPERATOR_USER=operador
+OPERATOR_PASS=$2b$12$...     # bcrypt hash
+OPERATOR_TOKEN=token-secreto-operador
+
+AUTO_RESTART=true            # Watchdog auto-relanza FFmpeg si cae
+ALLOWED_ORIGINS=http://localhost:8000,http://192.168.1.x:8000
+```
+
+---
+
 <div align="center">
-  <sub>Desarrollado para entornos de transmisión y broadcast SDI continuo.</sub>
+  <sub>Desarrollado para entornos de transmisión y broadcast SDI continuo · v2.1</sub>
 </div>

@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-slate-900 p-8">
+    <h1 class="text-white mb-4">Test Grid Layout</h1>
+    
+    <div id="gridTest" class="grid grid-cols-1 lg:grid-cols-[1fr_1fr] xl:grid-cols-[1fr_1fr_260px] gap-4 mb-6">
+        <div class="bg-red-500 h-64 rounded-xl p-4 text-white">Canal 1</div>
+        <div class="bg-cyan-500 h-64 rounded-xl p-4 text-white">Canal 2</div>
+        <div class="bg-slate-700 h-64 rounded-xl p-4 text-white">Recursos</div>
+    </div>
+
+    <button onclick="checkGrid()" class="bg-blue-600 text-white px-4 py-2 rounded">Check Grid Classes</button>
+    <pre id="output" class="text-white mt-4"></pre>
+
+    <script>
+        function checkGrid() {
+            const grid = document.getElementById('gridTest');
+            const output = document.getElementById('output');
+            output.textContent = 'Classes: ' + grid.className + '\n' +
+                                'MaxWidth: ' + grid.style.maxWidth + '\n' +
+                                'Margin: ' + grid.style.margin;
+        }
+    </script>
+</body>
+</html>

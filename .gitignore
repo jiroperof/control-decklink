@@ -9,12 +9,21 @@ env/
 
 # Variables de entorno
 .env
+.env.backup
 
-# Archivos de la base de datos y cache dinámicos
-duration_cache.json
-users_db.json
-cleanup_config.json
+# Certificados TLS (generados localmente)
+certs/
+
+# Datos de runtime — NO subir al repo
+data/access_log.json
+data/duration_cache.json
+data/users_db.json
 
 # Archivos de logs
+logs/
 *.log
-ffmpeg_debug_*.log
+*.log.[0-9]*
+*.log.*.gz
+
+# Archivos temporales
+requirements.txt.tmp

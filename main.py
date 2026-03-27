@@ -5,9 +5,10 @@ from pathlib import Path
 from typing import Optional
 from contextlib import asynccontextmanager
 from fastapi import FastAPI, HTTPException, Depends, Request, Query, Header, Path as FastAPIPath
-from fastapi.responses import JSONResponse, StreamingResponse, FileResponse
+from fastapi.responses import JSONResponse, StreamingResponse, FileResponse, RedirectResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.middleware.cors import CORSMiddleware
+from starlette.middleware.base import BaseHTTPMiddleware
 from pydantic import BaseModel, field_validator
 import bcrypt
 
@@ -36,8 +37,15 @@ cached_metrics = {
 }
 cached_processes = {"processes": [], "count": 0}
 
+# ── Directorios del proyecto ─────────────────────────────────────────────────
+_BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+_DATA_DIR = os.path.join(_BASE_DIR, "data")
+_LOGS_DIR = os.path.join(_BASE_DIR, "logs")
+os.makedirs(_DATA_DIR, exist_ok=True)
+os.makedirs(_LOGS_DIR, exist_ok=True)
+
 # ── Duration Cache con evicción LRU ───────────────────────────────────────────
-CACHE_FILE = os.path.join(os.path.dirname(os.path.abspath(__file__)), "duration_cache.json")
+CACHE_FILE = os.path.join(_DATA_DIR, "duration_cache.json")
 MAX_CACHE_ENTRIES = 5000  # Límite de entradas en cache
 DURATION_CACHE: dict = {}  # {path: [mtime, duration, last_access_time]}
 try:
@@ -93,8 +101,7 @@ USERS = {
 }
 
 # ── Base de datos de usuarios dinámicos ───────────────────────────────────────
-_BASE_USERS_DIR = os.path.dirname(os.path.abspath(__file__))
-USERS_DB_FILE = os.path.join(_BASE_USERS_DIR, "users_db.json")
+USERS_DB_FILE = os.path.join(_DATA_DIR, "users_db.json")
 
 DEFAULT_USERS_DB = {
     "groups": {
@@ -122,13 +129,16 @@ def _load_users_db() -> dict:
 async def _save_users_db():
     async with users_db_lock:
         try:
-            await asyncio.to_thread(lambda: json.dump(USERS_DB, open(USERS_DB_FILE, "w"), indent=2))
+            def _write_users():
+                with open(USERS_DB_FILE, "w") as f:
+                    json.dump(USERS_DB, f, indent=2)
+            await asyncio.to_thread(_write_users)
         except Exception as e:
             logger.error(f"Error guardando users_db: {e}")
 
 USERS_DB = _load_users_db()
 
-ACCESS_LOG_FILE = os.path.join(_BASE_USERS_DIR, "access_log.json")
+ACCESS_LOG_FILE = os.path.join(_DATA_DIR, "access_log.json")
 def _load_access_log() -> list:
     try:
         if os.path.exists(ACCESS_LOG_FILE):
@@ -144,7 +154,10 @@ async def _save_access_log():
             # Truncar en memoria también para prevenir memory leak
             global ACCESS_LOG
             ACCESS_LOG = ACCESS_LOG[-2000:]
-            await asyncio.to_thread(lambda: json.dump(ACCESS_LOG, open(ACCESS_LOG_FILE, "w"), indent=2))
+            def _write_log():
+                with open(ACCESS_LOG_FILE, "w") as f:
+                    json.dump(ACCESS_LOG, f, indent=2)
+            await asyncio.to_thread(_write_log)
         except Exception as e:
             logger.error(f"Error guardando access_log: {e}")
 
@@ -263,8 +276,7 @@ class RecordingManager:
     def __init__(self, source_id: str, input_name: str):
         self.source_id = source_id
         self.input_name = input_name
-        _base_dir = os.path.dirname(os.path.abspath(__file__))
-        self.log_file = os.path.join(_base_dir, f"ffmpeg_debug_{source_id}.log")
+        self.log_file = os.path.join(_LOGS_DIR, f"ffmpeg_debug_{source_id}.log")
         self.process: Optional[subprocess.Popen] = None
         self.preview_process: Optional[asyncio.subprocess.Process] = None
         self.config:  Optional[dict] = None
@@ -281,7 +293,8 @@ class RecordingManager:
         max_size = 50 * 1024 * 1024 # 50 MB
         if os.path.exists(self.log_file) and os.path.getsize(self.log_file) > max_size:
             ts = datetime.now().strftime("%Y%m%d_%H%M%S")
-            os.rename(self.log_file, f"ffmpeg_debug_{self.source_id}_{ts}.log")
+            rotated = os.path.join(_LOGS_DIR, f"ffmpeg_debug_{self.source_id}_{ts}.log")
+            os.rename(self.log_file, rotated)
 
     def _stop_sync(self, graceful: bool = True):
         """Detiene ffmpeg de forma ordenada:
@@ -547,7 +560,11 @@ async def lifespan(app: FastAPI):
 
 # ── App ───────────────────────────────────────────────────────────────────────
 app = FastAPI(title="VTV - Capturadora Multicanal 2.0", lifespan=lifespan)
-app.add_middleware(CORSMiddleware, allow_origins=ALLOWED_ORIGINS, allow_methods=["*"], allow_headers=["*"])
+app.add_middleware(CORSMiddleware, allow_origins=["*"], allow_credentials=True, allow_methods=["*"], allow_headers=["*"])
+
+# ── Configuración para Red Interna (HTTP) ────────────────────────────────────
+# Para red interna VTV: Sin HTTPS, sin warnings, acceso directo
+# Si necesitas HTTPS en el futuro, consulta HTTPS_SETUP.md
 
 # ── Endpoints ─────────────────────────────────────────────────────────────────
 @app.get("/health")
@@ -560,7 +577,8 @@ async def login(data: LoginRequest, request: Request):
     now = time.time()
 
     # Limpiar entradas de LOGIN_ATTEMPTS con más de 10 minutos de antigüedad (previene memory leak)
-    stale = [k for k, v in LOGIN_ATTEMPTS.items() if now - v.get("lock_until", 0) > 600 and v.get("count", 0) == 0]
+    stale = [k for k, v in LOGIN_ATTEMPTS.items()
+             if v.get("count", 0) == 0 or now - v.get("lock_until", 0) > 600]
     for k in stale:
         LOGIN_ATTEMPTS.pop(k, None)
 
@@ -572,9 +590,9 @@ async def login(data: LoginRequest, request: Request):
     user_data = None
     real_user = data.username
     
-    # Buscar en usuarios estáticos
+    # Buscar en usuarios estáticos (sin alias)
     for uname, uinfo in USERS.items():
-        if uname == data.username or (data.username == 'admin' and uinfo['role'] == 'admin') or (data.username == 'operador' and uinfo['role'] == 'operator'):
+        if uname == data.username:
             user_data = uinfo
             real_user = uname
             break
@@ -744,8 +762,7 @@ async def api_log(source_id: str = FastAPIPath(..., pattern="^(1|2)$"), lines: i
     return {"lines": content, "size_bytes": size, "total_lines_shown": len(content)}
 
 # ── Gestión de Limpieza ───────────────────────────────────────────────────────
-_BASE_DIR = os.path.dirname(os.path.abspath(__file__))
-CLEANUP_CONFIG = os.path.join(_BASE_DIR, "cleanup_config.json")
+CLEANUP_CONFIG = os.path.join(_DATA_DIR, "cleanup_config.json")
 CLEANUP_SCRIPT = os.path.join(_BASE_DIR, "scripts", "cleanup.sh")
 
 # ── Ruta base de grabaciones ──────────────────────────────────────────────────
@@ -761,11 +778,15 @@ def _resolve_dest_path() -> Path:
 @app.get("/api/cleanup/config")
 async def get_cleanup_config(token: str = Depends(verify_token)):
     if not os.path.exists(CLEANUP_CONFIG): return {"retention_days": 2}
-    with open(CLEANUP_CONFIG, "r") as f: return json.load(f)
+    def _read(): 
+        with open(CLEANUP_CONFIG, "r") as f: return json.load(f)
+    return await asyncio.to_thread(_read)
 
 @app.post("/api/cleanup/config")
 async def save_cleanup_config(cfg: dict, token: str = Depends(require_admin)):
-    with open(CLEANUP_CONFIG, "w") as f: json.dump(cfg, f, indent=2)
+    def _write():
+        with open(CLEANUP_CONFIG, "w") as f: json.dump(cfg, f, indent=2)
+    await asyncio.to_thread(_write)
     return {"status": "ok"}
 
 @app.post("/api/cleanup/execute")
@@ -890,11 +911,12 @@ async def api_stream(req: Request, file: str, token: str = Depends(verify_token)
     range_header = req.headers.get("Range")
     
     if range_header:
-        match = re.match(r"bytes=(\d+)-(\d*)", range_header)
-        if match:
-            start = int(match.group(1))
-            end = int(match.group(2)) if match.group(2) else file_size - 1
-            length = (end - start) + 1
+            match = re.match(r"bytes=(\d+)-(\d*)", range_header)
+            if match:
+                start = int(match.group(1))
+                end = int(match.group(2)) if match.group(2) else file_size - 1
+                end = min(end, file_size - 1)
+                length = (end - start) + 1
             
             def file_iterator(path, offset, bytes_to_read):
                 with open(path, "rb") as f:
@@ -1076,21 +1098,27 @@ async def delete_user(username: str, token: str = Depends(require_admin)):
 
 @app.get("/api/admin/stats")
 async def get_stats(token: str = Depends(require_admin)):
-    files_ch1 = 0; size_ch1 = 0; duration_ch1 = 0
-    files_ch2 = 0; size_ch2 = 0; duration_ch2 = 0
+    def _compute_recording_stats():
+        f1 = 0; s1 = 0; d1 = 0.0
+        f2 = 0; s2 = 0; d2 = 0.0
+        for path_str, cache_val in list(DURATION_CACHE.items()):
+            dur = cache_val[1]
+            try:
+                sz = os.path.getsize(path_str)
+            except Exception:
+                sz = 0
+            if "_CH1_" in path_str:
+                f1 += 1; s1 += sz; d1 += dur
+            elif "_CH2_" in path_str:
+                f2 += 1; s2 += sz; d2 += dur
+        lf1 = managers["1"].log_file
+        lf2 = managers["2"].log_file
+        log1 = os.path.getsize(lf1) if os.path.exists(lf1) else 0
+        log2 = os.path.getsize(lf2) if os.path.exists(lf2) else 0
+        return f1, s1, d1, f2, s2, d2, log1, log2
 
-    for path_str, (mtime, dur) in DURATION_CACHE.items():
-        try:
-            sz = os.path.getsize(path_str)
-        except Exception:
-            sz = 0
-        if "_CH1_" in path_str:
-            files_ch1 += 1; size_ch1 += sz; duration_ch1 += dur
-        elif "_CH2_" in path_str:
-            files_ch2 += 1; size_ch2 += sz; duration_ch2 += dur
-
-    log1_sz = os.path.getsize(managers["1"].log_file) if os.path.exists(managers["1"].log_file) else 0
-    log2_sz = os.path.getsize(managers["2"].log_file) if os.path.exists(managers["2"].log_file) else 0
+    files_ch1, size_ch1, duration_ch1, files_ch2, size_ch2, duration_ch2, log1_sz, log2_sz = \
+        await asyncio.to_thread(_compute_recording_stats)
 
     recent_logins = ACCESS_LOG[-50:]
     user_counts = {}
@@ -1124,32 +1152,34 @@ async def get_stats(token: str = Depends(require_admin)):
         }
     }
 
+# ── Endpoint para descargar certificado CA (debe ir ANTES del mount) ─────────
+@app.get("/download-certificate")
+async def download_ca_cert():
+    """Endpoint para descargar el certificado CA root y eliminar warnings en otros dispositivos"""
+    ca_file = os.path.join(os.path.dirname(os.path.abspath(__file__)), "certs", "vtv-ca-root.pem")
+    if os.path.exists(ca_file):
+        return FileResponse(
+            ca_file, 
+            media_type="application/x-pem-file",
+            filename="vtv-ca-root.pem",
+            headers={"Content-Disposition": "attachment; filename=vtv-ca-root.pem"}
+        )
+    raise HTTPException(status_code=404, detail="Certificado CA no encontrado")
+
+# Static files debe ir al FINAL para no capturar otras rutas
 app.mount("/", StaticFiles(directory="static", html=True), name="static")
 
 if __name__ == "__main__":
     import uvicorn
     
-    # Configuración SSL/HTTPS
-    cert_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), "certs")
-    cert_file = os.path.join(cert_dir, "cert.pem")
-    key_file = os.path.join(cert_dir, "key.pem")
+    # Servidor HTTP para red interna VTV
+    logger.info("🌐 Iniciando servidor HTTP en puerto 8000")
+    logger.info("� Red interna VTV - Sin cifrado SSL")
+    logger.info("� Para HTTPS, consulta HTTPS_SETUP.md")
     
-    # Verificar si existen certificados SSL
-    use_ssl = os.path.exists(cert_file) and os.path.exists(key_file)
-    
-    if use_ssl:
-        logger.info("🔒 Iniciando servidor con HTTPS en puerto 8000")
-        logger.info(f"📜 Certificado: {cert_file}")
-        logger.info(f"🔑 Clave privada: {key_file}")
-        uvicorn.run(
-            app, 
-            host="0.0.0.0", 
-            port=8000, 
-            log_level="info",
-            ssl_keyfile=key_file,
-            ssl_certfile=cert_file
-        )
-    else:
-        logger.warning("⚠️  Certificados SSL no encontrados. Iniciando en HTTP (inseguro)")
-        logger.warning(f"💡 Ejecuta './setup_https.sh' para habilitar HTTPS")
-        uvicorn.run(app, host="0.0.0.0", port=8000, log_level="info")
+    uvicorn.run(
+        app, 
+        host="0.0.0.0", 
+        port=8000, 
+        log_level="info"
+    )

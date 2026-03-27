@@ -84,8 +84,8 @@
             try {
                 const res = await fetch('/api/metrics', { headers: { 'X-Token': TOKEN, 'X-Username': USERNAME || '', 'X-Session-Id': SESSION_ID || '' } });
                 if (res.status === 403) {
+                    showToast('Sesión finalizada. Vuelve a iniciar sesión.', 'warning');
                     logout();
-                    showToast('Sesión finalizada por inactividad', 'warning');
                     return;
                 }
                 if (!res.ok) { onNetFail(); return; }
@@ -370,7 +370,7 @@
 
                 if (cnt) cnt.textContent = `${files.length} archivo(s) en ${d.dest_path}`;
                 if (!files.length) { el.innerHTML = '<span class="italic text-slate-500">No hay archivos grabados aún.</span>'; return; }
-                const isOp = localStorage.getItem(ROLE_KEY) === 'operator';
+                const isAdmin = localStorage.getItem(ROLE_KEY) === 'admin';
                 el.innerHTML = `<div class="overflow-x-auto"><table class="w-full text-xs min-w-[600px]">
             <thead><tr class="text-left text-slate-500 border-b border-slate-700 pb-2">
                 <th class="pb-3 pr-4 uppercase">Archivo (Pestaña Global)</th>
@@ -390,7 +390,7 @@
                 <td class="py-2 text-right whitespace-nowrap flex gap-1 justify-end">
                     <button onclick="playVideo('${enc}')" class="bg-blue-600/20 hover:bg-blue-600 text-blue-400 hover:text-white px-2 py-1 rounded transition-colors" title="Reproducir">▶️</button>
                     <a href="/api/files/download?file=${enc}&token=${TOKEN}" class="bg-green-600/20 hover:bg-green-600 text-green-400 hover:text-white px-2 py-1 rounded transition-colors" title="Descargar" download>⬇️</a>
-                    ${!isOp ? `<button onclick="deleteVideo('${enc}')" class="bg-red-600/20 hover:bg-red-600 text-red-400 hover:text-white px-2 py-1 rounded transition-colors" title="Eliminar"><svg class="w-4 h-4 inline-block" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg></button>` : ''}
+                    ${isAdmin ? `<button onclick="deleteVideo('${enc}')" class="bg-red-600/20 hover:bg-red-600 text-red-400 hover:text-white px-2 py-1 rounded transition-colors" title="Eliminar"><svg class="w-4 h-4 inline-block" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg></button>` : ''}
                 </td>
             </tr>`}).join('')}
             </tbody></table></div>`;
@@ -493,27 +493,19 @@
                 if (!chk.ok) { showToast('Contraseña incorrecta.', 'error'); return; }
             } catch (_) { showToast('Error de conexión al verificar contraseña.', 'error'); return; }
 
-            showConfirmDialog(
-                '¿Estás seguro de querer borrar todos los videos anteriores a hoy? Esta acción no se puede deshacer.',
-                async () => {
-                    const btn = document.getElementById('btnManualCleanup');
-                    const oldText = btn.textContent;
-                    btn.disabled = true; btn.textContent = 'Borrando Todo...';
-                    showLoadingOverlay('Eliminando archivos antiguos...');
-                    try {
-                        const res = await fetch('/api/cleanup/execute?force_all=true', { method: 'POST', headers: { 'X-Token': TOKEN } });
-                        const data = await res.json();
-                        hideLoadingOverlay();
-                        showToast('Limpieza profunda completada.', 'success');
-                    } catch (e) { 
-                        hideLoadingOverlay();
-                        showToast('Error: ' + e, 'error'); 
-                    } finally { 
-                        btn.disabled = false; 
-                        btn.textContent = oldText; 
-                    }
-                }
-            );
+            if (!confirm('¿Estás seguro de querer borrar todos los videos anteriores a hoy?')) return;
+            const btn = document.getElementById('btnManualCleanup');
+            const oldText = btn.textContent;
+            btn.disabled = true; btn.textContent = 'Borrando Todo...';
+            try {
+                // El backend ejecuta el script con el config actual.
+                // Para asegurar que borre "todo" el pasado, primero guardamos config con 1 dia si es necesario.
+                // O mejor, pasamos un parametro al backend.
+                const res = await fetch('/api/cleanup/execute?force_all=true', { method: 'POST', headers: { 'X-Token': TOKEN } });
+                const data = await res.json();
+                showToast('Limpieza profunda completada.', 'success');
+            } catch (e) { showToast('Error: ' + e, 'error'); }
+            finally { btn.disabled = false; btn.textContent = oldText; }
         }
 
         function playVideo(encName) {

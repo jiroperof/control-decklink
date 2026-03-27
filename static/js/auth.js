@@ -1,25 +1,35 @@
         // ── Efecto Animado del Header (Scroll) ─────────────────────────────────────────
+        let _scrollTicking = false;
+        let _headerScrolled = null; // null = estado desconocido, true/false = estado actual
         window.addEventListener('scroll', () => {
-            const header = document.getElementById('mainHeader');
-            const logo = document.getElementById('logoImg');
-            const title = document.getElementById('headerTitle');
-            const subtitle = document.getElementById('headerSubtitle');
-            const titleBox = document.getElementById('headerTitleBox');
-            if (!header) return;
+            if (_scrollTicking) return;
+            _scrollTicking = true;
+            requestAnimationFrame(() => {
+                const scrolled = window.scrollY > 20;
+                if (scrolled === _headerScrolled) { _scrollTicking = false; return; }
+                _headerScrolled = scrolled;
 
-            if (window.scrollY > 20) {
-                header.classList.add('shadow-[0_20px_40px_-15px_rgba(0,0,0,0.8)]', 'border-slate-700/60', 'bg-slate-900/95', 'py-1');
-                header.classList.remove('bg-slate-900/80', 'border-transparent', 'shadow-sm', 'py-1.5');
-                if (logo) { logo.classList.replace('h-6', 'h-5'); logo.classList.replace('md:h-7', 'md:h-6'); }
-                if (title) { title.classList.replace('text-base', 'text-sm'); title.classList.replace('md:text-lg', 'md:text-base'); title.classList.replace('tracking-tighter', 'tracking-normal'); }
-                if (subtitle) subtitle.classList.add('opacity-60');
-            } else {
-                header.classList.remove('shadow-[0_20px_40px_-15px_rgba(0,0,0,0.8)]', 'border-slate-700/60', 'bg-slate-900/95', 'py-1', 'pt-6', 'pb-6', 'pt-3', 'pb-3');
-                header.classList.add('bg-slate-900/80', 'border-transparent', 'shadow-sm', 'py-1.5');
-                if (logo) { logo.classList.replace('h-5', 'h-6'); logo.classList.replace('md:h-6', 'md:h-7'); logo.classList.replace('h-8', 'h-6'); logo.classList.replace('h-11', 'h-6'); }
-                if (title) { title.classList.replace('text-sm', 'text-base'); title.classList.replace('md:text-base', 'md:text-lg'); title.classList.replace('tracking-normal', 'tracking-tighter'); title.classList.replace('text-xl', 'text-base'); title.classList.replace('text-2xl', 'text-base'); }
-                if (subtitle) subtitle.classList.remove('opacity-60');
-            }
+                const header = document.getElementById('mainHeader');
+                if (!header) { _scrollTicking = false; return; }
+                const logo = document.getElementById('logoImg');
+                const title = document.getElementById('headerTitle');
+                const subtitle = document.getElementById('headerSubtitle');
+
+                if (scrolled) {
+                    header.classList.add('shadow-[0_20px_40px_-15px_rgba(0,0,0,0.8)]', 'border-slate-700/60', 'bg-slate-900/95', 'py-1');
+                    header.classList.remove('bg-slate-900/80', 'border-transparent', 'shadow-sm', 'py-1.5');
+                    if (logo) { logo.classList.replace('h-6', 'h-5'); logo.classList.replace('md:h-7', 'md:h-6'); }
+                    if (title) { title.classList.replace('text-base', 'text-sm'); title.classList.replace('md:text-lg', 'md:text-base'); title.classList.replace('tracking-tighter', 'tracking-normal'); }
+                    if (subtitle) subtitle.classList.add('opacity-60');
+                } else {
+                    header.classList.remove('shadow-[0_20px_40px_-15px_rgba(0,0,0,0.8)]', 'border-slate-700/60', 'bg-slate-900/95', 'py-1', 'pt-6', 'pb-6', 'pt-3', 'pb-3');
+                    header.classList.add('bg-slate-900/80', 'border-transparent', 'shadow-sm', 'py-1.5');
+                    if (logo) { logo.classList.replace('h-5', 'h-6'); logo.classList.replace('md:h-6', 'md:h-7'); logo.classList.replace('h-8', 'h-6'); logo.classList.replace('h-11', 'h-6'); }
+                    if (title) { title.classList.replace('text-sm', 'text-base'); title.classList.replace('md:text-base', 'md:text-lg'); title.classList.replace('tracking-normal', 'tracking-tighter'); title.classList.replace('text-xl', 'text-base'); title.classList.replace('text-2xl', 'text-base'); }
+                    if (subtitle) subtitle.classList.remove('opacity-60');
+                }
+                _scrollTicking = false;
+            });
         });
 
         // ── Toasts y Alertas Sonoras ──────────────────────────────────────────────────
@@ -125,9 +135,7 @@
         // Carga los nombres de grupos desde el servidor para el login
         async function loadGroupNamesIntoLogin() {
             try {
-                const res = await fetch('/api/admin/groups', { headers: { 'X-Token': 'public' } });
-                // Si responde 401 normal (sin token), intentamos sin header
-                const r2 = res.ok ? res : await fetch('/api/health');
+                const res = await fetch('/api/admin/groups');
                 if (!res.ok) return;
                 const d = await res.json();
                 const g1 = document.getElementById('btnRoleG1Label');
@@ -178,10 +186,11 @@
             // Elementos de Layout Compartidos
             const grid = document.getElementById('gridCards');
 
-            // Reset layout to defaults first
+            // Reset layout to defaults (admin: 3 columnas)
             if (grid) {
-                grid.classList.remove('xl:grid-cols-[1fr_1fr]', 'xl:grid-cols-[1fr_260px]', 'lg:grid-cols-[1fr_260px]');
-                grid.classList.add('xl:grid-cols-[1fr_1fr_260px]', 'lg:grid-cols-[1fr_1fr]');
+                grid.style.gridTemplateColumns = '1fr 1fr 260px';
+                grid.style.maxWidth = '';
+                grid.style.margin = '';
             }
 
             if (!isAdmin) {
@@ -194,8 +203,7 @@
                     document.querySelectorAll('.glass-panel.h-full').forEach(el => el.classList.remove('h-full'));
                     document.querySelectorAll('.mt-auto').forEach(el => el.classList.remove('mt-auto'));
                     if(grid) {
-                        grid.classList.remove('xl:grid-cols-[1fr_1fr_260px]');
-                        grid.classList.add('xl:grid-cols-[1fr_1fr]');
+                        grid.style.gridTemplateColumns = '1fr 1fr';
                     }
                     const resPanel = document.getElementById('resPanel');
                     if(resPanel) {
@@ -217,11 +225,10 @@
             if (isGroup) {
                 document.querySelectorAll('.admin-ui-block').forEach(el => el.classList.remove('hidden'));
                 
-                // Ajustar grid para centrar el único canal visible
+                // Ajustar grid para mostrar solo 1 canal + recursos
                 if (grid) {
-                    grid.classList.remove('xl:grid-cols-[1fr_1fr_260px]', 'lg:grid-cols-[1fr_1fr]');
-                    grid.classList.add('xl:grid-cols-[1fr_260px]', 'lg:grid-cols-[1fr_260px]');
-                    grid.style.maxWidth = '1000px';
+                    grid.style.gridTemplateColumns = '1fr 260px';
+                    grid.style.maxWidth = '1100px';
                     grid.style.margin = '0 auto';
                 }
 

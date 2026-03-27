@@ -17,7 +17,7 @@ fuser -k 8000/tcp 2>/dev/null
 
 # Iniciar el servidor en segundo plano
 echo "Iniciando servidor DeckLink..."
-nohup python3 main.py > server.log 2>&1 &
+nohup python3 main.py > logs/server.log 2>&1 &
 
-echo "Servidor iniciado en segundo plano. Log en server.log"
+echo "Servidor iniciado en segundo plano. Log en logs/server.log"
 deactivate
