@@ -50,7 +50,16 @@ La aplicación se sirve de forma segura en una red local bajo un daemon de `syst
 
 1. **Instalación de Dependencias OS:** Es mandatorio instalar los **Desktop Video Drivers** de Blackmagic y un cliente `FFmpeg` compilado expresamente con soporte `--enable-decklink` y `--enable-nvenc`.
 2. **Entorno de Python:** El ambiente virtual `.venv` provee `uvicorn`, `fastapi`, `psutil`, etc.
-3. **Arranque:** `sudo systemctl start vtv-decklink`
+3. **🔒 HTTPS (Opcional pero Recomendado):** 
+   ```bash
+   ./setup_https.sh  # Configura certificados SSL locales con mkcert
+   ```
+   Ver [HTTPS_SETUP.md](HTTPS_SETUP.md) para más opciones.
+4. **Arranque:** `sudo systemctl start vtv-decklink`
+
+### Acceso
+- **HTTP:** `http://localhost:8000` (por defecto)
+- **HTTPS:** `https://localhost:8000` (si configuraste certificados)
 
 ### Inicio de Sesión
 El sistema cuenta con prevención contra fuerza bruta (bloqueo automático temporal a IPs con 5 intentos fallidos). Los usuarios base (`Administrador` y `Operador` global) se inyectan a través del archivo de configuración `.env`. Las cuentas operativas limitadas por canal se administran visualmente mediante el botón de *"Administración"* dentro de la misma web app.

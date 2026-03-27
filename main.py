@@ -1128,4 +1128,28 @@ app.mount("/", StaticFiles(directory="static", html=True), name="static")
 
 if __name__ == "__main__":
     import uvicorn
-    uvicorn.run(app, host="0.0.0.0", port=8000, log_level="info")
+    
+    # Configuración SSL/HTTPS
+    cert_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), "certs")
+    cert_file = os.path.join(cert_dir, "cert.pem")
+    key_file = os.path.join(cert_dir, "key.pem")
+    
+    # Verificar si existen certificados SSL
+    use_ssl = os.path.exists(cert_file) and os.path.exists(key_file)
+    
+    if use_ssl:
+        logger.info("🔒 Iniciando servidor con HTTPS en puerto 8000")
+        logger.info(f"📜 Certificado: {cert_file}")
+        logger.info(f"🔑 Clave privada: {key_file}")
+        uvicorn.run(
+            app, 
+            host="0.0.0.0", 
+            port=8000, 
+            log_level="info",
+            ssl_keyfile=key_file,
+            ssl_certfile=cert_file
+        )
+    else:
+        logger.warning("⚠️  Certificados SSL no encontrados. Iniciando en HTTP (inseguro)")
+        logger.warning(f"💡 Ejecuta './setup_https.sh' para habilitar HTTPS")
+        uvicorn.run(app, host="0.0.0.0", port=8000, log_level="info")
