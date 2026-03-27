@@ -9,6 +9,7 @@ from fastapi.responses import JSONResponse, StreamingResponse, FileResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel, field_validator
+import bcrypt
 
 # ── Logging ───────────────────────────────────────────────────────────────────
 logging.basicConfig(level=logging.INFO,
@@ -35,14 +36,32 @@ cached_metrics = {
 }
 cached_processes = {"processes": [], "count": 0}
 
+# ── Duration Cache con evicción LRU ───────────────────────────────────────────
 CACHE_FILE = os.path.join(os.path.dirname(os.path.abspath(__file__)), "duration_cache.json")
-DURATION_CACHE: dict = {}
+MAX_CACHE_ENTRIES = 5000  # Límite de entradas en cache
+DURATION_CACHE: dict = {}  # {path: [mtime, duration, last_access_time]}
 try:
     if os.path.exists(CACHE_FILE):
         with open(CACHE_FILE, "r") as f:
-            DURATION_CACHE = json.load(f)
+            loaded = json.load(f)
+            # Migrar formato antiguo [mtime, dur] a nuevo [mtime, dur, access_time]
+            for k, v in loaded.items():
+                if len(v) == 2:
+                    DURATION_CACHE[k] = [v[0], v[1], time.time()]
+                else:
+                    DURATION_CACHE[k] = v
 except Exception as e:
     logger.error(f"Error cargando duration_cache: {e}")
+
+def _evict_cache_if_needed():
+    """Evicta entradas LRU si el cache excede MAX_CACHE_ENTRIES"""
+    if len(DURATION_CACHE) > MAX_CACHE_ENTRIES:
+        # Ordenar por último acceso y eliminar las más antiguas
+        sorted_entries = sorted(DURATION_CACHE.items(), key=lambda x: x[1][2] if len(x[1]) > 2 else 0)
+        to_remove = len(DURATION_CACHE) - MAX_CACHE_ENTRIES
+        for path, _ in sorted_entries[:to_remove]:
+            del DURATION_CACHE[path]
+        logger.info(f"Cache eviction: eliminadas {to_remove} entradas antiguas")
 
 # ── Variables de entorno ──────────────────────────────────────────────────────
 try:
@@ -100,12 +119,12 @@ def _load_users_db() -> dict:
         logger.error(f"Error cargando users_db: {e}")
     return {"groups": dict(DEFAULT_USERS_DB["groups"]), "users": {}}
 
-def _save_users_db():
-    try:
-        with open(USERS_DB_FILE, "w") as f:
-            json.dump(USERS_DB, f, indent=2)
-    except Exception as e:
-        logger.error(f"Error guardando users_db: {e}")
+async def _save_users_db():
+    async with users_db_lock:
+        try:
+            await asyncio.to_thread(lambda: json.dump(USERS_DB, open(USERS_DB_FILE, "w"), indent=2))
+        except Exception as e:
+            logger.error(f"Error guardando users_db: {e}")
 
 USERS_DB = _load_users_db()
 
@@ -119,12 +138,15 @@ def _load_access_log() -> list:
         logger.error(f"Error cargando access_log: {e}")
     return []
 
-def _save_access_log():
-    try:
-        with open(ACCESS_LOG_FILE, "w") as f:
-            json.dump(ACCESS_LOG[-2000:], f, indent=2)
-    except Exception as e:
-        logger.error(f"Error guardando access_log: {e}")
+async def _save_access_log():
+    async with access_log_lock:
+        try:
+            # Truncar en memoria también para prevenir memory leak
+            global ACCESS_LOG
+            ACCESS_LOG = ACCESS_LOG[-2000:]
+            await asyncio.to_thread(lambda: json.dump(ACCESS_LOG, open(ACCESS_LOG_FILE, "w"), indent=2))
+        except Exception as e:
+            logger.error(f"Error guardando access_log: {e}")
 
 ACCESS_LOG = _load_access_log()
 
@@ -155,6 +177,24 @@ _rebuild_dynamic_maps()
 
 # Brute force protection
 LOGIN_ATTEMPTS = {}
+
+# ── Concurrency Locks ─────────────────────────────────────────────────────────
+access_log_lock = asyncio.Lock()
+users_db_lock = asyncio.Lock()
+sessions_lock = asyncio.Lock()
+
+# ── Password Security ─────────────────────────────────────────────────────────
+def hash_password(password: str) -> str:
+    """Hash a password using bcrypt"""
+    return bcrypt.hashpw(password.encode('utf-8'), bcrypt.gensalt()).decode('utf-8')
+
+def verify_password(plain_password: str, hashed_password: str) -> bool:
+    """Verify a password against a bcrypt hash"""
+    try:
+        return bcrypt.checkpw(plain_password.encode('utf-8'), hashed_password.encode('utf-8'))
+    except Exception as e:
+        logger.error(f"Error verificando password: {e}")
+        return False
 
 # ── Modelos ───────────────────────────────────────────────────────────────────
 class RecordConfig(BaseModel):
@@ -258,13 +298,13 @@ class RecordingManager:
                     proc.stdin.write("q\n")
                     proc.stdin.flush()
                     logger.info(f"[CH{self.source_id}] Enviando 'q' a ffmpeg (PID {proc.pid}) para corte limpio…")
-                except Exception:
-                    pass  # stdin puede estar cerrado
+                except Exception as e:
+                    logger.debug(f"[CH{self.source_id}] No se pudo enviar 'q' a stdin (probablemente cerrado): {e}")
                 # SIGTERM al grupo de procesos como fallback
                 try:
                     os.killpg(os.getpgid(proc.pid), signal.SIGTERM)
-                except Exception:
-                    pass
+                except Exception as e:
+                    logger.debug(f"[CH{self.source_id}] No se pudo enviar SIGTERM al grupo: {e}")
                 # Esperar hasta 15 s que ffmpeg finalice el segmento
                 for _ in range(30):
                     if proc.poll() is not None:
@@ -275,8 +315,8 @@ class RecordingManager:
                 try:
                     os.killpg(os.getpgid(proc.pid), signal.SIGKILL)
                     proc.wait(timeout=5)
-                except Exception:
-                    pass
+                except Exception as e:
+                    logger.warning(f"[CH{self.source_id}] Error enviando SIGKILL: {e}")
             logger.info(f"[CH{self.source_id}] FFmpeg detenido (PID {proc.pid})")
         except Exception as e:
             logger.warning(f"[CH{self.source_id}] Error al detener FFmpeg: {e}")
@@ -296,8 +336,8 @@ class RecordingManager:
             try:
                 self.preview_process.terminate()
                 # No podemos await aquí, pero marcamos como None
-            except Exception:
-                pass
+            except Exception as e:
+                logger.warning(f"[CH{self.source_id}] Error deteniendo preview: {e}")
             self.preview_process = None
             time.sleep(1)  # dar tiempo al dispositivo de liberarse
 
@@ -546,37 +586,40 @@ async def login(data: LoginRequest, request: Request):
             user_data = dyn
             real_user = data.username
 
-    if user_data and user_data["password"] == data.password:
+    if user_data and verify_password(data.password, user_data["password"]):
         LOGIN_ATTEMPTS[ip] = {"count": 0, "lock_until": 0} # reset
         new_sess = str(uuid.uuid4())
         
-        ACCESS_LOG.append({
-            "timestamp": now,
-            "username": real_user,
-            "ip": ip,
-            "role": user_data["role"]
-        })
-        _save_access_log()
+        async with access_log_lock:
+            ACCESS_LOG.append({
+                "timestamp": now,
+                "username": real_user,
+                "ip": ip,
+                "role": user_data["role"]
+            })
+        await _save_access_log()
         
         # Gestión de sesiones concurrentes por Rol
         role = user_data["role"]
         max_sess = 3 if role == "operator" else 1
-        sessions = ACTIVE_SESSIONS.get(real_user, [])
         
-        # Retrocompatibilidad rápida para el viejo esquema en memoria
-        if isinstance(sessions, dict):
-            sessions = [sessions]
-        
-        # Limpiar sesiones huérfanas (sin ping por más de 4 minutos)
-        sessions = [s for s in sessions if type(s) is dict and "last_ping" in s and now - s["last_ping"] < 240]
-        
-        # Desalojar la más vieja si llegamos al tope
-        if len(sessions) >= max_sess:
-            sessions.sort(key=lambda x: x.get("last_ping", 0))
-            sessions.pop(0)
+        async with sessions_lock:
+            sessions = ACTIVE_SESSIONS.get(real_user, [])
             
-        sessions.append({"session_id": new_sess, "last_ping": now})
-        ACTIVE_SESSIONS[real_user] = sessions
+            # Retrocompatibilidad rápida para el viejo esquema en memoria
+            if isinstance(sessions, dict):
+                sessions = [sessions]
+            
+            # Limpiar sesiones huérfanas (sin ping por más de 4 minutos)
+            sessions = [s for s in sessions if isinstance(s, dict) and "last_ping" in s and now - s["last_ping"] < 240]
+            
+            # Desalojar la más vieja si llegamos al tope
+            if len(sessions) >= max_sess:
+                sessions.sort(key=lambda x: x.get("last_ping", 0))
+                sessions.pop(0)
+                
+            sessions.append({"session_id": new_sess, "last_ping": now})
+            ACTIVE_SESSIONS[real_user] = sessions
 
         # Determinar el canal asignado (para roles de grupo)
         channel = None
@@ -597,36 +640,38 @@ async def login(data: LoginRequest, request: Request):
         attempt["lock_until"] = now + 300
     LOGIN_ATTEMPTS[ip] = attempt
     
-    ACCESS_LOG.append({
-        "timestamp": now,
-        "username": data.username,
-        "ip": ip,
-        "role": "fallido"
-    })
-    _save_access_log()
+    async with access_log_lock:
+        ACCESS_LOG.append({
+            "timestamp": now,
+            "username": data.username,
+            "ip": ip,
+            "role": "fallido"
+        })
+    await _save_access_log()
     
     raise HTTPException(status_code=401, detail="Credenciales incorrectas")
 
 @app.get("/api/metrics")
 async def api_metrics(x_username: str = Header(None), x_session_id: str = Header(None), token: str = Depends(verify_token)):
     if x_username and x_session_id:
-        sessions = ACTIVE_SESSIONS.get(x_username, [])
-        if isinstance(sessions, dict):
-            sessions = [sessions]
+        async with sessions_lock:
+            sessions = ACTIVE_SESSIONS.get(x_username, [])
+            if isinstance(sessions, dict):
+                sessions = [sessions]
 
-        my_session = next((s for s in sessions if type(s) is dict and s.get("session_id") == x_session_id), None)
+            my_session = next((s for s in sessions if isinstance(s, dict) and s.get("session_id") == x_session_id), None)
 
-        if not my_session:
-            # Sesión no encontrada en memoria (p.ej. después de reinicio del servidor).
-            # El token ya fue validado, así que re-registramos la sesión en lugar de botar al usuario.
-            now = time.time()
-            sessions = [s for s in sessions if type(s) is dict and "last_ping" in s and now - s["last_ping"] < 240]
-            my_session = {"session_id": x_session_id, "last_ping": now}
-            sessions.append(my_session)
-            ACTIVE_SESSIONS[x_username] = sessions
-        else:
-            my_session["last_ping"] = time.time()
-            ACTIVE_SESSIONS[x_username] = sessions
+            if not my_session:
+                # Sesión no encontrada en memoria (p.ej. después de reinicio del servidor).
+                # El token ya fue validado, así que re-registramos la sesión en lugar de botar al usuario.
+                now = time.time()
+                sessions = [s for s in sessions if isinstance(s, dict) and "last_ping" in s and now - s["last_ping"] < 240]
+                my_session = {"session_id": x_session_id, "last_ping": now}
+                sessions.append(my_session)
+                ACTIVE_SESSIONS[x_username] = sessions
+            else:
+                my_session["last_ping"] = time.time()
+                ACTIVE_SESSIONS[x_username] = sessions
 
     return cached_metrics
 
@@ -740,10 +785,10 @@ class VerifyPasswordRequest(BaseModel):
     password: str
 
 @app.post("/api/verify-password")
-async def verify_password(req: VerifyPasswordRequest, token: str = Depends(require_admin)):
+async def verify_admin_password(req: VerifyPasswordRequest, token: str = Depends(require_admin)):
     """Verifica que la contraseña proporcionada corresponde a algún usuario con rol admin.
     Permite que el frontend valide la contraseña SIN exponerla en el código fuente del cliente."""
-    user_data = next((u for u in USERS.values() if u["password"] == req.password and u["role"] == "admin"), None)
+    user_data = next((u for u in USERS.values() if verify_password(req.password, u["password"]) and u["role"] == "admin"), None)
     if not user_data:
         raise HTTPException(status_code=401, detail="Contraseña incorrecta")
     return {"status": "ok"}
@@ -765,18 +810,23 @@ async def api_files(token: str = Depends(verify_token)):
             path_str = str(f)
 
             dur_sec = 0.0
-            if path_str in DURATION_CACHE and DURATION_CACHE[path_str][0] == mtime:
-                dur_sec = DURATION_CACHE[path_str][1]
+            cache_entry = DURATION_CACHE.get(path_str)
+            if cache_entry and cache_entry[0] == mtime:
+                # Cache hit - actualizar último acceso
+                dur_sec = cache_entry[1]
+                cache_entry[2] = time.time()
+                cache_updated = True
             else:
+                # Cache miss - calcular duración
                 try:
                     res = subprocess.check_output([
                         "ffprobe", "-v", "error", "-show_entries", "format=duration",
                         "-of", "default=noprint_wrappers=1:nokey=1", path_str
-                    ], stderr=subprocess.STDOUT, timeout=1).decode().strip()
+                    ], stderr=subprocess.STDOUT, timeout=3).decode().strip()
                     dur_sec = float(res) if res != "N/A" else 0.0
-                except Exception:
-                    pass
-                DURATION_CACHE[path_str] = [mtime, dur_sec]
+                except Exception as e:
+                    logger.warning(f"Error obteniendo duración de {path_str}: {e}")
+                DURATION_CACHE[path_str] = [mtime, dur_sec, time.time()]
                 cache_updated = True
 
             results.append({
@@ -787,6 +837,7 @@ async def api_files(token: str = Depends(verify_token)):
             })
 
         if cache_updated:
+            _evict_cache_if_needed()
             try:
                 with open(CACHE_FILE, "w") as cf:
                     json.dump(DURATION_CACHE, cf)
@@ -812,8 +863,7 @@ def resolve_safe_path(filename: str) -> Path:
     return target
 
 @app.get("/api/files/download")
-async def api_download(file: str, token: str = Query(...)):
-    if token not in TOKEN_TO_ROLE: raise HTTPException(status_code=401, detail="Token inválido")
+async def api_download(file: str, token: str = Depends(verify_token)):
     target = resolve_safe_path(file)
     return FileResponse(target, filename=target.name, content_disposition_type="attachment")
 
@@ -823,7 +873,7 @@ class DeleteReq(BaseModel):
 
 @app.post("/api/files/delete")
 async def api_delete(req: DeleteReq, token: str = Depends(require_admin)):
-    user_data = next((u for u in USERS.values() if u["password"] == req.password), None)
+    user_data = next((u for u in USERS.values() if verify_password(req.password, u["password"])), None)
     if not user_data:
         raise HTTPException(status_code=401, detail="Clave incorrecta")
     target = resolve_safe_path(req.filename)
@@ -834,8 +884,7 @@ async def api_delete(req: DeleteReq, token: str = Depends(require_admin)):
         raise HTTPException(status_code=500, detail=str(e))
 
 @app.get("/api/files/stream")
-async def api_stream(req: Request, file: str, token: str = Query(...)):
-    if token not in TOKEN_TO_ROLE: raise HTTPException(status_code=401, detail="Token inválido")
+async def api_stream(req: Request, file: str, token: str = Depends(verify_token)):
     target = resolve_safe_path(file)
     file_size = target.stat().st_size
     range_header = req.headers.get("Range")
@@ -863,13 +912,8 @@ async def api_stream(req: Request, file: str, token: str = Query(...)):
     return FileResponse(target, media_type="video/mp4")
 
 @app.get("/api/preview/{source_id}")
-async def api_preview(source_id: str, token: str = Query(...)):
+async def api_preview(source_id: str, token: str = Depends(verify_token)):
     logger.info(f"[PREVIEW] Petición recibida para CH{source_id}")
-    # Verificación de token manual ya que es para un <img> tag
-    if token not in TOKEN_TO_ROLE:
-        logger.warning(f"[PREVIEW] Token inválido: {token}")
-        raise HTTPException(status_code=401, detail="Invalid token")
-        
     mgr = managers.get(source_id)
     if not mgr:
         raise HTTPException(status_code=404, detail="Canal no encontrado")
@@ -939,8 +983,8 @@ async def api_preview(source_id: str, token: str = Query(...)):
             try:
                 process.terminate()
                 await process.wait()
-            except:
-                pass
+            except Exception as e:
+                logger.debug(f"[PREVIEW] Error limpiando proceso preview: {e}")
 
     return StreamingResponse(frame_generator(), media_type="multipart/x-mixed-replace; boundary=ffserver")
 
@@ -971,9 +1015,10 @@ async def get_groups():
 async def update_groups(req: GroupNamesRequest, token: str = Depends(require_admin)):
     if not req.group1_name.strip() or not req.group2_name.strip():
         raise HTTPException(status_code=400, detail="Los nombres de grupo no pueden estar vacíos.")
-    USERS_DB["groups"]["1"]["name"] = req.group1_name.strip()
-    USERS_DB["groups"]["2"]["name"] = req.group2_name.strip()
-    _save_users_db()
+    async with users_db_lock:
+        USERS_DB["groups"]["1"]["name"] = req.group1_name.strip()
+        USERS_DB["groups"]["2"]["name"] = req.group2_name.strip()
+    await _save_users_db()
     return {"status": "ok", "group1_name": req.group1_name.strip(), "group2_name": req.group2_name.strip()}
 
 @app.get("/api/admin/users")
@@ -1002,25 +1047,29 @@ async def create_user(req: CreateUserRequest, token: str = Depends(require_admin
         raise HTTPException(status_code=409, detail=f"El usuario '{uname}' ya existe.")
     new_token = secrets.token_hex(24)
     role = f"group{req.group}"
-    USERS_DB["users"][uname] = {
-        "password": req.password,
-        "token": new_token,
-        "role": role,
-        "group": req.group
-    }
-    ACTIVE_SESSIONS[uname] = []
-    _save_users_db()
+    async with users_db_lock:
+        USERS_DB["users"][uname] = {
+            "password": hash_password(req.password),
+            "token": new_token,
+            "role": role,
+            "group": req.group
+        }
+    async with sessions_lock:
+        ACTIVE_SESSIONS[uname] = []
+    await _save_users_db()
     _rebuild_dynamic_maps()
     logger.info(f"[ADMIN] Usuario creado: {uname} ({role})")
     return {"status": "ok", "username": uname, "role": role}
 
 @app.delete("/api/admin/users/{username}")
 async def delete_user(username: str, token: str = Depends(require_admin)):
-    if username not in USERS_DB["users"]:
-        raise HTTPException(status_code=404, detail="Usuario no encontrado.")
-    del USERS_DB["users"][username]
-    ACTIVE_SESSIONS.pop(username, None)
-    _save_users_db()
+    async with users_db_lock:
+        if username not in USERS_DB["users"]:
+            raise HTTPException(status_code=404, detail="Usuario no encontrado.")
+        del USERS_DB["users"][username]
+    async with sessions_lock:
+        ACTIVE_SESSIONS.pop(username, None)
+    await _save_users_db()
     _rebuild_dynamic_maps()
     logger.info(f"[ADMIN] Usuario eliminado: {username}")
     return {"status": "ok"}
