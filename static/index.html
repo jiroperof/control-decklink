@@ -114,6 +114,53 @@
 
         input[type="number"] {
             -moz-appearance: textfield;
+            appearance: textfield;
+        }
+
+        /* ── Accesibilidad: Screen Reader Only ──────────────────────────────────── */
+        .sr-only {
+            position: absolute;
+            width: 1px;
+            height: 1px;
+            padding: 0;
+            margin: -1px;
+            overflow: hidden;
+            clip: rect(0, 0, 0, 0);
+            white-space: nowrap;
+            border-width: 0;
+        }
+
+        /* ── Mobile Optimizations ──────────────────────────────────────────────── */
+        @media (max-width: 768px) {
+            /* Touch targets mínimo 44x44px */
+            button, .btn, select, input[type="time"] {
+                min-height: 44px;
+                padding: 12px 16px;
+            }
+            
+            /* Tamaños de fuente legibles en mobile */
+            .text-\[9px\] { font-size: 11px !important; }
+            .text-\[10px\] { font-size: 12px !important; }
+            .text-\[11px\] { font-size: 13px !important; }
+            
+            /* Botones más grandes */
+            .px-3.py-1 { padding: 10px 14px; }
+            .px-4.py-2 { padding: 12px 16px; }
+            
+            /* Espaciado entre elementos interactivos */
+            .gap-2 { gap: 12px; }
+            .gap-3 { gap: 16px; }
+        }
+
+        /* ── Respeto a preferencias de movimiento ──────────────────────────────── */
+        @media (prefers-reduced-motion: reduce) {
+            *,
+            *::before,
+            *::after {
+                animation-duration: 0.01ms !important;
+                animation-iteration-count: 1 !important;
+                transition-duration: 0.01ms !important;
+            }
         }
 
         /* Premium Animations */
@@ -254,7 +301,7 @@
     </div>
 
     <!-- ════════════════════════════════ DASHBOARD ════════════════════════════════ -->
-    <div id="mainSection" class="hidden container mx-auto px-6 pt-4 pb-28">
+    <div id="mainSection" class="hidden container mx-auto px-6 pt-4 pb-32 md:pb-28">
 
         <!-- HEADER -->
         <header id="mainHeader"
@@ -336,9 +383,9 @@
 
                     <div class="admin-ui-block grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
                         <div>
-                            <label class="block text-[9px] font-bold text-slate-400 mb-1 uppercase">Calidad del
+                            <label for="bitrate_1" class="block text-[9px] font-bold text-slate-300 mb-1 uppercase">Calidad del
                                 Master</label>
-                            <select id="bitrate_1"
+                            <select id="bitrate_1" aria-label="Calidad de bitrate para Canal 1"
                                 class="w-full p-2.5 rounded-xl outline-none font-bold text-xs">
                                 <option value="15M" selected>15 Mbps - Estándar</option>
                                 <option value="25M">25 Mbps - HD Master</option>
@@ -346,32 +393,32 @@
                             </select>
                         </div>
                         <div>
-                            <label class="block text-[9px] font-bold text-slate-400 mb-1 uppercase">Cortes cada
+                            <label for="minutes_1" class="block text-[9px] font-bold text-slate-300 mb-1 uppercase">Cortes cada
                                 (Minutos)</label>
                             <div
                                 class="flex items-center bg-[#0f172a] rounded-xl overflow-hidden focus-within:ring-2 focus-within:ring-red-500/40 transition-all font-mono border border-slate-700 shadow-inner">
-                                <button type="button" id="btnMinDec_1" onclick="adjMin('1', -1)"
-                                    class="px-4 py-2 text-slate-400 hover:text-white hover:bg-slate-700 transition-colors disabled:opacity-50 border-r border-slate-700 font-bold active:bg-slate-600 text-[14px]"
+                                <button type="button" id="btnMinDec_1" onclick="adjMin('1', -1)" aria-label="Disminuir minutos de segmentación"
+                                    class="px-4 py-2 text-slate-300 hover:text-white hover:bg-slate-700 transition-colors disabled:opacity-50 border-r border-slate-700 font-bold active:bg-slate-600 text-[14px]"
                                     style="line-height: 1.1;">-</button>
-                                <input type="number" id="minutes_1" value="1" min="1" max="120"
+                                <input type="number" id="minutes_1" value="1" min="1" max="120" aria-label="Minutos de segmentación Canal 1"
                                     class="w-full py-2 outline-none font-black text-[13px] text-center text-white"
                                     style="border: none !important; box-shadow: none; background: transparent !important;">
-                                <button type="button" id="btnMinInc_1" onclick="adjMin('1', 1)"
-                                    class="px-4 py-2 text-slate-400 hover:text-white hover:bg-slate-700 transition-colors disabled:opacity-50 border-l border-slate-700 font-bold active:bg-slate-600 text-[14px]"
+                                <button type="button" id="btnMinInc_1" onclick="adjMin('1', 1)" aria-label="Aumentar minutos de segmentación"
+                                    class="px-4 py-2 text-slate-300 hover:text-white hover:bg-slate-700 transition-colors disabled:opacity-50 border-l border-slate-700 font-bold active:bg-slate-600 text-[14px]"
                                     style="line-height: 1.1;">+</button>
                             </div>
                         </div>
                     </div>
 
                     <div class="admin-ui-block mb-4">
-                        <label class="block text-[9px] font-bold text-slate-400 mb-1 uppercase">Carpeta de
+                        <label for="destPath_1" class="block text-[9px] font-bold text-slate-300 mb-1 uppercase">Carpeta de
                             Destino</label>
                         <div class="flex gap-2">
-                            <input type="text" id="destPath_1" value="/home/administrador/Capturas"
+                            <input type="text" id="destPath_1" value="/home/administrador/Capturas" aria-label="Ruta de destino para grabaciones Canal 1"
                                 class="flex-1 p-2.5 rounded-xl outline-none font-mono text-[11px]">
-                            <button id="btnResetDest_1" onclick="resetDestPath('1')"
+                            <button id="btnResetDest_1" onclick="resetDestPath('1')" aria-label="Restaurar ruta por defecto"
                                 class="bg-slate-700 hover:bg-slate-600 px-3 py-2.5 rounded-xl transition-all flex items-center justify-center disabled:opacity-50 disabled:cursor-not-allowed border border-slate-600 shadow-md active:scale-95"
-                                title="Restaurar ruta">
+                                title="Restaurar ruta por defecto">
                                 <svg class="w-4 h-4 text-slate-300" fill="none" stroke="currentColor"
                                     viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
@@ -384,20 +431,20 @@
 
                     <!-- GRABACIÓN PROGRAMADA -->
                     <div class="admin-ui-block mb-4 bg-slate-900/50 rounded-2xl border border-slate-700/50 p-4 pb-3">
-                        <p class="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-3">⏰ Programar Canal
+                        <p class="text-[9px] font-black text-slate-300 uppercase tracking-widest mb-3">⏰ Programar Canal
                         </p>
                         <div id="scheduleBody_1">
                             <div class="grid grid-cols-2 gap-3 mb-3">
                                 <div>
-                                    <label class="block text-[9px] text-slate-500 mb-1 uppercase font-bold">Inicio
+                                    <label for="scheduleStart_1" class="block text-[9px] text-slate-300 mb-1 uppercase font-bold">Inicio
                                         (HH:MM)</label>
-                                    <input type="time" id="scheduleStart_1"
+                                    <input type="time" id="scheduleStart_1" aria-label="Hora de inicio programado Canal 1"
                                         class="w-full p-2 rounded-xl outline-none font-mono text-xs">
                                 </div>
                                 <div>
-                                    <label class="block text-[9px] text-slate-500 mb-1 uppercase font-bold">Stop
+                                    <label for="scheduleStop_1" class="block text-[9px] text-slate-300 mb-1 uppercase font-bold">Stop
                                         (HH:MM)</label>
-                                    <input type="time" id="scheduleStop_1"
+                                    <input type="time" id="scheduleStop_1" aria-label="Hora de detención programada Canal 1"
                                         class="w-full p-2 rounded-xl outline-none font-mono text-xs">
                                 </div>
                             </div>
@@ -444,9 +491,9 @@
 
                     <div class="admin-ui-block grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
                         <div>
-                            <label class="block text-[9px] font-bold text-slate-400 mb-1 uppercase">Calidad del
+                            <label for="bitrate_2" class="block text-[9px] font-bold text-slate-300 mb-1 uppercase">Calidad del
                                 Master</label>
-                            <select id="bitrate_2"
+                            <select id="bitrate_2" aria-label="Calidad de bitrate para Canal 2"
                                 class="w-full p-2.5 rounded-xl outline-none font-bold text-xs">
                                 <option value="15M" selected>15 Mbps - Estándar</option>
                                 <option value="25M">25 Mbps - HD Master</option>
@@ -454,32 +501,32 @@
                             </select>
                         </div>
                         <div>
-                            <label class="block text-[9px] font-bold text-slate-400 mb-1 uppercase">Cortes cada
+                            <label for="minutes_2" class="block text-[9px] font-bold text-slate-300 mb-1 uppercase">Cortes cada
                                 (Minutos)</label>
                             <div
                                 class="flex items-center bg-[#0f172a] rounded-xl overflow-hidden focus-within:ring-2 focus-within:ring-blue-500/40 transition-all font-mono border border-slate-700 shadow-inner">
-                                <button type="button" id="btnMinDec_2" onclick="adjMin('2', -1)"
-                                    class="px-4 py-2 text-slate-400 hover:text-white hover:bg-slate-700 transition-colors disabled:opacity-50 border-r border-slate-700 font-bold active:bg-slate-600 text-[14px]"
+                                <button type="button" id="btnMinDec_2" onclick="adjMin('2', -1)" aria-label="Disminuir minutos de segmentación"
+                                    class="px-4 py-2 text-slate-300 hover:text-white hover:bg-slate-700 transition-colors disabled:opacity-50 border-r border-slate-700 font-bold active:bg-slate-600 text-[14px]"
                                     style="line-height: 1.1;">-</button>
-                                <input type="number" id="minutes_2" value="1" min="1" max="120"
+                                <input type="number" id="minutes_2" value="1" min="1" max="120" aria-label="Minutos de segmentación Canal 2"
                                     class="w-full py-2 outline-none font-black text-[13px] text-center text-white"
                                     style="border: none !important; box-shadow: none; background: transparent !important;">
-                                <button type="button" id="btnMinInc_2" onclick="adjMin('2', 1)"
-                                    class="px-4 py-2 text-slate-400 hover:text-white hover:bg-slate-700 transition-colors disabled:opacity-50 border-l border-slate-700 font-bold active:bg-slate-600 text-[14px]"
+                                <button type="button" id="btnMinInc_2" onclick="adjMin('2', 1)" aria-label="Aumentar minutos de segmentación"
+                                    class="px-4 py-2 text-slate-300 hover:text-white hover:bg-slate-700 transition-colors disabled:opacity-50 border-l border-slate-700 font-bold active:bg-slate-600 text-[14px]"
                                     style="line-height: 1.1;">+</button>
                             </div>
                         </div>
                     </div>
 
                     <div class="admin-ui-block mb-4">
-                        <label class="block text-[9px] font-bold text-slate-400 mb-1 uppercase">Carpeta de
+                        <label for="destPath_2" class="block text-[9px] font-bold text-slate-300 mb-1 uppercase">Carpeta de
                             Destino</label>
                         <div class="flex gap-2">
-                            <input type="text" id="destPath_2" value="/home/administrador/Capturas"
+                            <input type="text" id="destPath_2" value="/home/administrador/Capturas" aria-label="Ruta de destino para grabaciones Canal 2"
                                 class="flex-1 p-2.5 rounded-xl outline-none font-mono text-[11px]">
-                            <button id="btnResetDest_2" onclick="resetDestPath('2')"
+                            <button id="btnResetDest_2" onclick="resetDestPath('2')" aria-label="Restaurar ruta por defecto"
                                 class="bg-slate-700 hover:bg-slate-600 px-3 py-2.5 rounded-xl transition-all flex items-center justify-center disabled:opacity-50 disabled:cursor-not-allowed border border-slate-600 shadow-md active:scale-95"
-                                title="Restaurar ruta">
+                                title="Restaurar ruta por defecto">
                                 <svg class="w-4 h-4 text-slate-300" fill="none" stroke="currentColor"
                                     viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
@@ -492,20 +539,20 @@
 
                     <!-- GRABACIÓN PROGRAMADA -->
                     <div class="admin-ui-block mb-4 bg-slate-900/50 rounded-2xl border border-slate-700/50 p-4 pb-3">
-                        <p class="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-3">⏰ Programar Canal
+                        <p class="text-[9px] font-black text-slate-300 uppercase tracking-widest mb-3">⏰ Programar Canal
                         </p>
                         <div id="scheduleBody_2">
                             <div class="grid grid-cols-2 gap-3 mb-3">
                                 <div>
-                                    <label class="block text-[9px] text-slate-500 mb-1 uppercase font-bold">Inicio
+                                    <label for="scheduleStart_2" class="block text-[9px] text-slate-300 mb-1 uppercase font-bold">Inicio
                                         (HH:MM)</label>
-                                    <input type="time" id="scheduleStart_2"
+                                    <input type="time" id="scheduleStart_2" aria-label="Hora de inicio programado Canal 2"
                                         class="w-full p-2 rounded-xl outline-none font-mono text-xs">
                                 </div>
                                 <div>
-                                    <label class="block text-[9px] text-slate-500 mb-1 uppercase font-bold">Stop
+                                    <label for="scheduleStop_2" class="block text-[9px] text-slate-300 mb-1 uppercase font-bold">Stop
                                         (HH:MM)</label>
-                                    <input type="time" id="scheduleStop_2"
+                                    <input type="time" id="scheduleStop_2" aria-label="Hora de detención programada Canal 2"
                                         class="w-full p-2 rounded-xl outline-none font-mono text-xs">
                                 </div>
                             </div>
@@ -702,36 +749,36 @@
     </div>
 
     <!-- MODAL GESTIÓN DE LIMPIEZA -->
-    <div id="modalCleanup"
+    <div id="modalCleanup" role="dialog" aria-labelledby="cleanupModalTitle" aria-modal="true"
         class="fixed inset-0 z-[60] hidden flex items-center justify-center bg-slate-950/80 backdrop-blur-md p-6">
         <div class="glass-panel w-full max-w-sm p-8 rounded-3xl shadow-2xl animate-fade-in-up">
             <div class="flex justify-between items-center mb-6 border-b border-slate-700 pb-3">
-                <h3 class="text-sm font-black uppercase tracking-widest text-white">⚙ Gestión de Limpieza</h3>
-                <button onclick="closeCleanupModal()"
-                    class="text-slate-500 hover:text-white transition-colors">✕</button>
+                <h3 id="cleanupModalTitle" class="text-sm font-black uppercase tracking-widest text-white">⚙ Gestión de Limpieza</h3>
+                <button onclick="closeCleanupModal()" aria-label="Cerrar modal"
+                    class="text-slate-400 hover:text-white transition-colors">✕</button>
             </div>
 
             <div class="space-y-5">
                 <div>
-                    <label class="block text-[10px] font-bold text-slate-400 mb-2 uppercase tracking-widest">Días a
+                    <label for="cleanupDays" class="block text-[10px] font-bold text-slate-300 mb-2 uppercase tracking-widest">Días a
                         Conservar</label>
                     <div
                         class="flex items-center bg-slate-900 rounded-xl border border-slate-700 overflow-hidden shadow-inner">
-                        <button onclick="changeCleanupDays(-1)"
-                            class="px-4 py-2 hover:bg-slate-800 transition-colors text-slate-400 font-bold border-r border-slate-700">-</button>
-                        <input type="number" id="cleanupDays" value="2" min="1" max="30"
+                        <button onclick="changeCleanupDays(-1)" aria-label="Disminuir días de retención"
+                            class="px-4 py-2 hover:bg-slate-800 transition-colors text-slate-300 font-bold border-r border-slate-700">-</button>
+                        <input type="number" id="cleanupDays" value="2" min="1" max="30" aria-label="Días de retención de archivos"
                             class="w-full bg-transparent text-center font-black text-sm text-white outline-none">
-                        <button onclick="changeCleanupDays(1)"
-                            class="px-4 py-2 hover:bg-slate-800 transition-colors text-slate-400 font-bold border-l border-slate-700">+</button>
+                        <button onclick="changeCleanupDays(1)" aria-label="Aumentar días de retención"
+                            class="px-4 py-2 hover:bg-slate-800 transition-colors text-slate-300 font-bold border-l border-slate-700">+</button>
                     </div>
-                    <p class="text-[9px] text-slate-500 mt-2">* Los archivos más antiguos se borrarán
+                    <p class="text-[9px] text-slate-400 mt-2">* Los archivos más antiguos se borrarán
                         automáticamente vía Crontab.</p>
                 </div>
 
                 <div>
-                    <label class="block text-[10px] font-bold text-slate-400 mb-2 uppercase tracking-widest">Confirmar
+                    <label for="cleanupPass" class="block text-[10px] font-bold text-slate-300 mb-2 uppercase tracking-widest">Confirmar
                         Contraseña Admin</label>
-                    <input type="password" id="cleanupPass" placeholder="••••••••"
+                    <input type="password" id="cleanupPass" placeholder="••••••••" aria-label="Contraseña de administrador para confirmar"
                         class="w-full p-3 rounded-xl bg-slate-900 border border-slate-700 outline-none font-mono text-sm text-center">
                 </div>
 
@@ -748,22 +795,22 @@
     </div>
 
     <!-- MODAL ADMIN: GESTIÓN DE USUARIOS Y GRUPOS -->
-    <div id="modalAdmin" class="fixed inset-0 z-[65] hidden flex items-center justify-center bg-slate-950/85 backdrop-blur-md p-6">
+    <div id="modalAdmin" role="dialog" aria-labelledby="adminModalTitle" aria-modal="true" class="fixed inset-0 z-[65] hidden flex items-center justify-center bg-slate-950/85 backdrop-blur-md p-6">
         <div class="glass-panel w-full max-w-lg p-0 rounded-3xl shadow-2xl animate-fade-in-up overflow-hidden" style="max-height:90vh;overflow-y:auto">
             <!-- Header Modal -->
             <div class="flex justify-between items-center px-8 py-5 bg-indigo-900/30 border-b border-indigo-700/40">
-                <h3 class="text-sm font-black uppercase tracking-widest text-indigo-200">⚙ Administración del Sistema</h3>
-                <button onclick="closeAdminModal()" class="text-slate-400 hover:text-white transition-colors text-lg font-bold">✕</button>
+                <h3 id="adminModalTitle" class="text-sm font-black uppercase tracking-widest text-indigo-200">⚙ Administración del Sistema</h3>
+                <button onclick="closeAdminModal()" aria-label="Cerrar modal de administración" class="text-slate-400 hover:text-white transition-colors text-lg font-bold">✕</button>
             </div>
             <!-- Tabs -->
-            <div class="flex border-b border-slate-700/50">
-                <button id="tabBtnGrupos" onclick="switchAdminTab('grupos')" class="flex-1 py-3 text-[11px] font-black uppercase tracking-widest transition-all tab-active">👥 Grupos</button>
-                <button id="tabBtnUsuarios" onclick="switchAdminTab('usuarios')" class="flex-1 py-3 text-[11px] font-black uppercase tracking-widest transition-all tab-inactive">👤 Usuarios</button>
+            <div class="flex border-b border-slate-700/50" role="tablist" aria-label="Opciones de administración">
+                <button id="tabBtnGrupos" onclick="switchAdminTab('grupos')" role="tab" aria-selected="true" aria-controls="tabGrupos" class="flex-1 py-3 text-[11px] font-black uppercase tracking-widest transition-all tab-active">👥 Grupos</button>
+                <button id="tabBtnUsuarios" onclick="switchAdminTab('usuarios')" role="tab" aria-selected="false" aria-controls="tabUsuarios" class="flex-1 py-3 text-[11px] font-black uppercase tracking-widest transition-all tab-inactive">👤 Usuarios</button>
             </div>
 
             <!-- Tab Grupos -->
-            <div id="tabGrupos" class="px-8 py-6 space-y-5">
-                <p class="text-[10px] text-slate-500 uppercase font-bold tracking-widest">Cambiar nombres de las interfaces de grupo</p>
+            <div id="tabGrupos" role="tabpanel" aria-labelledby="tabBtnGrupos" class="px-8 py-6 space-y-5">
+                <p class="text-[10px] text-slate-400 uppercase font-bold tracking-widest">Cambiar nombres de las interfaces de grupo</p>
                 <div class="space-y-3">
                     <div>
                         <label class="block text-[9px] font-bold text-indigo-400 mb-1 uppercase">Grupo 1 (Canal 1)</label>
@@ -780,25 +827,25 @@
             </div>
 
             <!-- Tab Usuarios -->
-            <div id="tabUsuarios" class="hidden px-8 py-6 space-y-6">
+            <div id="tabUsuarios" role="tabpanel" aria-labelledby="tabBtnUsuarios" class="hidden px-8 py-6 space-y-6">
                 <!-- Crear usuario -->
                 <div class="bg-slate-900/60 rounded-2xl p-5 border border-slate-700/50 space-y-4">
                     <p class="text-[10px] font-black text-slate-300 uppercase tracking-widest">➕ Crear Nuevo Usuario</p>
                     <div class="grid grid-cols-2 gap-3">
                         <div>
-                            <label class="block text-[9px] font-bold text-slate-400 mb-1 uppercase">Usuario</label>
-                            <input type="text" id="newUserName" placeholder="nombre_usuario"
+                            <label for="newUserName" class="block text-[9px] font-bold text-slate-300 mb-1 uppercase">Usuario</label>
+                            <input type="text" id="newUserName" placeholder="nombre_usuario" aria-label="Nombre de usuario nuevo"
                                 class="w-full p-2.5 rounded-xl outline-none font-mono text-sm bg-slate-800 border border-slate-600 focus:border-indigo-400 text-white transition-all" />
                         </div>
                         <div>
-                            <label class="block text-[9px] font-bold text-slate-400 mb-1 uppercase">Contraseña</label>
-                            <input type="password" id="newUserPass" placeholder="••••••••"
+                            <label for="newUserPass" class="block text-[9px] font-bold text-slate-300 mb-1 uppercase">Contraseña</label>
+                            <input type="password" id="newUserPass" placeholder="••••••••" aria-label="Contraseña para usuario nuevo"
                                 class="w-full p-2.5 rounded-xl outline-none font-mono text-sm bg-slate-800 border border-slate-600 focus:border-indigo-400 text-white transition-all" />
                         </div>
                     </div>
                     <div>
-                        <label class="block text-[9px] font-bold text-slate-400 mb-1 uppercase">Asignar a Grupo</label>
-                        <select id="newUserGroup" class="w-full p-2.5 rounded-xl outline-none font-bold text-sm bg-slate-800 border border-slate-600 text-white">
+                        <label for="newUserGroup" class="block text-[9px] font-bold text-slate-300 mb-1 uppercase">Asignar a Grupo</label>
+                        <select id="newUserGroup" aria-label="Grupo para asignar al usuario" class="w-full p-2.5 rounded-xl outline-none font-bold text-sm bg-slate-800 border border-slate-600 text-white">
                             <option value="1" id="newUserGroupOpt1">Grupo 1 — Capturadora2.0I</option>
                             <option value="2" id="newUserGroupOpt2">Grupo 2 — Capturadora2.0II</option>
                         </select>
@@ -820,11 +867,11 @@
     </div>
 
     <!-- MODAL VISTA PREVIA -->
-    <div id="modalPreview" class="fixed inset-0 z-[70] hidden flex items-center justify-center bg-slate-950/90 backdrop-blur-lg p-4">
+    <div id="modalPreview" role="dialog" aria-labelledby="previewTitle" aria-modal="true" class="fixed inset-0 z-[70] hidden flex items-center justify-center bg-slate-950/90 backdrop-blur-lg p-4">
         <div class="glass-panel w-full max-w-4xl rounded-3xl overflow-hidden shadow-2xl border border-white/10 animate-fade-in-up">
             <div class="flex justify-between items-center px-6 py-4 bg-slate-900/80 border-b border-slate-700">
                 <h3 id="previewTitle" class="text-sm font-black uppercase tracking-widest text-white">Señal en Vivo: Canal 1</h3>
-                <button onclick="closePreview()" class="bg-red-600/20 hover:bg-red-600 text-red-500 hover:text-white px-3 py-1 rounded-lg transition-all font-bold">CERRAR</button>
+                <button onclick="closePreview()" aria-label="Cerrar vista previa" class="bg-red-600/20 hover:bg-red-600 text-red-500 hover:text-white px-3 py-1 rounded-lg transition-all font-bold">CERRAR</button>
             </div>
             <div class="aspect-video bg-black flex items-center justify-center relative">
                 <img id="previewImg" src="" class="w-full h-full object-contain" alt="Live Feed">
@@ -836,11 +883,11 @@
     </div>
 
     <!-- MODAL REPRODUCTOR VOD -->
-    <div id="modalPlayer" class="fixed inset-0 z-[80] hidden flex items-center justify-center bg-slate-950/90 backdrop-blur-lg p-4">
+    <div id="modalPlayer" role="dialog" aria-labelledby="playerTitle" aria-modal="true" class="fixed inset-0 z-[80] hidden flex items-center justify-center bg-slate-950/90 backdrop-blur-lg p-4">
         <div class="glass-panel w-full max-w-5xl rounded-3xl overflow-hidden shadow-2xl border border-white/10 animate-fade-in-up flex flex-col">
             <div class="flex justify-between items-center px-6 py-4 bg-slate-900/80 border-b border-slate-700">
                 <h3 id="playerTitle" class="text-sm font-black uppercase tracking-widest text-white truncate max-w-[80%]">Reproductor VOD</h3>
-                <button onclick="closePlayer()" class="bg-red-600/20 hover:bg-red-600 text-red-500 hover:text-white px-3 py-1 rounded-lg transition-all font-bold">CERRAR</button>
+                <button onclick="closePlayer()" aria-label="Cerrar reproductor" class="bg-red-600/20 hover:bg-red-600 text-red-500 hover:text-white px-3 py-1 rounded-lg transition-all font-bold">CERRAR</button>
             </div>
             <div class="bg-black w-full aspect-video flex-1 flex items-center justify-center">
                 <video id="vodPlayer" class="w-full h-full" controls playsinline controlsList="nodownload"></video>
@@ -848,17 +895,18 @@
         </div>
     </div>
 
+    <script src="/js/accessibility.js"></script>
     <script src="/js/auth.js"></script>
     <script src="/js/dashboard.js"></script>
     <script src="/js/logs.js"></script>
     <script src="/js/admin.js"></script>
     <script src="/js/stats.js"></script>
     <!-- ════════════════════════════════ MODAL ESTADÍSTICAS ════════════════════════════════ -->
-    <div id="modalStats" class="hidden fixed inset-0 z-[100] bg-slate-900/95 backdrop-blur-xl overflow-y-auto w-full h-full">
+    <div id="modalStats" role="dialog" aria-labelledby="statsModalTitle" aria-modal="true" class="hidden fixed inset-0 z-[100] bg-slate-900/95 backdrop-blur-xl overflow-y-auto w-full h-full">
         <div class="max-w-7xl mx-auto px-4 py-8">
             <div class="flex justify-between items-center mb-8 border-b border-slate-700/50 pb-4">
-                <h2 class="text-2xl font-black tracking-tighter uppercase text-white drop-shadow-md">Panel de Estadísticas</h2>
-                <button onclick="closeStatsModal()" class="text-slate-400 hover:text-white transition-colors bg-slate-800 p-2 rounded-full shadow border border-slate-700">
+                <h2 id="statsModalTitle" class="text-2xl font-black tracking-tighter uppercase text-white drop-shadow-md">Panel de Estadísticas</h2>
+                <button onclick="closeStatsModal()" aria-label="Cerrar panel de estadísticas" class="text-slate-400 hover:text-white transition-colors bg-slate-800 p-2 rounded-full shadow border border-slate-700">
                     <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
                 </button>
             </div>

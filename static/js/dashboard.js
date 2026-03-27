@@ -85,7 +85,7 @@
                 const res = await fetch('/api/metrics', { headers: { 'X-Token': TOKEN, 'X-Username': USERNAME || '', 'X-Session-Id': SESSION_ID || '' } });
                 if (res.status === 403) {
                     logout();
-                    alert("Sesión finalizada.");
+                    showToast('Sesión finalizada por inactividad', 'warning');
                     return;
                 }
                 if (!res.ok) { onNetFail(); return; }
@@ -493,19 +493,27 @@
                 if (!chk.ok) { showToast('Contraseña incorrecta.', 'error'); return; }
             } catch (_) { showToast('Error de conexión al verificar contraseña.', 'error'); return; }
 
-            if (!confirm('¿Estás seguro de querer borrar todos los videos anteriores a hoy?')) return;
-            const btn = document.getElementById('btnManualCleanup');
-            const oldText = btn.textContent;
-            btn.disabled = true; btn.textContent = 'Borrando Todo...';
-            try {
-                // El backend ejecuta el script con el config actual.
-                // Para asegurar que borre "todo" el pasado, primero guardamos config con 1 dia si es necesario.
-                // O mejor, pasamos un parametro al backend.
-                const res = await fetch('/api/cleanup/execute?force_all=true', { method: 'POST', headers: { 'X-Token': TOKEN } });
-                const data = await res.json();
-                showToast('Limpieza profunda completada.', 'success');
-            } catch (e) { showToast('Error: ' + e, 'error'); }
-            finally { btn.disabled = false; btn.textContent = oldText; }
+            showConfirmDialog(
+                '¿Estás seguro de querer borrar todos los videos anteriores a hoy? Esta acción no se puede deshacer.',
+                async () => {
+                    const btn = document.getElementById('btnManualCleanup');
+                    const oldText = btn.textContent;
+                    btn.disabled = true; btn.textContent = 'Borrando Todo...';
+                    showLoadingOverlay('Eliminando archivos antiguos...');
+                    try {
+                        const res = await fetch('/api/cleanup/execute?force_all=true', { method: 'POST', headers: { 'X-Token': TOKEN } });
+                        const data = await res.json();
+                        hideLoadingOverlay();
+                        showToast('Limpieza profunda completada.', 'success');
+                    } catch (e) { 
+                        hideLoadingOverlay();
+                        showToast('Error: ' + e, 'error'); 
+                    } finally { 
+                        btn.disabled = false; 
+                        btn.textContent = oldText; 
+                    }
+                }
+            );
         }
 
         function playVideo(encName) {
