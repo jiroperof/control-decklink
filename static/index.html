@@ -60,7 +60,7 @@
         }
 
         .collapsible-body.open {
-            max-height: 9999px;
+            max-height: 2400px;
             opacity: 1;
         }
 
@@ -168,9 +168,21 @@
         }
 
         .glass-panel {
+            background: rgba(15, 23, 42, 0.82);
+            border: 1px solid rgba(51, 65, 85, 0.5);
+        }
+
+        .glass-panel-blur {
             background: rgba(15, 23, 42, 0.4);
             backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
             border: 1px solid rgba(51, 65, 85, 0.5);
+        }
+
+        #mainHeader {
+            will-change: transform;
+            transform: translateZ(0);
+            contain: layout style;
         }
 
         /* Toasts */
@@ -199,7 +211,7 @@
 
     <!-- ════════════════════════════════ LOGIN ════════════════════════════════ -->
     <div id="loginSection" class="fixed inset-0 z-50 flex flex-col items-center justify-center p-4 backdrop-blur-xl bg-slate-900">
-        <div class="w-full max-w-lg p-10 sm:p-12 glass-panel rounded-[2rem] shadow-[0_0_50px_rgba(0,0,0,0.5)] animate-fade-in-up -mt-16 sm:-mt-24">
+        <div class="w-full max-w-lg p-10 sm:p-12 glass-panel-blur rounded-[2rem] shadow-[0_0_50px_rgba(0,0,0,0.5)] animate-fade-in-up -mt-16 sm:-mt-24">
             
             <!-- Branding Idéntico al Header Superior Izquierdo -->
             <div class="flex items-center justify-center mb-10">
@@ -695,7 +707,7 @@
     <!-- MODAL GESTIÓN DE LIMPIEZA -->
     <div id="modalCleanup"
         class="fixed inset-0 z-[60] hidden flex items-center justify-center bg-slate-950/80 backdrop-blur-md p-6">
-        <div class="glass-panel w-full max-w-sm p-8 rounded-3xl shadow-2xl animate-fade-in-fast">
+        <div class="glass-panel-blur w-full max-w-sm p-8 rounded-3xl shadow-2xl animate-fade-in-fast">
             <div class="flex justify-between items-center mb-6 border-b border-slate-700 pb-3">
                 <h3 class="text-sm font-black uppercase tracking-widest text-white">⚙ Gestión de Limpieza</h3>
                 <button onclick="closeCleanupModal()"
@@ -740,7 +752,7 @@
 
     <!-- MODAL ADMIN: GESTIÓN DE USUARIOS Y GRUPOS -->
     <div id="modalAdmin" class="fixed inset-0 z-[65] hidden flex items-center justify-center bg-slate-950/85 backdrop-blur-md p-6">
-        <div class="glass-panel w-full max-w-lg p-0 rounded-3xl shadow-2xl animate-fade-in-fast overflow-hidden" style="max-height:90vh;overflow-y:auto">
+        <div class="glass-panel-blur w-full max-w-lg p-0 rounded-3xl shadow-2xl animate-fade-in-fast overflow-hidden" style="max-height:90vh;overflow-y:auto">
             <!-- Header Modal -->
             <div class="flex justify-between items-center px-8 py-5 bg-indigo-900/30 border-b border-indigo-700/40">
                 <h3 class="text-sm font-black uppercase tracking-widest text-indigo-200">⚙ Administración del Sistema</h3>
@@ -812,7 +824,7 @@
 
     <!-- MODAL VISTA PREVIA -->
     <div id="modalPreview" class="fixed inset-0 z-[70] hidden flex items-center justify-center bg-slate-950/90 backdrop-blur-lg p-4">
-        <div class="glass-panel w-full max-w-4xl rounded-3xl overflow-hidden shadow-2xl border border-white/10 animate-fade-in-fast">
+        <div class="glass-panel-blur w-full max-w-4xl rounded-3xl overflow-hidden shadow-2xl border border-white/10 animate-fade-in-fast">
             <div class="flex justify-between items-center px-6 py-4 bg-slate-900/80 border-b border-slate-700">
                 <h3 id="previewTitle" class="text-sm font-black uppercase tracking-widest text-white">Señal en Vivo: Canal 1</h3>
                 <button onclick="closePreview()" class="bg-red-600/20 hover:bg-red-600 text-red-500 hover:text-white px-3 py-1 rounded-lg transition-all font-bold">CERRAR</button>
@@ -828,7 +840,7 @@
 
     <!-- MODAL REPRODUCTOR VOD -->
     <div id="modalPlayer" class="fixed inset-0 z-[80] hidden flex items-center justify-center bg-slate-950/90 backdrop-blur-lg p-4">
-        <div class="glass-panel w-full max-w-5xl rounded-3xl overflow-hidden shadow-2xl border border-white/10 animate-fade-in-fast flex flex-col">
+        <div class="glass-panel-blur w-full max-w-5xl rounded-3xl overflow-hidden shadow-2xl border border-white/10 animate-fade-in-fast flex flex-col">
             <div class="flex justify-between items-center px-6 py-4 bg-slate-900/80 border-b border-slate-700">
                 <h3 id="playerTitle" class="text-sm font-black uppercase tracking-widest text-white truncate max-w-[80%]">Reproductor VOD</h3>
                 <button onclick="closePlayer()" class="bg-red-600/20 hover:bg-red-600 text-red-500 hover:text-white px-3 py-1 rounded-lg transition-all font-bold">CERRAR</button>

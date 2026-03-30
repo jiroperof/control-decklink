@@ -1,0 +1,554 @@
+[
+  {
+    "timestamp": 1774542406.0404065,
+    "username": "administrador",
+    "ip": "192.168.22.203",
+    "role": "admin"
+  },
+  {
+    "timestamp": 1774542507.305983,
+    "username": "jropero",
+    "ip": "192.168.22.203",
+    "role": "group2"
+  },
+  {
+    "timestamp": 1774542571.219931,
+    "username": "operador",
+    "ip": "192.168.22.203",
+    "role": "operator"
+  },
+  {
+    "timestamp": 1774542588.6685297,
+    "username": "administrador",
+    "ip": "192.168.22.203",
+    "role": "admin"
+  },
+  {
+    "timestamp": 1774542702.2243166,
+    "username": "eblanco",
+    "ip": "192.168.22.250",
+    "role": "group2"
+  },
+  {
+    "timestamp": 1774543394.4784498,
+    "username": "administrador",
+    "ip": "192.168.22.203",
+    "role": "admin"
+  },
+  {
+    "timestamp": 1774543427.8043766,
+    "username": "jropero",
+    "ip": "192.168.22.203",
+    "role": "group2"
+  },
+  {
+    "timestamp": 1774543506.5331635,
+    "username": "administrador",
+    "ip": "192.168.22.203",
+    "role": "fallido"
+  },
+  {
+    "timestamp": 1774543509.9958618,
+    "username": "administrador",
+    "ip": "192.168.22.203",
+    "role": "admin"
+  },
+  {
+    "timestamp": 1774543754.3636222,
+    "username": "administrador",
+    "ip": "127.0.0.1",
+    "role": "admin"
+  },
+  {
+    "timestamp": 1774543768.7931836,
+    "username": "administrador",
+    "ip": "127.0.0.1",
+    "role": "admin"
+  },
+  {
+    "timestamp": 1774544197.943084,
+    "username": "administrador",
+    "ip": "192.168.22.203",
+    "role": "admin"
+  },
+  {
+    "timestamp": 1774544212.8536422,
+    "username": "jcontreras",
+    "ip": "192.168.22.203",
+    "role": "group1"
+  },
+  {
+    "timestamp": 1774544738.4258168,
+    "username": "administrador",
+    "ip": "192.168.22.203",
+    "role": "admin"
+  },
+  {
+    "timestamp": 1774545023.7791693,
+    "username": "administrador",
+    "ip": "192.168.22.203",
+    "role": "admin"
+  },
+  {
+    "timestamp": 1774545340.1895368,
+    "username": "jropero",
+    "ip": "192.168.22.203",
+    "role": "fallido"
+  },
+  {
+    "timestamp": 1774545346.6609278,
+    "username": "jropero",
+    "ip": "192.168.22.203",
+    "role": "group2"
+  },
+  {
+    "timestamp": 1774545563.8789313,
+    "username": "administrador",
+    "ip": "192.168.22.203",
+    "role": "admin"
+  },
+  {
+    "timestamp": 1774545899.6662233,
+    "username": "jropero",
+    "ip": "192.168.22.203",
+    "role": "group2"
+  },
+  {
+    "timestamp": 1774545938.3627317,
+    "username": "administrador",
+    "ip": "192.168.22.203",
+    "role": "admin"
+  },
+  {
+    "timestamp": 1774546242.4966521,
+    "username": "administrador",
+    "ip": "192.168.22.203",
+    "role": "admin"
+  },
+  {
+    "timestamp": 1774546475.4454408,
+    "username": "jropero",
+    "ip": "192.168.22.203",
+    "role": "fallido"
+  },
+  {
+    "timestamp": 1774546489.9154253,
+    "username": "administrador",
+    "ip": "192.168.22.203",
+    "role": "fallido"
+  },
+  {
+    "timestamp": 1774546823.6061714,
+    "username": "administrador",
+    "ip": "192.168.22.203",
+    "role": "admin"
+  },
+  {
+    "timestamp": 1774546823.6095371,
+    "username": "administrador",
+    "ip": "192.168.22.203",
+    "role": "admin"
+  },
+  {
+    "timestamp": 1774546834.7631342,
+    "username": "administrador",
+    "ip": "192.168.22.203",
+    "role": "admin"
+  },
+  {
+    "timestamp": 1774547252.707972,
+    "username": "eblanco",
+    "ip": "192.168.22.250",
+    "role": "group2"
+  },
+  {
+    "timestamp": 1774547278.4650183,
+    "username": "administrador",
+    "ip": "192.168.22.250",
+    "role": "admin"
+  },
+  {
+    "timestamp": 1774548908.3338957,
+    "username": "administrador",
+    "ip": "192.168.22.117",
+    "role": "admin"
+  },
+  {
+    "timestamp": 1774549108.701279,
+    "username": "jcontreras",
+    "ip": "192.168.22.117",
+    "role": "group1"
+  },
+  {
+    "timestamp": 1774549290.116134,
+    "username": "jropero",
+    "ip": "192.168.22.203",
+    "role": "fallido"
+  },
+  {
+    "timestamp": 1774549293.9737327,
+    "username": "jropero",
+    "ip": "192.168.22.203",
+    "role": "group2"
+  },
+  {
+    "timestamp": 1774549646.9091218,
+    "username": "jropero",
+    "ip": "192.168.22.203",
+    "role": "group2"
+  },
+  {
+    "timestamp": 1774553397.9493732,
+    "username": "operador",
+    "ip": "192.168.22.203",
+    "role": "operator"
+  },
+  {
+    "timestamp": 1774555196.2406762,
+    "username": "administrador",
+    "ip": "192.168.22.117",
+    "role": "admin"
+  },
+  {
+    "timestamp": 1774555211.4869237,
+    "username": "administrador",
+    "ip": "192.168.22.203",
+    "role": "admin"
+  },
+  {
+    "timestamp": 1774614217.6052678,
+    "username": "administrador",
+    "ip": "192.168.22.203",
+    "role": "admin"
+  },
+  {
+    "timestamp": 1774614936.050852,
+    "username": "administrador",
+    "ip": "192.168.22.203",
+    "role": "admin"
+  },
+  {
+    "timestamp": 1774616286.7468123,
+    "username": "administrador",
+    "ip": "192.168.22.203",
+    "role": "admin"
+  },
+  {
+    "timestamp": 1774620054.9958737,
+    "username": "jropero",
+    "ip": "192.168.22.203",
+    "role": "group2"
+  },
+  {
+    "timestamp": 1774620063.5407135,
+    "username": "operador",
+    "ip": "192.168.22.203",
+    "role": "operator"
+  },
+  {
+    "timestamp": 1774621294.5997355,
+    "username": "administrador",
+    "ip": "192.168.22.203",
+    "role": "admin"
+  },
+  {
+    "timestamp": 1774622673.7129736,
+    "username": "eblanco",
+    "ip": "192.168.22.250",
+    "role": "group2"
+  },
+  {
+    "timestamp": 1774626221.3896713,
+    "username": "administrador",
+    "ip": "192.168.22.203",
+    "role": "admin"
+  },
+  {
+    "timestamp": 1774626489.821836,
+    "username": "jropero",
+    "ip": "192.168.22.203",
+    "role": "group2"
+  },
+  {
+    "timestamp": 1774627184.984943,
+    "username": "adminstrador",
+    "ip": "192.168.22.203",
+    "role": "fallido"
+  },
+  {
+    "timestamp": 1774627190.6875408,
+    "username": "adminstrador",
+    "ip": "192.168.22.203",
+    "role": "fallido"
+  },
+  {
+    "timestamp": 1774627220.0667846,
+    "username": "administrador",
+    "ip": "192.168.22.203",
+    "role": "admin"
+  },
+  {
+    "timestamp": 1774627537.8520598,
+    "username": "administrador",
+    "ip": "192.168.22.203",
+    "role": "admin"
+  },
+  {
+    "timestamp": 1774627551.9007196,
+    "username": "administrador",
+    "ip": "192.168.22.203",
+    "role": "admin"
+  },
+  {
+    "timestamp": 1774627562.7096164,
+    "username": "administrador",
+    "ip": "192.168.22.203",
+    "role": "fallido"
+  },
+  {
+    "timestamp": 1774627593.1806633,
+    "username": "jropero",
+    "ip": "192.168.22.203",
+    "role": "group2"
+  },
+  {
+    "timestamp": 1774627862.1663215,
+    "username": "administrador",
+    "ip": "192.168.22.203",
+    "role": "admin"
+  },
+  {
+    "timestamp": 1774628002.86867,
+    "username": "administrador",
+    "ip": "192.168.22.203",
+    "role": "admin"
+  },
+  {
+    "timestamp": 1774628268.0182106,
+    "username": "jropero",
+    "ip": "192.168.22.203",
+    "role": "group2"
+  },
+  {
+    "timestamp": 1774628518.816251,
+    "username": "jropero",
+    "ip": "192.168.22.203",
+    "role": "group2"
+  },
+  {
+    "timestamp": 1774628532.4665694,
+    "username": "administrador",
+    "ip": "192.168.22.203",
+    "role": "admin"
+  },
+  {
+    "timestamp": 1774628612.205549,
+    "username": "jropero",
+    "ip": "192.168.22.203",
+    "role": "group1"
+  },
+  {
+    "timestamp": 1774628699.452793,
+    "username": "administrador",
+    "ip": "192.168.22.203",
+    "role": "admin"
+  },
+  {
+    "timestamp": 1774628729.9881558,
+    "username": "jropero",
+    "ip": "192.168.22.203",
+    "role": "group1"
+  },
+  {
+    "timestamp": 1774628883.7226243,
+    "username": "administrador",
+    "ip": "192.168.22.203",
+    "role": "admin"
+  },
+  {
+    "timestamp": 1774629012.6632817,
+    "username": "administrador",
+    "ip": "192.168.22.203",
+    "role": "admin"
+  },
+  {
+    "timestamp": 1774629021.3030303,
+    "username": "jropero",
+    "ip": "192.168.22.203",
+    "role": "group1"
+  },
+  {
+    "timestamp": 1774629046.953836,
+    "username": "administrador",
+    "ip": "192.168.22.203",
+    "role": "admin"
+  },
+  {
+    "timestamp": 1774629240.8427515,
+    "username": "administrador",
+    "ip": "192.168.22.203",
+    "role": "admin"
+  },
+  {
+    "timestamp": 1774629593.9065251,
+    "username": "administrador",
+    "ip": "192.168.22.203",
+    "role": "admin"
+  },
+  {
+    "timestamp": 1774629611.9773614,
+    "username": "administrador",
+    "ip": "192.168.22.203",
+    "role": "admin"
+  },
+  {
+    "timestamp": 1774629944.5962813,
+    "username": "administrador",
+    "ip": "192.168.22.203",
+    "role": "admin"
+  },
+  {
+    "timestamp": 1774630032.6131914,
+    "username": "jropero",
+    "ip": "192.168.22.203",
+    "role": "group1"
+  },
+  {
+    "timestamp": 1774630044.7389095,
+    "username": "administrador",
+    "ip": "192.168.22.203",
+    "role": "admin"
+  },
+  {
+    "timestamp": 1774630338.3152847,
+    "username": "administrador",
+    "ip": "127.0.0.1",
+    "role": "admin"
+  },
+  {
+    "timestamp": 1774630348.220494,
+    "username": "administrador",
+    "ip": "127.0.0.1",
+    "role": "admin"
+  },
+  {
+    "timestamp": 1774630395.7216733,
+    "username": "administrador",
+    "ip": "127.0.0.1",
+    "role": "admin"
+  },
+  {
+    "timestamp": 1774630413.2396579,
+    "username": "administrador",
+    "ip": "127.0.0.1",
+    "role": "admin"
+  },
+  {
+    "timestamp": 1774630457.8039665,
+    "username": "administrador",
+    "ip": "127.0.0.1",
+    "role": "admin"
+  },
+  {
+    "timestamp": 1774630491.4374807,
+    "username": "administrador",
+    "ip": "192.168.22.203",
+    "role": "admin"
+  },
+  {
+    "timestamp": 1774630878.3668225,
+    "username": "jropero",
+    "ip": "192.168.22.203",
+    "role": "group1"
+  },
+  {
+    "timestamp": 1774630965.33379,
+    "username": "administrador",
+    "ip": "127.0.0.1",
+    "role": "admin"
+  },
+  {
+    "timestamp": 1774630977.4084504,
+    "username": "administrador",
+    "ip": "127.0.0.1",
+    "role": "admin"
+  },
+  {
+    "timestamp": 1774630996.8557417,
+    "username": "administrador",
+    "ip": "127.0.0.1",
+    "role": "admin"
+  },
+  {
+    "timestamp": 1774631016.3543105,
+    "username": "jropero",
+    "ip": "127.0.0.1",
+    "role": "fallido"
+  },
+  {
+    "timestamp": 1774631402.7161052,
+    "username": "jropero",
+    "ip": "192.168.22.203",
+    "role": "group1"
+  },
+  {
+    "timestamp": 1774631963.0036626,
+    "username": "administrador",
+    "ip": "192.168.22.203",
+    "role": "admin"
+  },
+  {
+    "timestamp": 1774632214.1940536,
+    "username": "administrador",
+    "ip": "192.168.22.203",
+    "role": "admin"
+  },
+  {
+    "timestamp": 1774632886.4589944,
+    "username": "administrador",
+    "ip": "192.168.22.203",
+    "role": "admin"
+  },
+  {
+    "timestamp": 1774633423.6100023,
+    "username": "administrador",
+    "ip": "192.168.22.203",
+    "role": "admin"
+  },
+  {
+    "timestamp": 1774633451.8621502,
+    "username": "jropero",
+    "ip": "192.168.22.203",
+    "role": "group1"
+  },
+  {
+    "timestamp": 1774633688.9826436,
+    "username": "administrador",
+    "ip": "192.168.22.203",
+    "role": "admin"
+  },
+  {
+    "timestamp": 1774634074.2264147,
+    "username": "administrador",
+    "ip": "192.168.22.203",
+    "role": "admin"
+  },
+  {
+    "timestamp": 1774643030.1180806,
+    "username": "administrador",
+    "ip": "192.168.57.187",
+    "role": "admin"
+  },
+  {
+    "timestamp": 1774643129.7446976,
+    "username": "oliver19",
+    "ip": "192.168.57.187",
+    "role": "group2"
+  },
+  {
+    "timestamp": 1774643230.019064,
+    "username": "administrador",
+    "ip": "192.168.57.187",
+    "role": "admin"
+  }
+]

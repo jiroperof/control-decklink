@@ -877,7 +877,9 @@ def resolve_safe_path(filename: str) -> Path:
     base = get_base_path()
     safe_filename = filename.lstrip("/").replace("../", "")
     target = (base / safe_filename).resolve()
-    if not str(target).startswith(str(base)):
+    try:
+        target.relative_to(base)
+    except ValueError:
         raise HTTPException(status_code=403, detail="Ruta inválida")
     if not target.exists() or not target.is_file():
         raise HTTPException(status_code=404, detail="Archivo no encontrado")
@@ -911,13 +913,13 @@ async def api_stream(req: Request, file: str, token: str = Depends(verify_token)
     range_header = req.headers.get("Range")
     
     if range_header:
-            match = re.match(r"bytes=(\d+)-(\d*)", range_header)
-            if match:
-                start = int(match.group(1))
-                end = int(match.group(2)) if match.group(2) else file_size - 1
-                end = min(end, file_size - 1)
-                length = (end - start) + 1
-            
+        match = re.match(r"bytes=(\d+)-(\d*)", range_header)
+        if match:
+            start = int(match.group(1))
+            end = int(match.group(2)) if match.group(2) else file_size - 1
+            end = min(end, file_size - 1)
+            length = (end - start) + 1
+
             def file_iterator(path, offset, bytes_to_read):
                 with open(path, "rb") as f:
                     f.seek(offset)
@@ -927,7 +929,7 @@ async def api_stream(req: Request, file: str, token: str = Depends(verify_token)
                         if not data: break
                         bytes_to_read -= len(data)
                         yield data
-                        
+
             headers = {"Content-Range": f"bytes {start}-{end}/{file_size}", "Accept-Ranges": "bytes", "Content-Length": str(length), "Content-Type": "video/mp4"}
             return StreamingResponse(file_iterator(target, start, length), status_code=206, headers=headers)
             
@@ -1156,7 +1158,7 @@ async def get_stats(token: str = Depends(require_admin)):
 @app.get("/download-certificate")
 async def download_ca_cert():
     """Endpoint para descargar el certificado CA root y eliminar warnings en otros dispositivos"""
-    ca_file = os.path.join(os.path.dirname(os.path.abspath(__file__)), "certs", "vtv-ca-root.pem")
+    ca_file = os.path.join(_BASE_DIR, "certs", "vtv-ca-root.pem")
     if os.path.exists(ca_file):
         return FileResponse(
             ca_file, 
@@ -1167,7 +1169,7 @@ async def download_ca_cert():
     raise HTTPException(status_code=404, detail="Certificado CA no encontrado")
 
 # Static files debe ir al FINAL para no capturar otras rutas
-app.mount("/", StaticFiles(directory="static", html=True), name="static")
+app.mount("/", StaticFiles(directory=os.path.join(_BASE_DIR, "static"), html=True), name="static")
 
 if __name__ == "__main__":
     import uvicorn

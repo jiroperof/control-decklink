@@ -304,7 +304,7 @@
                 localStorage.setItem(TOKEN_KEY, TOKEN);
                 localStorage.setItem(ROLE_KEY, ROLE);
                 localStorage.setItem(USER_KEY, USERNAME);
-                localStorage.setItem('vtv_session', SESSION_ID);
+                localStorage.setItem(SESSION_KEY, SESSION_ID);
                 localStorage.setItem(EXPIRE_KEY, Date.now() + SESSION_HOURS * 3600 * 1000);
                 if (USER_CHANNEL) localStorage.setItem(CHANNEL_KEY, USER_CHANNEL);
                 else localStorage.removeItem(CHANNEL_KEY);
