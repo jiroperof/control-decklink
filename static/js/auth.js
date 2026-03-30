@@ -91,6 +91,7 @@
         let USER_CHANNEL = null; // "1", "2", or null
         let metricsTimer = null, statusTimer = null;
         let activePreviewId = null;
+        let previewAbortController = null;
         let _lastLogSize = { '1': 0, '2': 0 };
         let _lastProcHash = null;
 

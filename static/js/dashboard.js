@@ -548,6 +548,45 @@
         }
 
         // --- VISTA PREVIA ---
+        function _findJpegBoundary(buf, pattern, from = 0) {
+            outer: for (let i = from; i <= buf.length - pattern.length; i++) {
+                for (let j = 0; j < pattern.length; j++) {
+                    if (buf[i + j] !== pattern[j]) continue outer;
+                }
+                return i;
+            }
+            return -1;
+        }
+
+        async function _streamMjpeg(url, imgEl, signal) {
+            const res = await fetch(url, { signal, headers: { 'X-Token': TOKEN } });
+            if (!res.ok) throw new Error(`HTTP ${res.status}`);
+            const reader = res.body.getReader();
+            const SOI = new Uint8Array([0xFF, 0xD8]);
+            const EOI = new Uint8Array([0xFF, 0xD9]);
+            let buf = new Uint8Array(0);
+            while (true) {
+                const { done, value } = await reader.read();
+                if (done) break;
+                const merged = new Uint8Array(buf.length + value.length);
+                merged.set(buf); merged.set(value, buf.length);
+                buf = merged;
+                while (buf.length > 3) {
+                    const s = _findJpegBoundary(buf, SOI);
+                    if (s === -1) { buf = new Uint8Array(0); break; }
+                    const e = _findJpegBoundary(buf, EOI, s + 2);
+                    if (e === -1) { if (s > 0) buf = buf.slice(s); break; }
+                    const frame = buf.slice(s, e + 2);
+                    buf = buf.slice(e + 2);
+                    const blobUrl = URL.createObjectURL(new Blob([frame], { type: 'image/jpeg' }));
+                    const prev = imgEl.src;
+                    imgEl.src = blobUrl;
+                    if (prev && prev.startsWith('blob:')) URL.revokeObjectURL(prev);
+                }
+                if (buf.length > 2000000) buf = new Uint8Array(0); // safety valve
+            }
+        }
+
         function openPreview(id) {
             if (channels[id]?.running) {
                 showToast(`Canal ${id} está grabando. Detén la grabación para ver la vista previa.`, 'warning');
@@ -557,18 +596,22 @@
             const modal = document.getElementById('modalPreview');
             const img = document.getElementById('previewImg');
             const loader = document.getElementById('previewLoader');
-            const title = document.getElementById('previewTitle');
 
-            title.textContent = `Señal en Vivo: Canal ${id}`;
-            img.onload = () => { loader.classList.add('hidden'); };
-            img.onerror = () => {
-                showToast('No se pudo cargar la vista previa. Asegúrate de que el canal no esté ocupado.', 'error');
-                closePreview();
-            };
-
-            // El token se pasa por query string porque es un <img>. Añadimos cache-buster.
-            img.src = `/api/preview/${id}?token=${TOKEN}&t=${Date.now()}`;
+            document.getElementById('previewTitle').textContent = `Señal en Vivo: Canal ${id}`;
+            loader.classList.remove('hidden');
+            img.onload = () => loader.classList.add('hidden');
             modal.classList.remove('hidden');
+
+            const controller = new AbortController();
+            previewAbortController = controller;
+
+            _streamMjpeg(`/api/preview/${id}?t=${Date.now()}`, img, controller.signal)
+                .catch(e => {
+                    if (e.name !== 'AbortError') {
+                        showToast('No se pudo cargar la vista previa. Verifica que el canal no esté ocupado.', 'error');
+                        closePreview();
+                    }
+                });
         }
 
         async function closePreview() {
@@ -576,11 +619,10 @@
             const img = document.getElementById('previewImg');
             const loader = document.getElementById('previewLoader');
 
-            // Desvincular eventos antes de limpiar la fuente para evitar el bucle de "onerror"
             img.onload = null;
-            img.onerror = null;
-            img.src = ""; // Detiene el stream en el cliente
-            
+            if (previewAbortController) { previewAbortController.abort(); previewAbortController = null; }
+            if (img.src && img.src.startsWith('blob:')) URL.revokeObjectURL(img.src);
+            img.src = '';
             modal.classList.add('hidden');
             loader.classList.remove('hidden');
 
