@@ -549,6 +549,10 @@
 
         // --- VISTA PREVIA ---
         function openPreview(id) {
+            if (channels[id]?.running) {
+                showToast(`Canal ${id} está grabando. Detén la grabación para ver la vista previa.`, 'warning');
+                return;
+            }
             activePreviewId = id;
             const modal = document.getElementById('modalPreview');
             const img = document.getElementById('previewImg');
