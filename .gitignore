@@ -14,10 +14,13 @@ env/
 # Certificados TLS (generados localmente)
 certs/
 
-# Datos de runtime — NO subir al repo
+# Datos de runtime — NO subir al repo (en data/ ni en raíz)
 data/access_log.json
 data/duration_cache.json
 data/users_db.json
+access_log.json
+duration_cache.json
+users_db.json
 
 # Archivos de logs
 logs/
