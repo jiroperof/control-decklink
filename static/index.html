@@ -204,7 +204,7 @@
     </style>
 </head>
 
-<body class="bg-slate-900 text-white min-h-screen antialiased" style="font-family: 'Outfit', system-ui, sans-serif;">
+<body class="bg-slate-900 text-white min-h-screen antialiased flex flex-col" style="font-family: 'Outfit', system-ui, sans-serif;">
 
     <!-- TOAST CONTAINER -->
     <div id="toastContainer" class="fixed top-6 right-6 z-[100] flex flex-col gap-3 pointer-events-none"></div>
@@ -229,6 +229,8 @@
                 <!-- Hidden elements kept for modal compatibility -->
                 <span id="btnRoleG1Label" class="hidden">Capturadora2.0I</span>
                 <span id="btnRoleG2Label" class="hidden">Capturadora2.0II</span>
+                <span id="btnRoleG3Label" class="hidden">Capturadora2.0III</span>
+                <span id="btnRoleG4Label" class="hidden">Capturadora2.0IV</span>
 
                 <div>
                     <input type="text" id="user" placeholder="Usuario de acceso"
@@ -258,7 +260,7 @@
     </div>
 
     <!-- ════════════════════════════════ DASHBOARD ════════════════════════════════ -->
-    <div id="mainSection" class="hidden container mx-auto px-6 pt-4 pb-28">
+    <div id="mainSection" class="hidden container mx-auto px-6 pt-4 pb-10 flex-1">
 
         <!-- HEADER -->
         <header id="mainHeader"
@@ -286,6 +288,12 @@
                         <div id="badgeCH2"
                             class="px-3 py-1 rounded border border-slate-700/50 bg-slate-800/60 text-slate-400 font-bold text-[10px] tracking-widest shadow-inner transition-colors duration-300">
                             GRABANDO 2</div>
+                        <div id="badgeCH3"
+                            class="px-3 py-1 rounded border border-slate-700/50 bg-slate-800/60 text-slate-400 font-bold text-[10px] tracking-widest shadow-inner transition-colors duration-300">
+                            GRABANDO 3</div>
+                        <div id="badgeCH4"
+                            class="px-3 py-1 rounded border border-slate-700/50 bg-slate-800/60 text-slate-400 font-bold text-[10px] tracking-widest shadow-inner transition-colors duration-300">
+                            GRABANDO 4</div>
                     </div>
                     <div class="flex justify-center items-center gap-4 border-l border-slate-700/50 pl-5 h-full">
                         
@@ -322,7 +330,8 @@
             ⚠ Sin conexión con el servidor. Reintentando...</div>
 
         <!-- MAIN GRID -->
-        <div id="gridCards" class="grid gap-4 mb-6 animate-fade-in-up delay-100 items-start" style="grid-template-columns: 1fr 1fr 260px;">
+        <div class="flex flex-col xl:flex-row gap-4 mb-6 animate-fade-in-up delay-100 items-start">
+            <div id="gridCards" class="grid grid-cols-1 xl:grid-cols-2 gap-4 flex-1 w-full">
 
 
             <!-- CONFIG: CH1 -->
@@ -433,11 +442,11 @@
                 </div>
             </div>
 
-            <!-- CONFIG: CH2 -->
-            <div id="cardCH2" class="glass-panel rounded-3xl font-mono flex flex-col overflow-hidden h-full">
+<!-- CONFIG: CH2 -->
+            <div id="cardCH2" class="glass-panel rounded-3xl font-mono flex flex-col overflow-hidden h-full shadow-lg">
                 <div
                     class="bg-slate-900/40 px-5 py-4 border-b border-slate-700/50 font-black text-white uppercase tracking-widest flex justify-between items-center">
-                    <span id="titleCH2" class="text-blue-500">🔴 DeckLink Duo (2)</span><span id="autoRestartBanner_2"
+                    <span class="text-blue-500">🔴 DeckLink Duo (2)</span><span id="autoRestartBanner_2"
                         class="hidden text-orange-400 text-[9px] bg-orange-900/30 px-2 py-1 rounded border border-orange-700/50">🔄
                         Auto-Rec Injected</span></div>
                 <div class="p-4 flex-1 flex flex-col">
@@ -460,7 +469,7 @@
                             <label class="block text-[9px] font-bold text-slate-400 mb-1 uppercase">Cortes cada
                                 (Minutos)</label>
                             <div
-                                class="flex items-center bg-[#0f172a] rounded-xl overflow-hidden focus-within:ring-2 focus-within:ring-blue-500/40 transition-all font-mono border border-slate-700 shadow-inner">
+                                class="flex items-center bg-[#0f172a] rounded-xl overflow-hidden focus-within:ring-2 focus-within:ring-red-500/40 transition-all font-mono border border-slate-700 shadow-inner">
                                 <button type="button" id="btnMinDec_2" onclick="adjMin('2', -1)"
                                     class="px-4 py-2 text-slate-400 hover:text-white hover:bg-slate-700 transition-colors disabled:opacity-50 border-r border-slate-700 font-bold active:bg-slate-600 text-[14px]"
                                     style="line-height: 1.1;">-</button>
@@ -541,8 +550,228 @@
                 </div>
             </div>
 
-            <!-- MÉTRICAS -->
-            <div id="resPanel" class="font-mono h-full">
+<!-- CONFIG: CH3 -->
+            <div id="cardCH3" class="glass-panel rounded-3xl font-mono flex flex-col overflow-hidden h-full shadow-lg">
+                <div
+                    class="bg-slate-900/40 px-5 py-4 border-b border-slate-700/50 font-black text-white uppercase tracking-widest flex justify-between items-center">
+                    <span class="text-green-500">🔴 DeckLink Duo (3)</span><span id="autoRestartBanner_3"
+                        class="hidden text-orange-400 text-[9px] bg-orange-900/30 px-2 py-1 rounded border border-orange-700/50">🔄
+                        Auto-Rec Injected</span></div>
+                <div class="p-4 flex-1 flex flex-col">
+                    <div id="scheduleBanner_3"
+                        class="hidden mb-4 text-blue-400 text-[10px] font-bold bg-blue-900/20 border border-blue-700/40 rounded-xl py-2 px-3 text-center">
+                    </div>
+
+                    <div class="admin-ui-block grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                        <div>
+                            <label class="block text-[9px] font-bold text-slate-400 mb-1 uppercase">Calidad del
+                                Master</label>
+                            <select id="bitrate_3"
+                                class="w-full p-2.5 rounded-xl outline-none font-bold text-xs">
+                                <option value="15M" selected>15 Mbps - Estándar</option>
+                                <option value="25M">25 Mbps - HD Master</option>
+                                <option value="50M">50 Mbps - Master Pro</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-[9px] font-bold text-slate-400 mb-1 uppercase">Cortes cada
+                                (Minutos)</label>
+                            <div
+                                class="flex items-center bg-[#0f172a] rounded-xl overflow-hidden focus-within:ring-2 focus-within:ring-red-500/40 transition-all font-mono border border-slate-700 shadow-inner">
+                                <button type="button" id="btnMinDec_3" onclick="adjMin('3', -1)"
+                                    class="px-4 py-2 text-slate-400 hover:text-white hover:bg-slate-700 transition-colors disabled:opacity-50 border-r border-slate-700 font-bold active:bg-slate-600 text-[14px]"
+                                    style="line-height: 1.1;">-</button>
+                                <input type="number" id="minutes_3" value="1" min="1" max="120"
+                                    class="w-full py-2 outline-none font-black text-[13px] text-center text-white"
+                                    style="border: none !important; box-shadow: none; background: transparent !important;">
+                                <button type="button" id="btnMinInc_3" onclick="adjMin('3', 1)"
+                                    class="px-4 py-2 text-slate-400 hover:text-white hover:bg-slate-700 transition-colors disabled:opacity-50 border-l border-slate-700 font-bold active:bg-slate-600 text-[14px]"
+                                    style="line-height: 1.1;">+</button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="admin-ui-block mb-4">
+                        <label class="block text-[9px] font-bold text-slate-400 mb-1 uppercase">Carpeta de
+                            Destino</label>
+                        <div class="flex gap-2">
+                            <input type="text" id="destPath_3" value="/home/administrador/Capturas"
+                                class="flex-1 p-2.5 rounded-xl outline-none font-mono text-[11px]">
+                            <button id="btnResetDest_3" onclick="resetDestPath('3')"
+                                class="bg-slate-700 hover:bg-slate-600 px-3 py-2.5 rounded-xl transition-all flex items-center justify-center disabled:opacity-50 disabled:cursor-not-allowed border border-slate-600 shadow-md active:scale-95"
+                                title="Restaurar ruta">
+                                <svg class="w-4 h-4 text-slate-300" fill="none" stroke="currentColor"
+                                    viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                        d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15">
+                                    </path>
+                                </svg>
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- GRABACIÓN PROGRAMADA -->
+                    <div class="admin-ui-block mb-4 bg-slate-900/50 rounded-2xl border border-slate-700/50 p-4 pb-3">
+                        <p class="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-3">⏰ Programar Canal
+                        </p>
+                        <div id="scheduleBody_3">
+                            <div class="grid grid-cols-2 gap-3 mb-3">
+                                <div>
+                                    <label class="block text-[9px] text-slate-500 mb-1 uppercase font-bold">Inicio
+                                        (HH:MM)</label>
+                                    <input type="time" id="scheduleStart_3"
+                                        class="w-full p-2 rounded-xl outline-none font-mono text-xs">
+                                </div>
+                                <div>
+                                    <label class="block text-[9px] text-slate-500 mb-1 uppercase font-bold">Stop
+                                        (HH:MM)</label>
+                                    <input type="time" id="scheduleStop_3"
+                                        class="w-full p-2 rounded-xl outline-none font-mono text-xs">
+                                </div>
+                            </div>
+                            <div class="flex gap-2">
+                                <button onclick="setSchedule('3')"
+                                    class="flex-1 bg-blue-700 hover:bg-blue-600 py-2 rounded-xl font-bold text-[10px] uppercase transition-all">Guardar</button>
+                                <button onclick="cancelSchedule('3')"
+                                    class="flex-1 bg-slate-700 hover:bg-slate-600 py-2 rounded-xl font-bold text-[10px] uppercase transition-all">Borrar</button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="mt-auto"></div>
+
+                    <!-- Duración -->
+                    <div id="durationBox_3" class="my-2 text-center transition-all duration-300 opacity-50">
+                        <p class="text-[9px] text-slate-500 uppercase font-bold mb-0.5">Duración (CH3)</p>
+                        <p id="durationVal_3"
+                            class="text-2xl font-black text-red-400 font-mono tracking-widest drop-shadow-md">00:00:00
+                        </p>
+                    </div>
+
+                    <div class="admin-ui-block grid grid-cols-2 gap-4 mt-2">
+                        <button id="btnStart_3" onclick="execute('3', 'start')"
+                            class="bg-red-600 hover:bg-red-500 py-4 rounded-2xl font-black text-lg active:scale-95 uppercase shadow-lg shadow-red-900/40 transition-all">Iniciar</button>
+                        <button id="btnStop_3" onclick="execute('3', 'stop')"
+                            class="bg-slate-700 hover:bg-slate-600 py-4 rounded-2xl font-black text-lg active:scale-95 uppercase shadow-lg transition-all">Detener</button>
+                    </div>
+                    <button id="btnPreview_3" onclick="openPreview('3')" class="w-full mt-3 bg-slate-800/60 hover:bg-slate-700 border border-slate-700 py-2 rounded-xl font-bold text-[10px] uppercase tracking-widest transition-all active:scale-95 disabled:opacity-30 disabled:cursor-not-allowed">👁 Vista Previa</button>
+                </div>
+            </div>
+
+<!-- CONFIG: CH4 -->
+            <div id="cardCH4" class="glass-panel rounded-3xl font-mono flex flex-col overflow-hidden h-full shadow-lg">
+                <div
+                    class="bg-slate-900/40 px-5 py-4 border-b border-slate-700/50 font-black text-white uppercase tracking-widest flex justify-between items-center">
+                    <span class="text-fuchsia-500">🔴 DeckLink Duo (4)</span><span id="autoRestartBanner_4"
+                        class="hidden text-orange-400 text-[9px] bg-orange-900/30 px-2 py-1 rounded border border-orange-700/50">🔄
+                        Auto-Rec Injected</span></div>
+                <div class="p-4 flex-1 flex flex-col">
+                    <div id="scheduleBanner_4"
+                        class="hidden mb-4 text-blue-400 text-[10px] font-bold bg-blue-900/20 border border-blue-700/40 rounded-xl py-2 px-3 text-center">
+                    </div>
+
+                    <div class="admin-ui-block grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                        <div>
+                            <label class="block text-[9px] font-bold text-slate-400 mb-1 uppercase">Calidad del
+                                Master</label>
+                            <select id="bitrate_4"
+                                class="w-full p-2.5 rounded-xl outline-none font-bold text-xs">
+                                <option value="15M" selected>15 Mbps - Estándar</option>
+                                <option value="25M">25 Mbps - HD Master</option>
+                                <option value="50M">50 Mbps - Master Pro</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-[9px] font-bold text-slate-400 mb-1 uppercase">Cortes cada
+                                (Minutos)</label>
+                            <div
+                                class="flex items-center bg-[#0f172a] rounded-xl overflow-hidden focus-within:ring-2 focus-within:ring-red-500/40 transition-all font-mono border border-slate-700 shadow-inner">
+                                <button type="button" id="btnMinDec_4" onclick="adjMin('4', -1)"
+                                    class="px-4 py-2 text-slate-400 hover:text-white hover:bg-slate-700 transition-colors disabled:opacity-50 border-r border-slate-700 font-bold active:bg-slate-600 text-[14px]"
+                                    style="line-height: 1.1;">-</button>
+                                <input type="number" id="minutes_4" value="1" min="1" max="120"
+                                    class="w-full py-2 outline-none font-black text-[13px] text-center text-white"
+                                    style="border: none !important; box-shadow: none; background: transparent !important;">
+                                <button type="button" id="btnMinInc_4" onclick="adjMin('4', 1)"
+                                    class="px-4 py-2 text-slate-400 hover:text-white hover:bg-slate-700 transition-colors disabled:opacity-50 border-l border-slate-700 font-bold active:bg-slate-600 text-[14px]"
+                                    style="line-height: 1.1;">+</button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="admin-ui-block mb-4">
+                        <label class="block text-[9px] font-bold text-slate-400 mb-1 uppercase">Carpeta de
+                            Destino</label>
+                        <div class="flex gap-2">
+                            <input type="text" id="destPath_4" value="/home/administrador/Capturas"
+                                class="flex-1 p-2.5 rounded-xl outline-none font-mono text-[11px]">
+                            <button id="btnResetDest_4" onclick="resetDestPath('4')"
+                                class="bg-slate-700 hover:bg-slate-600 px-3 py-2.5 rounded-xl transition-all flex items-center justify-center disabled:opacity-50 disabled:cursor-not-allowed border border-slate-600 shadow-md active:scale-95"
+                                title="Restaurar ruta">
+                                <svg class="w-4 h-4 text-slate-300" fill="none" stroke="currentColor"
+                                    viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                        d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15">
+                                    </path>
+                                </svg>
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- GRABACIÓN PROGRAMADA -->
+                    <div class="admin-ui-block mb-4 bg-slate-900/50 rounded-2xl border border-slate-700/50 p-4 pb-3">
+                        <p class="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-3">⏰ Programar Canal
+                        </p>
+                        <div id="scheduleBody_4">
+                            <div class="grid grid-cols-2 gap-3 mb-3">
+                                <div>
+                                    <label class="block text-[9px] text-slate-500 mb-1 uppercase font-bold">Inicio
+                                        (HH:MM)</label>
+                                    <input type="time" id="scheduleStart_4"
+                                        class="w-full p-2 rounded-xl outline-none font-mono text-xs">
+                                </div>
+                                <div>
+                                    <label class="block text-[9px] text-slate-500 mb-1 uppercase font-bold">Stop
+                                        (HH:MM)</label>
+                                    <input type="time" id="scheduleStop_4"
+                                        class="w-full p-2 rounded-xl outline-none font-mono text-xs">
+                                </div>
+                            </div>
+                            <div class="flex gap-2">
+                                <button onclick="setSchedule('4')"
+                                    class="flex-1 bg-blue-700 hover:bg-blue-600 py-2 rounded-xl font-bold text-[10px] uppercase transition-all">Guardar</button>
+                                <button onclick="cancelSchedule('4')"
+                                    class="flex-1 bg-slate-700 hover:bg-slate-600 py-2 rounded-xl font-bold text-[10px] uppercase transition-all">Borrar</button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="mt-auto"></div>
+
+                    <!-- Duración -->
+                    <div id="durationBox_4" class="my-2 text-center transition-all duration-300 opacity-50">
+                        <p class="text-[9px] text-slate-500 uppercase font-bold mb-0.5">Duración (CH4)</p>
+                        <p id="durationVal_4"
+                            class="text-2xl font-black text-red-400 font-mono tracking-widest drop-shadow-md">00:00:00
+                        </p>
+                    </div>
+
+                    <div class="admin-ui-block grid grid-cols-2 gap-4 mt-2">
+                        <button id="btnStart_4" onclick="execute('4', 'start')"
+                            class="bg-red-600 hover:bg-red-500 py-4 rounded-2xl font-black text-lg active:scale-95 uppercase shadow-lg shadow-red-900/40 transition-all">Iniciar</button>
+                        <button id="btnStop_4" onclick="execute('4', 'stop')"
+                            class="bg-slate-700 hover:bg-slate-600 py-4 rounded-2xl font-black text-lg active:scale-95 uppercase shadow-lg transition-all">Detener</button>
+                    </div>
+                    <button id="btnPreview_4" onclick="openPreview('4')" class="w-full mt-3 bg-slate-800/60 hover:bg-slate-700 border border-slate-700 py-2 rounded-xl font-bold text-[10px] uppercase tracking-widest transition-all active:scale-95 disabled:opacity-30 disabled:cursor-not-allowed">👁 Vista Previa</button>
+                </div>
+            </div>
+
+            </div><!-- /gridCards -->
+
+            <!-- Sidebar -->
+            <div class="w-full xl:w-[260px] xl:shrink-0 flex flex-col gap-4">
+                <!-- MÉTRICAS -->
+                <div id="resPanel" class="font-mono h-full">
                 <div class="glass-panel p-6 rounded-3xl shadow-2xl h-full flex flex-col gap-0">
                     <h3 class="text-xs font-black text-white uppercase mb-5 border-b border-slate-700 pb-2 text-center tracking-widest">
                         RECURSOS</h3>
@@ -599,8 +828,11 @@
                                 <span class="flex items-center gap-2">
                                     <span>Disco (/) Root</span>
                                     <button onclick="openCleanupModal()"
-                                        class="admin-ui-block text-[8px] text-red-500 hover:text-red-400 font-bold border border-red-900/40 bg-red-900/10 px-1.5 py-0.5 rounded transition-all active:scale-95"
-                                        title="Configurar Limpieza">LIMPIAR</button>
+                                        class="admin-ui-block text-[9px] text-red-100 hover:text-white font-bold border border-red-500/50 bg-red-600/80 px-2 py-0.5 rounded-md transition-all active:scale-95 shadow-[0_0_10px_rgba(220,38,38,0.4)] hover:bg-red-500 flex items-center gap-1"
+                                        title="Gestión de Limpieza">
+                                        <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
+                                        LIMPIAR
+                                    </button>
                                     <span id="diskAlert" class="hidden text-red-500 text-sm animate-pulse" title="¡Espacio Crítico!">⚠</span>
                                 </span>
                                 <span id="diskVal">0%</span>
@@ -640,7 +872,8 @@
                 </div>
             </div>
 
-        </div><!-- /gridCards -->
+            </div><!-- /Sidebar -->
+        </div><!-- /MAIN GRID -->
 
         <!-- HISTORIAL DE ARCHIVOS -->
         <div class="mt-12 glass-panel rounded-3xl shadow-2xl mb-6 overflow-hidden animate-fade-in-up delay-200">
@@ -684,7 +917,7 @@
                         Auto-refresh (5s)
                     </label>
                 </div>
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-6">
                     <div class="flex flex-col">
                         <p class="text-[10px] text-slate-500 font-bold mb-2 uppercase tracking-widest">DeckLink (1)
                             <span id="logSize_1" class="ml-2 font-mono text-slate-600"></span></p>
@@ -699,6 +932,20 @@
                             class="font-mono text-[9px] bg-[#0a0f1a] text-[#60a5fa] h-[300px] overflow-y-auto p-4 rounded-xl whitespace-pre-wrap break-all border border-slate-700/50">
                         </div>
                     </div>
+                    <div class="flex flex-col">
+                        <p class="text-[10px] text-slate-500 font-bold mb-2 uppercase tracking-widest">DeckLink (3)
+                            <span id="logSize_3" class="ml-2 font-mono text-slate-600"></span></p>
+                        <div id="logBox_3"
+                            class="font-mono text-[9px] bg-[#0a0f1a] text-[#4ade80] h-[300px] overflow-y-auto p-4 rounded-xl whitespace-pre-wrap break-all border border-slate-700/50">
+                        </div>
+                    </div>
+                    <div class="flex flex-col">
+                        <p class="text-[10px] text-slate-500 font-bold mb-2 uppercase tracking-widest">DeckLink (4)
+                            <span id="logSize_4" class="ml-2 font-mono text-slate-600"></span></p>
+                        <div id="logBox_4"
+                            class="font-mono text-[9px] bg-[#0a0f1a] text-[#f472b6] h-[300px] overflow-y-auto p-4 rounded-xl whitespace-pre-wrap break-all border border-slate-700/50">
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
@@ -707,44 +954,51 @@
     <!-- MODAL GESTIÓN DE LIMPIEZA -->
     <div id="modalCleanup"
         class="fixed inset-0 z-[60] hidden flex items-center justify-center bg-slate-950/80 backdrop-blur-md p-6">
-        <div class="glass-panel-blur w-full max-w-sm p-8 rounded-3xl shadow-2xl animate-fade-in-fast">
+        <div class="glass-panel-blur w-full max-w-md p-8 rounded-3xl shadow-2xl animate-fade-in-fast">
             <div class="flex justify-between items-center mb-6 border-b border-slate-700 pb-3">
-                <h3 class="text-sm font-black uppercase tracking-widest text-white">⚙ Gestión de Limpieza</h3>
+                <h3 class="text-sm font-black uppercase tracking-widest text-white flex items-center gap-2">
+                    <svg class="w-5 h-5 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
+                    Gestión de Limpieza de Archivos
+                </h3>
                 <button onclick="closeCleanupModal()"
-                    class="text-slate-500 hover:text-white transition-colors">✕</button>
+                    class="text-slate-500 hover:text-white transition-colors text-lg">✕</button>
             </div>
 
-            <div class="space-y-5">
-                <div>
-                    <label class="block text-[10px] font-bold text-slate-400 mb-2 uppercase tracking-widest">Días a
-                        Conservar</label>
-                    <div
-                        class="flex items-center bg-slate-900 rounded-xl border border-slate-700 overflow-hidden shadow-inner">
-                        <button onclick="changeCleanupDays(-1)"
-                            class="px-4 py-2 hover:bg-slate-800 transition-colors text-slate-400 font-bold border-r border-slate-700">-</button>
-                        <input type="number" id="cleanupDays" value="2" min="1" max="30"
-                            class="w-full bg-transparent text-center font-black text-sm text-white outline-none">
-                        <button onclick="changeCleanupDays(1)"
-                            class="px-4 py-2 hover:bg-slate-800 transition-colors text-slate-400 font-bold border-l border-slate-700">+</button>
+            <div class="space-y-6">
+                <!-- Autolimpiado section -->
+                <div class="bg-slate-900/60 p-4 rounded-2xl border border-slate-700/50">
+                    <h4 class="text-[10px] font-black text-blue-400 mb-3 uppercase tracking-widest border-b border-blue-900/50 pb-2">🔄 Limpieza Automática</h4>
+                    <label class="block text-[10px] font-bold text-slate-400 mb-2 uppercase tracking-widest">Días de historial a conservar</label>
+                    <div class="flex items-center bg-slate-900 rounded-xl border border-slate-700 overflow-hidden shadow-inner mb-2">
+                        <button onclick="changeCleanupDays(-1)" class="px-4 py-2 hover:bg-slate-800 transition-colors text-slate-400 font-bold border-r border-slate-700">-</button>
+                        <input type="number" id="cleanupDays" value="2" min="1" max="30" class="w-full bg-transparent text-center font-black text-sm text-white outline-none">
+                        <button onclick="changeCleanupDays(1)" class="px-4 py-2 hover:bg-slate-800 transition-colors text-slate-400 font-bold border-l border-slate-700">+</button>
                     </div>
-                    <p class="text-[9px] text-slate-500 mt-2">* Los archivos más antiguos se borrarán
-                        automáticamente vía Crontab.</p>
+                    <p class="text-[9px] text-slate-500 leading-tight">* Los archivos de días anteriores al límite se borrarán automáticamente mediante el sistema (Crontab).</p>
+                    <button onclick="saveCleanupConfig()" class="w-full mt-3 bg-blue-600 hover:bg-blue-500 py-2.5 rounded-xl font-bold uppercase tracking-widest text-[10px] shadow-lg transition-all active:scale-95">Guardar Configuración de Limpieza</button>
+                </div>
+
+                <!-- Manual cleanup section -->
+                <div class="bg-slate-900/60 p-4 rounded-2xl border border-slate-700/50 space-y-4">
+                    <h4 class="text-[10px] font-black text-red-400 mb-2 uppercase tracking-widest border-b border-red-900/50 pb-2">⚠️ Limpieza Manual y Específica</h4>
+                    
+                    <div>
+                        <label class="block text-[10px] font-bold text-slate-400 mb-1 uppercase tracking-widest">Eliminar un día específico</label>
+                        <div class="flex gap-2">
+                            <input type="date" id="cleanupSpecificDate" class="flex-1 p-2 rounded-xl bg-slate-900 border border-slate-700 outline-none font-mono text-sm text-slate-300">
+                            <button onclick="runSpecificCleanup()" id="btnSpecificCleanup" class="bg-orange-600 hover:bg-orange-500 px-4 rounded-xl font-bold uppercase tracking-widest text-[10px] shadow-lg transition-all active:scale-95 text-white">Borrar Día</button>
+                        </div>
+                    </div>
+
+                    <div class="pt-2">
+                        <button onclick="runManualCleanup()" id="btnManualCleanup" class="w-full bg-slate-800 hover:bg-red-600 py-3 rounded-xl font-bold uppercase tracking-widest text-[10px] shadow-lg transition-all active:scale-95 text-slate-300 hover:text-white border border-red-900/30 hover:border-red-500">Eliminar Todo Excepto Hoy (Limpieza Profunda)</button>
+                    </div>
                 </div>
 
                 <div>
-                    <label class="block text-[10px] font-bold text-slate-400 mb-2 uppercase tracking-widest">Confirmar
-                        Contraseña Admin</label>
-                    <input type="password" id="cleanupPass" placeholder="••••••••"
-                        class="w-full p-3 rounded-xl bg-slate-900 border border-slate-700 outline-none font-mono text-sm text-center">
-                </div>
-
-                <div class="pt-2">
-                    <button onclick="saveCleanupConfig()"
-                        class="w-full bg-blue-600 hover:bg-blue-500 py-3 rounded-xl font-bold uppercase tracking-widest text-[10px] shadow-lg transition-all active:scale-95 mb-3">Guardar
-                        Configuración</button>
-                    <button onclick="runManualCleanup()" id="btnManualCleanup"
-                        class="w-full bg-slate-700 hover:bg-red-600 py-3 rounded-xl font-bold uppercase tracking-widest text-[10px] shadow-lg transition-all active:scale-95 text-slate-300 hover:text-white border border-slate-600 hover:border-red-500">Limpiar
-                        Ayer Ahora (Manual)</button>
+                    <label class="block text-[10px] font-bold text-slate-400 mb-1 uppercase tracking-widest">Confirmar con Contraseña de Admin</label>
+                    <input type="password" id="cleanupPass" placeholder="••••••••" class="w-full p-3 rounded-xl bg-slate-950 border border-slate-700 outline-none font-mono text-sm text-center focus:border-red-500 transition-colors">
+                    <p class="text-[9px] text-slate-500 text-center mt-1">Requerido para cualquier acción de limpieza</p>
                 </div>
             </div>
         </div>
@@ -778,6 +1032,16 @@
                         <input type="text" id="inputG2Name" placeholder="Capturadora2.0II"
                             class="w-full p-3 rounded-xl outline-none font-mono text-sm bg-slate-900 border border-cyan-700/50 focus:border-cyan-400 text-white transition-all" />
                     </div>
+                    <div>
+                        <label class="block text-[9px] font-bold text-green-400 mb-1 uppercase">Grupo 3 (Canal 3)</label>
+                        <input type="text" id="inputG3Name" placeholder="Capturadora2.0III"
+                            class="w-full p-3 rounded-xl outline-none font-mono text-sm bg-slate-900 border border-green-700/50 focus:border-green-400 text-white transition-all" />
+                    </div>
+                    <div>
+                        <label class="block text-[9px] font-bold text-fuchsia-400 mb-1 uppercase">Grupo 4 (Canal 4)</label>
+                        <input type="text" id="inputG4Name" placeholder="Capturadora2.0IV"
+                            class="w-full p-3 rounded-xl outline-none font-mono text-sm bg-slate-900 border border-fuchsia-700/50 focus:border-fuchsia-400 text-white transition-all" />
+                    </div>
                 </div>
                 <button onclick="saveGroupNames()" class="w-full bg-indigo-600 hover:bg-indigo-500 py-3 rounded-xl font-bold uppercase tracking-widest text-[10px] shadow-lg transition-all active:scale-95">Guardar Nombres</button>
             </div>
@@ -804,6 +1068,8 @@
                         <select id="newUserGroup" class="w-full p-2.5 rounded-xl outline-none font-bold text-sm bg-slate-800 border border-slate-600 text-white">
                             <option value="1" id="newUserGroupOpt1">Grupo 1 — Capturadora2.0I</option>
                             <option value="2" id="newUserGroupOpt2">Grupo 2 — Capturadora2.0II</option>
+<option value="3" id="newUserGroupOpt3">Grupo 3 — Capturadora2.0III</option>
+<option value="4" id="newUserGroupOpt4">Grupo 4 — Capturadora2.0IV</option>
                         </select>
                     </div>
                     <button onclick="createUser()" class="w-full bg-green-700 hover:bg-green-600 py-2.5 rounded-xl font-bold uppercase tracking-widest text-[10px] shadow-lg transition-all active:scale-95">Crear Usuario</button>
@@ -934,13 +1200,13 @@
     </div>
     
     <!-- OPTIMIZED GLOBAL FOOTER -->
-    <footer class="fixed bottom-0 left-0 right-0 bg-slate-900/60 backdrop-blur-xl border-t border-slate-800/50 z-[75] pointer-events-none">
+    <footer class="mt-auto w-full bg-slate-900/60 backdrop-blur-xl border-t border-slate-800/50 z-[75]">
         <div class="container mx-auto px-6 py-4 flex flex-col sm:flex-row justify-between items-center gap-3 sm:gap-0">
             <div class="flex flex-col gap-0.5 text-slate-500 font-mono font-bold uppercase tracking-widest text-[10px] text-center sm:text-left">
                 <span>© C.A. Venezolana de Televisión 2026</span>
                 <span class="text-[9px] text-slate-600">RIF: G-200082933</span>
             </div>
-            <div class="relative flex items-center pointer-events-auto">
+            <div class="relative flex items-center">
                 <!-- Dropdown Menú Soporte -->
                 <div id="soporteMenu" class="absolute bottom-full right-0 mb-3 hidden flex-col bg-slate-900/95 backdrop-blur-xl border border-red-500/40 rounded-2xl shadow-[0_10px_40px_rgba(239,68,68,0.2)] overflow-hidden w-80 animate-fade-in-up z-[90]">
                     <div class="px-5 py-3 border-b border-red-500/20 bg-gradient-to-r from-red-900/40 to-slate-900/40">

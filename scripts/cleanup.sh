@@ -12,13 +12,28 @@ CONFIG_FILE="/home/administrador/Documentos/control-decklink/cleanup_config.json
 # Configuración predeterminada
 RET_DAYS=2
 FORCE_ALL=0
+SPECIFIC_DAY=""
 
 # Procesar argumentos
-for arg in "$@"; do
-    if [ "$arg" == "--force-all" ]; then
-        FORCE_ALL=1
-    fi
+while [[ "$#" -gt 0 ]]; do
+    case $1 in
+        --force-all) FORCE_ALL=1; shift ;;
+        --specific-day) SPECIFIC_DAY="$2"; shift 2 ;;
+        *) shift ;;
+    esac
 done
+
+if [ -n "$SPECIFIC_DAY" ]; then
+    echo "$(date): MODALIDAD ESPECIFICA ACTIVADA (Borrar dia: $SPECIFIC_DAY)."
+    if [ -d "$DIR_CAPTURA/$SPECIFIC_DAY" ]; then
+        echo "Borrando carpeta especifica: $SPECIFIC_DAY"
+        rm -rf "$DIR_CAPTURA/$SPECIFIC_DAY"
+        echo "$(date): Limpieza especifica completada."
+    else
+        echo "$(date): No se encontro la carpeta $DIR_CAPTURA/$SPECIFIC_DAY."
+    fi
+    exit 0
+fi
 
 if [ "$FORCE_ALL" -eq 1 ]; then
     RET_DAYS=1

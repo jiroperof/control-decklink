@@ -37,8 +37,13 @@
             document.getElementById('statsContent').classList.remove('hidden');
 
             const rec = data.recordings;
-            const totalBytes = rec.ch1.size_bytes + rec.ch2.size_bytes;
-            const totalSecs = rec.ch1.duration_sec + rec.ch2.duration_sec;
+            // Sumar todos los canales disponibles (backward-compatible con 2 o 4 canales)
+            const channelIds = ['1', '2', '3', '4'];
+            let totalBytes = 0, totalSecs = 0;
+            channelIds.forEach(ch => {
+                const chData = rec[`ch${ch}`];
+                if (chData) { totalBytes += chData.size_bytes; totalSecs += chData.duration_sec; }
+            });
             
             document.getElementById('kpiTotalSize').textContent = (totalBytes / 1073741824).toFixed(2) + ' GB';
             const h = Math.floor(totalSecs / 3600);
@@ -49,17 +54,33 @@
             Chart.defaults.color = '#94a3b8';
             Chart.defaults.font.family = 'Inter, sans-serif';
 
-            // Storage Chart
+            // Storage Chart — 4 canales
             const ctx1 = document.getElementById('storageChart').getContext('2d');
             if(storageChartInst) storageChartInst.destroy();
+
+            const chLabels = [], chSizes = [];
+            const chColors = [
+                'rgba(99, 102, 241, 0.8)',   // CH1 indigo
+                'rgba(6, 182, 212, 0.8)',     // CH2 cyan
+                'rgba(74, 222, 128, 0.8)',    // CH3 green
+                'rgba(244, 114, 182, 0.8)'    // CH4 fuchsia
+            ];
+            channelIds.forEach((ch, i) => {
+                const chData = rec[`ch${ch}`];
+                if (chData) {
+                    chLabels.push(`Canal ${ch} (GB)`);
+                    chSizes.push((chData.size_bytes / 1073741824).toFixed(2));
+                }
+            });
+
             storageChartInst = new Chart(ctx1, {
                 type: 'doughnut',
                 data: {
-                    labels: ['Canal 1 (GB)', 'Canal 2 (GB)'],
+                    labels: chLabels,
                     datasets: [{
-                        data: [(rec.ch1.size_bytes / 1073741824).toFixed(2), (rec.ch2.size_bytes / 1073741824).toFixed(2)],
-                        backgroundColor: ['rgba(99, 102, 241, 0.8)', 'rgba(6, 182, 212, 0.8)'],
-                        borderColor: ['#1e293b', '#1e293b'],
+                        data: chSizes,
+                        backgroundColor: chColors.slice(0, chLabels.length),
+                        borderColor: chLabels.map(() => '#1e293b'),
                         borderWidth: 2,
                         hoverOffset: 4
                     }]
@@ -130,6 +151,8 @@
                     'operator': 'text-yellow-400 bg-yellow-900/30 px-2 py-0.5 rounded border border-yellow-700/50',
                     'group1': 'text-indigo-400 bg-indigo-900/30 px-2 py-0.5 rounded border border-indigo-700/50',
                     'group2': 'text-cyan-400 bg-cyan-900/30 px-2 py-0.5 rounded border border-cyan-700/50',
+                    'group3': 'text-green-400 bg-green-900/30 px-2 py-0.5 rounded border border-green-700/50',
+                    'group4': 'text-fuchsia-400 bg-fuchsia-900/30 px-2 py-0.5 rounded border border-fuchsia-700/50',
                     'fallido': 'text-red-400 bg-red-900/30 px-2 py-0.5 rounded border border-red-700/50'
                 };
                 const rStyle = roleColors[acc.role] || 'text-slate-400';

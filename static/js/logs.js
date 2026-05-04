@@ -2,8 +2,7 @@
         async function loadLog() {
             const linesEl = document.getElementById('logLines');
             const lines = linesEl ? linesEl.value : 100;
-            // Para usuarios de grupo, solo cargar el log de su canal
-            const channelsToLoad = USER_CHANNEL ? [USER_CHANNEL] : ['1', '2'];
+            const channelsToLoad = USER_CHANNEL ? [USER_CHANNEL] : ['1', '2', '3', '4'];
             await Promise.all(channelsToLoad.map(async (id) => {
                 try {
                     const res = await fetch(`/api/log/${id}?lines=${lines}`, { headers: { 'X-Token': TOKEN } });

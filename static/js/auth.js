@@ -92,12 +92,14 @@
         let metricsTimer = null, statusTimer = null;
         let activePreviewId = null;
         let previewAbortController = null;
-        let _lastLogSize = { '1': 0, '2': 0 };
+        let _lastLogSize = { '1': 0, '2': 0, '3': 0, '4': 0 };
         let _lastProcHash = null;
 
         let channels = {
             '1': { running: false, elapsed: 0, timer: null, cfg: null, sch_start: null, sch_stop: null, auto: false, init_ui: false },
-            '2': { running: false, elapsed: 0, timer: null, cfg: null, sch_start: null, sch_stop: null, auto: false, init_ui: false }
+            '2': { running: false, elapsed: 0, timer: null, cfg: null, sch_start: null, sch_stop: null, auto: false, init_ui: false },
+            '3': { running: false, elapsed: 0, timer: null, cfg: null, sch_start: null, sch_stop: null, auto: false, init_ui: false },
+            '4': { running: false, elapsed: 0, timer: null, cfg: null, sch_start: null, sch_stop: null, auto: false, init_ui: false }
         };
 
         // ── Auto-Logout por Inactividad ───────────────────────────────────────────────
@@ -141,16 +143,28 @@
                 const d = await res.json();
                 const g1 = document.getElementById('btnRoleG1Label');
                 const g2 = document.getElementById('btnRoleG2Label');
+                const g3 = document.getElementById('btnRoleG3Label');
+                const g4 = document.getElementById('btnRoleG4Label');
                 const o1 = document.getElementById('newUserGroupOpt1');
                 const o2 = document.getElementById('newUserGroupOpt2');
+                const o3 = document.getElementById('newUserGroupOpt3');
+                const o4 = document.getElementById('newUserGroupOpt4');
                 const i1 = document.getElementById('inputG1Name');
                 const i2 = document.getElementById('inputG2Name');
+                const i3 = document.getElementById('inputG3Name');
+                const i4 = document.getElementById('inputG4Name');
                 if (g1) g1.textContent = d.group1_name;
                 if (g2) g2.textContent = d.group2_name;
+                if (g3) g3.textContent = d.group3_name;
+                if (g4) g4.textContent = d.group4_name;
                 if (o1) o1.textContent = `Grupo 1 — ${d.group1_name}`;
                 if (o2) o2.textContent = `Grupo 2 — ${d.group2_name}`;
+                if (o3) o3.textContent = `Grupo 3 — ${d.group3_name}`;
+                if (o4) o4.textContent = `Grupo 4 — ${d.group4_name}`;
                 if (i1) i1.value = d.group1_name;
                 if (i2) i2.value = d.group2_name;
+                if (i3) i3.value = d.group3_name;
+                if (i4) i4.value = d.group4_name;
             } catch(_) {}
         }
 
@@ -158,7 +172,7 @@
         function restrictUIByRole() {
             const role = localStorage.getItem(ROLE_KEY);
             const isAdmin = role === 'admin';
-            const isGroup = role === 'group1' || role === 'group2';
+            const isGroup = role && role.startsWith('group');
             USER_CHANNEL = localStorage.getItem(CHANNEL_KEY) || null;
             
             // Mostrar botón Administración y Estadísticas solo al admin a través del contenedor
@@ -187,9 +201,9 @@
             // Elementos de Layout Compartidos
             const grid = document.getElementById('gridCards');
 
-            // Reset layout to defaults (admin: 3 columnas)
+            // Reset layout to defaults
             if (grid) {
-                grid.style.gridTemplateColumns = '1fr 1fr 260px';
+                grid.style.gridTemplateColumns = '';
                 grid.style.maxWidth = '';
                 grid.style.margin = '';
             }
@@ -204,21 +218,9 @@
                     document.querySelectorAll('.glass-panel.h-full').forEach(el => el.classList.remove('h-full'));
                     document.querySelectorAll('.mt-auto').forEach(el => el.classList.remove('mt-auto'));
                     if(grid) {
-                        grid.style.gridTemplateColumns = '1fr 1fr';
+                        grid.style.gridTemplateColumns = '';
                     }
-                    const resPanel = document.getElementById('resPanel');
-                    if(resPanel) {
-                        resPanel.classList.add('lg:col-span-2', 'xl:col-span-2', 'mt-4');
-                        const resGlass = resPanel.querySelector('.glass-panel');
-                        if(resGlass) {
-                            resGlass.classList.remove('p-6');
-                            resGlass.classList.add('p-3', 'md:p-4');
-                        }
-                        const metricsContainer = resPanel.querySelector('.flex.flex-col.gap-3');
-                        if(metricsContainer) {
-                            metricsContainer.className = 'grid grid-cols-2 md:grid-cols-3 xl:grid-cols-6 gap-x-6 gap-y-4 px-2';
-                        }
-                    }
+                    // Layout is now handled by the responsive classes in index.html for the sidebar
                 }
             }
 
@@ -226,9 +228,9 @@
             if (isGroup) {
                 document.querySelectorAll('.admin-ui-block').forEach(el => el.classList.remove('hidden'));
                 
-                // Ajustar grid para mostrar solo 1 canal + recursos
+                // Ajustar grid para mostrar solo 1 canal
                 if (grid) {
-                    grid.style.gridTemplateColumns = '1fr 260px';
+                    grid.style.gridTemplateColumns = '1fr';
                     grid.style.maxWidth = '1100px';
                     grid.style.margin = '0 auto';
                 }

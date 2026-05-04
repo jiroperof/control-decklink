@@ -106,7 +106,9 @@ USERS_DB_FILE = os.path.join(_DATA_DIR, "users_db.json")
 DEFAULT_USERS_DB = {
     "groups": {
         "1": {"name": "Capturadora2.0I"},
-        "2": {"name": "Capturadora2.0II"}
+        "2": {"name": "Capturadora2.0II"},
+        "3": {"name": "Capturadora2.0III"},
+        "4": {"name": "Capturadora2.0IV"}
     },
     "users": {}
 }
@@ -243,17 +245,22 @@ class ScheduleRequest(BaseModel):
 class CreateUserRequest(BaseModel):
     username: str
     password: str
-    group: str  # "1" or "2"
+    group: str  # "1", "2", "3" or "4"
 
 class GroupNamesRequest(BaseModel):
     group1_name: str
     group2_name: str
+    group3_name: str
+    group4_name: str
 
 # ── Auth ──────────────────────────────────────────────────────────────────────
-def verify_token(x_token: str = Header(None)):
-    if x_token not in TOKEN_TO_ROLE:
+def verify_token(x_token: str = Header(None), token: Optional[str] = Query(None)):
+    """Valida el token desde el header X-Token o, como fallback, desde query param ?token=.
+    El fallback es necesario para enlaces <a href> de descarga que no pueden enviar headers."""
+    effective_token = x_token or token
+    if not effective_token or effective_token not in TOKEN_TO_ROLE:
         raise HTTPException(status_code=401, detail="Token inválido o expirado")
-    return x_token
+    return effective_token
 
 def require_admin(token: str = Depends(verify_token)):
     if TOKEN_TO_ROLE.get(token) != "admin":
@@ -268,6 +275,10 @@ def require_channel_access(source_id: str, token: str):
     if role == "group1" and source_id == "1":
         return True
     if role == "group2" and source_id == "2":
+        return True
+    if role == "group3" and source_id == "3":
+        return True
+    if role == "group4" and source_id == "4":
         return True
     return False
 
@@ -376,14 +387,16 @@ class RecordingManager:
         cmd = [
             "ffmpeg", "-y",
             "-thread_queue_size", "8192",
-            "-f", "decklink", "-duplex_mode", "half", "-video_input", "sdi", "-i", self.input_name,
-            # Deinterlace + colorspace seguro
+            "-f", "decklink", "-duplex_mode", "half",
+            "-video_input", "sdi", "-format_code", "Hi59",  # 1080i 29.97fps SDI digital
+            "-i", self.input_name,
+            # Deinterlace (1080i → 1080p) + colorspace seguro
             "-vf", "bwdif=mode=send_field:parity=auto,format=yuv420p",
             "-af", "aresample=async=1000",
             # Codec de video: NVENC sin forzar level para evitar fallos (auto-level)
             "-c:v", "h264_nvenc", "-preset", "p4", "-tune", "hq", "-rc", "vbr",
             "-b:v", cfg.bitrate, "-maxrate:v", f"{int(bnum * 1.5)}M", "-bufsize:v", "120M",
-            "-r", "30000/1001",        # 29.97 fps (nativo Decklink NTSC)
+            "-r", "30000/1001",        # 29.97 fps
             # Audio AAC-LC limpio
             "-c:a", "aac", "-b:a", "320k", "-ar", "48000", "-ac", "2",
             # Segmentación con faststart para reproducción rápida
@@ -425,15 +438,17 @@ class RecordingManager:
             self.config = cfg.model_dump()
         return ok, msg
 
-# Registramos los dos canales
+# Registramos los cuatro canales
 managers = {
     "1": RecordingManager("1", "DeckLink Duo (1)"),
-    "2": RecordingManager("2", "DeckLink Duo (2)")
+    "2": RecordingManager("2", "DeckLink Duo (2)"),
+    "3": RecordingManager("3", "DeckLink Duo (3)"),
+    "4": RecordingManager("4", "DeckLink Duo (4)")
 }
 
 def get_mgr(source_id: str) -> RecordingManager:
     if source_id not in managers:
-        raise HTTPException(status_code=404, detail="Canal no encontrado (usa 1 o 2)")
+        raise HTTPException(status_code=404, detail="Canal no encontrado (usa 1, 2, 3 o 4)")
     return managers[source_id]
 
 
@@ -560,7 +575,7 @@ async def lifespan(app: FastAPI):
 
 # ── App ───────────────────────────────────────────────────────────────────────
 app = FastAPI(title="VTV - Capturadora Multicanal 2.0", lifespan=lifespan)
-app.add_middleware(CORSMiddleware, allow_origins=["*"], allow_credentials=True, allow_methods=["*"], allow_headers=["*"])
+app.add_middleware(CORSMiddleware, allow_origins=ALLOWED_ORIGINS, allow_credentials=True, allow_methods=["*"], allow_headers=["*"])
 
 # ── Configuración para Red Interna (HTTP) ────────────────────────────────────
 # Para red interna VTV: Sin HTTPS, sin warnings, acceso directo
@@ -645,6 +660,10 @@ async def login(data: LoginRequest, request: Request):
             channel = "1"
         elif role == "group2":
             channel = "2"
+        elif role == "group3":
+            channel = "3"
+        elif role == "group4":
+            channel = "4"
         
         return {
             "token": user_data["token"], "role": role,
@@ -699,7 +718,7 @@ async def api_processes(token: str = Depends(verify_token)):
 
 # Endpoints por Canal (source_id = "1" o "2")
 @app.get("/api/status/{source_id}")
-async def api_status(source_id: str = FastAPIPath(..., pattern="^(1|2)$"), token: str = Depends(verify_token)):
+async def api_status(source_id: str = FastAPIPath(..., pattern="^(1|2|3|4)$"), token: str = Depends(verify_token)):
     mgr = get_mgr(source_id)
     running = mgr.is_recording()
     elapsed = int(time.time() - mgr.started_at) if mgr.started_at and running else 0
@@ -711,23 +730,51 @@ async def api_status(source_id: str = FastAPIPath(..., pattern="^(1|2)$"), token
     }
 
 @app.post("/api/start/{source_id}")
-async def api_start(config: RecordConfig, source_id: str = FastAPIPath(..., pattern="^(1|2)$"), token: str = Depends(verify_token)):
+async def api_start(config: RecordConfig, source_id: str = FastAPIPath(..., pattern="^(1|2|3|4)$"), token: str = Depends(verify_token)):
     if not require_channel_access(source_id, token):
         raise HTTPException(status_code=403, detail="Acceso denegado a este canal.")
     mgr = get_mgr(source_id)
+    
+    # 1. Detener preview explícito si existe
+    if mgr.preview_process:
+        try:
+            if mgr.preview_process.returncode is None:
+                mgr.preview_process.terminate()
+                try:
+                    await asyncio.wait_for(mgr.preview_process.wait(), timeout=1.5)
+                except asyncio.TimeoutError:
+                    mgr.preview_process.kill()
+                    await mgr.preview_process.wait()
+        except Exception: pass
+        finally:
+            mgr.preview_process = None
+
+    # 2. Matar huérfanos de preview para liberar hardware
+    try:
+        input_name = mgr.input_name
+        for p in psutil.process_iter(['pid', 'cmdline']):
+            try:
+                cmdline = ' '.join(p.info.get('cmdline') or [])
+                if 'ffmpeg' in cmdline and 'image2pipe' in cmdline and input_name in cmdline:
+                    logger.warning(f"[START] CH{source_id}: matando preview huérfano PID {p.pid} antes de grabar")
+                    p.kill()
+                    await asyncio.sleep(0.3)
+            except (psutil.NoSuchProcess, psutil.AccessDenied): pass
+    except Exception: pass
+    
     ok, msg = await mgr.start(config)
     if not ok: raise HTTPException(status_code=400, detail=msg)
     return {"status": "ok", "message": msg}
 
 @app.post("/api/stop/{source_id}")
-async def api_stop(source_id: str = FastAPIPath(..., pattern="^(1|2)$"), token: str = Depends(verify_token)):
+async def api_stop(source_id: str = FastAPIPath(..., pattern="^(1|2|3|4)$"), token: str = Depends(verify_token)):
     if not require_channel_access(source_id, token):
         raise HTTPException(status_code=403, detail="Acceso denegado a este canal.")
     await get_mgr(source_id).stop_and_clean()
     return {"status": "ok"}
 
 @app.post("/api/schedule/{source_id}")
-async def api_schedule(req: ScheduleRequest, source_id: str = FastAPIPath(..., pattern="^(1|2)$"), token: str = Depends(verify_token)):
+async def api_schedule(req: ScheduleRequest, source_id: str = FastAPIPath(..., pattern="^(1|2|3|4)$"), token: str = Depends(verify_token)):
     if not require_channel_access(source_id, token):
         raise HTTPException(status_code=403, detail="Acceso denegado a este canal.")
     mgr = get_mgr(source_id)
@@ -743,7 +790,7 @@ async def api_schedule(req: ScheduleRequest, source_id: str = FastAPIPath(..., p
     return {"status": "ok"}
 
 @app.post("/api/schedule/cancel/{source_id}")
-async def api_schedule_cancel(source_id: str = FastAPIPath(..., pattern="^(1|2)$"), token: str = Depends(verify_token)):
+async def api_schedule_cancel(source_id: str = FastAPIPath(..., pattern="^(1|2|3|4)$"), token: str = Depends(verify_token)):
     if not require_channel_access(source_id, token):
         raise HTTPException(status_code=403, detail="Acceso denegado a este canal.")
     mgr = get_mgr(source_id)
@@ -751,7 +798,7 @@ async def api_schedule_cancel(source_id: str = FastAPIPath(..., pattern="^(1|2)$
     return {"status": "ok"}
 
 @app.get("/api/log/{source_id}")
-async def api_log(source_id: str = FastAPIPath(..., pattern="^(1|2)$"), lines: int = Query(default=100, ge=10, le=1000), token: str = Depends(verify_token)):
+async def api_log(source_id: str = FastAPIPath(..., pattern="^(1|2|3|4)$"), lines: int = Query(default=100, ge=10, le=1000), token: str = Depends(verify_token)):
     lf = get_mgr(source_id).log_file
     if not os.path.exists(lf): return {"lines": [], "size_bytes": 0}
     def read_tail():
@@ -790,10 +837,12 @@ async def save_cleanup_config(cfg: dict, token: str = Depends(require_admin)):
     return {"status": "ok"}
 
 @app.post("/api/cleanup/execute")
-async def execute_cleanup(force_all: bool = False, token: str = Depends(require_admin)):
+async def execute_cleanup(force_all: bool = False, specific_day: str = None, token: str = Depends(require_admin)):
     args = ["sudo", CLEANUP_SCRIPT]
     if force_all:
         args.append("--force-all")
+    if specific_day:
+        args.extend(["--specific-day", specific_day])
     proc = await asyncio.create_subprocess_exec(
         *args,
         stdout=asyncio.subprocess.PIPE,
@@ -875,8 +924,9 @@ def get_base_path() -> Path:
 
 def resolve_safe_path(filename: str) -> Path:
     base = get_base_path()
-    safe_filename = filename.lstrip("/").replace("../", "")
-    target = (base / safe_filename).resolve()
+    # Resolve the path first, then verify it stays inside the base directory.
+    # This is the ONLY reliable traversal check — do NOT rely on string manipulation.
+    target = (base / filename).resolve()
     try:
         target.relative_to(base)
     except ValueError:
@@ -941,20 +991,53 @@ async def api_preview(source_id: str, token: str = Depends(verify_token)):
     mgr = managers.get(source_id)
     if not mgr:
         raise HTTPException(status_code=404, detail="Canal no encontrado")
-    
+
     if mgr.is_recording():
         logger.warning(f"[PREVIEW] CH{source_id} está ocupado grabando")
         raise HTTPException(status_code=400, detail="Dispositivo ocupado grabando Master")
 
-    # Comando FFmpeg para capturar frames de JPEG puros (uno tras otro)
+    # ── Matar cualquier proceso de preview anterior huérfano del mismo canal ──
+    # Esto evita el "Input/output error" cuando el cliente cierra el modal sin
+    # hacer clic en Cerrar y el proceso FFmpeg queda bloqueando el dispositivo.
+    if mgr.preview_process is not None:
+        try:
+            mgr.preview_process.terminate()
+            await asyncio.wait_for(mgr.preview_process.wait(), timeout=3.0)
+            logger.info(f"[PREVIEW] CH{source_id}: proceso anterior terminado limpiamente")
+        except Exception:
+            try: mgr.preview_process.kill()
+            except Exception: pass
+        mgr.preview_process = None
+        await asyncio.sleep(0.4)  # Dar tiempo al SO para liberar el dispositivo
+
+    # También matar cualquier proceso FFmpeg del sistema que bloquee este input
+    input_name = mgr.input_name
+    try:
+        for p in psutil.process_iter(['pid', 'cmdline']):
+            try:
+                cmdline = ' '.join(p.info.get('cmdline') or [])
+                if 'ffmpeg' in cmdline and 'image2pipe' in cmdline and input_name in cmdline:
+                    logger.warning(f"[PREVIEW] CH{source_id}: matando FFmpeg preview huérfano PID {p.pid}")
+                    p.kill()
+                    await asyncio.sleep(0.3)
+            except (psutil.NoSuchProcess, psutil.AccessDenied):
+                pass
+    except Exception as e:
+        logger.debug(f"[PREVIEW] Error buscando procesos huérfanos: {e}")
+
+    # Comando FFmpeg para capturar frames MJPEG continuos (streaming preview)
+    # format_code Hi59 = 1080i 29.97fps (SDI digital HD)
+    # bwdif deinterlaza la señal antes de escalar para preview
     cmd = [
-        "ffmpeg", "-f", "decklink", "-duplex_mode", "half", "-i", mgr.input_name,
-        "-vf", "scale=640:-1", 
-        "-vcodec", "mjpeg", "-q:v", "20", # q:v 20 para reducir ancho de banda
+        "ffmpeg", "-f", "decklink", "-duplex_mode", "half",
+        "-video_input", "sdi", "-format_code", "Hi59",  # 1080i 29.97fps SDI HD
+        "-i", mgr.input_name,
+        "-vf", "bwdif=mode=send_field:parity=auto,scale=640:-1",  # deinterlace primero, luego escalar
+        "-vcodec", "mjpeg", "-q:v", "5",  # q:v 5 = buena calidad (1=mejor, 31=peor)
         "-f", "image2pipe", "-"
     ]
-    
-    logger.info(f"[PREVIEW] Iniciando FFmpeg (MANUAL): {' '.join(cmd)}")
+
+    logger.info(f"[PREVIEW] Iniciando FFmpeg: {' '.join(cmd)}")
     process = await asyncio.create_subprocess_exec(
         *cmd,
         stdout=asyncio.subprocess.PIPE,
@@ -1005,8 +1088,14 @@ async def api_preview(source_id: str, token: str = Depends(verify_token)):
             if mgr.preview_process == process:
                 mgr.preview_process = None
             try:
-                process.terminate()
-                await process.wait()
+                if process.returncode is None:
+                    process.terminate()
+                    try:
+                        await asyncio.wait_for(process.wait(), timeout=1.5)
+                    except asyncio.TimeoutError:
+                        logger.warning(f"[PREVIEW] CH{source_id} FFmpeg ignoró SIGTERM. Matando (SIGKILL)...")
+                        process.kill()
+                        await process.wait()
             except Exception as e:
                 logger.debug(f"[PREVIEW] Error limpiando proceso preview: {e}")
 
@@ -1017,8 +1106,14 @@ async def api_preview_stop(source_id: str, token: str = Depends(verify_token)):
     mgr = get_mgr(source_id)
     if mgr.preview_process:
         try:
-            mgr.preview_process.terminate()
-            await mgr.preview_process.wait()
+            if mgr.preview_process.returncode is None:
+                mgr.preview_process.terminate()
+                try:
+                    await asyncio.wait_for(mgr.preview_process.wait(), timeout=1.5)
+                except asyncio.TimeoutError:
+                    logger.warning(f"[PREVIEW] CH{source_id} (stop) FFmpeg ignoró SIGTERM. Matando (SIGKILL)...")
+                    mgr.preview_process.kill()
+                    await mgr.preview_process.wait()
             logger.info(f"[PREVIEW] CH{source_id} detenido manualmente")
         except Exception as e:
             logger.error(f"[PREVIEW] Error al detener: {e}")
@@ -1026,24 +1121,107 @@ async def api_preview_stop(source_id: str, token: str = Depends(verify_token)):
             mgr.preview_process = None
     return {"status": "ok"}
 
+# ── Detección automática de formato de señal ──────────────────────────────────
+# Formatos soportados por el DeckLink Duo ordenados por prioridad de detección
+DECKLINK_FORMATS = [
+    {"code": "Hi59", "desc": "1920x1080i @ 29.97fps (SDI HD — más común en broadcast)"},
+    {"code": "Hi50", "desc": "1920x1080i @ 25fps (SDI HD — PAL)"},
+    {"code": "Hi60", "desc": "1920x1080i @ 30fps"},
+    {"code": "Hp29", "desc": "1920x1080p @ 29.97fps"},
+    {"code": "Hp25", "desc": "1920x1080p @ 25fps"},
+    {"code": "Hp30", "desc": "1920x1080p @ 30fps"},
+    {"code": "hp59", "desc": "1280x720p @ 59.94fps"},
+    {"code": "hp50", "desc": "1280x720p @ 50fps"},
+    {"code": "ntsc",  "desc": "720x486i @ 29.97fps (NTSC SD)"},
+    {"code": "pal",   "desc": "720x576i @ 25fps (PAL SD)"},
+]
+
+async def _probe_format(input_name: str, fmt_code: str, timeout_sec: float = 6.0) -> dict:
+    """Prueba un formato específico y detecta si hay señal activa."""
+    try:
+        proc = await asyncio.create_subprocess_exec(
+            "ffmpeg", "-f", "decklink", "-duplex_mode", "half",
+            "-video_input", "sdi", "-format_code", fmt_code,
+            "-i", input_name, "-t", "2",
+            "-f", "null", "-",
+            stdout=asyncio.subprocess.PIPE,
+            stderr=asyncio.subprocess.PIPE
+        )
+        try:
+            _, stderr = await asyncio.wait_for(proc.communicate(), timeout=timeout_sec)
+        except asyncio.TimeoutError:
+            proc.kill()
+            await proc.wait()
+            stderr = b""
+        output = stderr.decode(errors="replace")
+        no_signal = "No input signal detected" in output
+        # Si existe "Frame received" pero SIN "No input signal" → hay señal real
+        has_frames = "Frame received" in output
+        has_signal = has_frames and not no_signal
+        return {"has_signal": has_signal, "no_signal_msg": no_signal, "output": output[:500]}
+    except Exception as e:
+        return {"has_signal": False, "no_signal_msg": False, "output": str(e)}
+
+@app.get("/api/detect-format/{source_id}")
+async def api_detect_format(source_id: str, token: str = Depends(verify_token)):
+    """Detecta automáticamente el formato de señal SDI en el canal especificado.
+    Prueba cada formato disponible y devuelve cuáles tienen señal activa."""
+    mgr = managers.get(source_id)
+    if not mgr:
+        raise HTTPException(status_code=404, detail="Canal no encontrado")
+    if mgr.is_recording():
+        raise HTTPException(status_code=400, detail="Canal ocupado grabando — detén la grabación antes de detectar")
+
+    logger.info(f"[DETECT] Iniciando detección de formato en CH{source_id} ({mgr.input_name})")
+    results = []
+
+    for fmt in DECKLINK_FORMATS:
+        logger.info(f"[DETECT] Probando {fmt['code']} en {mgr.input_name}...")
+        probe = await _probe_format(mgr.input_name, fmt["code"])
+        results.append({
+            "format_code": fmt["code"],
+            "description": fmt["desc"],
+            "has_signal": probe["has_signal"],
+            "no_signal": probe["no_signal_msg"],
+        })
+        # Si encontramos señal activa, reportamos inmediatamente
+        if probe["has_signal"]:
+            logger.info(f"[DETECT] ✅ SEÑAL DETECTADA en CH{source_id} con formato {fmt['code']}")
+
+    detected = [r for r in results if r["has_signal"]]
+    logger.info(f"[DETECT] Detección completada. Formatos con señal: {[r['format_code'] for r in detected]}")
+
+    return {
+        "source_id": source_id,
+        "input_name": mgr.input_name,
+        "detected_formats": detected,
+        "all_results": results,
+        "recommendation": detected[0]["format_code"] if detected else None,
+        "summary": f"{'✅ Señal detectada: ' + detected[0]['format_code'] if detected else '❌ Sin señal en ningún formato — verifica el cable SDI y la fuente de video'}"
+    }
+
 # ── Admin: Gestión de Usuarios y Grupos ──────────────────────────────────────
 @app.get("/api/admin/groups")
 async def get_groups():
     """Devuelve los nombres actuales de los grupos (público para la pantalla de login)."""
     return {
         "group1_name": USERS_DB["groups"]["1"]["name"],
-        "group2_name": USERS_DB["groups"]["2"]["name"]
+        "group2_name": USERS_DB["groups"]["2"]["name"],
+        "group3_name": USERS_DB["groups"]["3"]["name"],
+        "group4_name": USERS_DB["groups"]["4"]["name"]
     }
 
 @app.post("/api/admin/groups")
 async def update_groups(req: GroupNamesRequest, token: str = Depends(require_admin)):
-    if not req.group1_name.strip() or not req.group2_name.strip():
+    if not req.group1_name.strip() or not req.group2_name.strip() or not req.group3_name.strip() or not req.group4_name.strip():
         raise HTTPException(status_code=400, detail="Los nombres de grupo no pueden estar vacíos.")
     async with users_db_lock:
         USERS_DB["groups"]["1"]["name"] = req.group1_name.strip()
         USERS_DB["groups"]["2"]["name"] = req.group2_name.strip()
+        USERS_DB["groups"]["3"]["name"] = req.group3_name.strip()
+        USERS_DB["groups"]["4"]["name"] = req.group4_name.strip()
     await _save_users_db()
-    return {"status": "ok", "group1_name": req.group1_name.strip(), "group2_name": req.group2_name.strip()}
+    return {"status": "ok", "group1_name": req.group1_name.strip(), "group2_name": req.group2_name.strip(), "group3_name": req.group3_name.strip(), "group4_name": req.group4_name.strip()}
 
 @app.get("/api/admin/users")
 async def list_users(token: str = Depends(require_admin)):
@@ -1059,8 +1237,8 @@ async def list_users(token: str = Depends(require_admin)):
 
 @app.post("/api/admin/users")
 async def create_user(req: CreateUserRequest, token: str = Depends(require_admin)):
-    if req.group not in ("1", "2"):
-        raise HTTPException(status_code=400, detail="El grupo debe ser '1' o '2'.")
+    if req.group not in ("1", "2", "3", "4"):
+        raise HTTPException(status_code=400, detail="El grupo debe ser '1', '2', '3' o '4'.")
     if not req.username.strip():
         raise HTTPException(status_code=400, detail="El nombre de usuario no puede estar vacío.")
     if not req.password:
@@ -1101,26 +1279,32 @@ async def delete_user(username: str, token: str = Depends(require_admin)):
 @app.get("/api/admin/stats")
 async def get_stats(token: str = Depends(require_admin)):
     def _compute_recording_stats():
-        f1 = 0; s1 = 0; d1 = 0.0
-        f2 = 0; s2 = 0; d2 = 0.0
+        # Contadores para los 4 canales
+        ch_stats = {}
+        for ch_id in ("1", "2", "3", "4"):
+            ch_stats[ch_id] = {"files": 0, "size": 0, "duration": 0.0}
+
         for path_str, cache_val in list(DURATION_CACHE.items()):
             dur = cache_val[1]
             try:
                 sz = os.path.getsize(path_str)
             except Exception:
                 sz = 0
-            if "_CH1_" in path_str:
-                f1 += 1; s1 += sz; d1 += dur
-            elif "_CH2_" in path_str:
-                f2 += 1; s2 += sz; d2 += dur
-        lf1 = managers["1"].log_file
-        lf2 = managers["2"].log_file
-        log1 = os.path.getsize(lf1) if os.path.exists(lf1) else 0
-        log2 = os.path.getsize(lf2) if os.path.exists(lf2) else 0
-        return f1, s1, d1, f2, s2, d2, log1, log2
+            for ch_id in ("1", "2", "3", "4"):
+                if f"_CH{ch_id}_" in path_str:
+                    ch_stats[ch_id]["files"] += 1
+                    ch_stats[ch_id]["size"] += sz
+                    ch_stats[ch_id]["duration"] += dur
+                    break
 
-    files_ch1, size_ch1, duration_ch1, files_ch2, size_ch2, duration_ch2, log1_sz, log2_sz = \
-        await asyncio.to_thread(_compute_recording_stats)
+        log_sizes = {}
+        for ch_id in ("1", "2", "3", "4"):
+            lf = managers[ch_id].log_file
+            log_sizes[ch_id] = os.path.getsize(lf) if os.path.exists(lf) else 0
+
+        return ch_stats, log_sizes
+
+    ch_stats, log_sizes = await asyncio.to_thread(_compute_recording_stats)
 
     recent_logins = ACCESS_LOG[-50:]
     user_counts = {}
@@ -1139,12 +1323,14 @@ async def get_stats(token: str = Depends(require_admin)):
 
     return {
         "recordings": {
-            "ch1": {"files": files_ch1, "size_bytes": size_ch1, "duration_sec": duration_ch1},
-            "ch2": {"files": files_ch2, "size_bytes": size_ch2, "duration_sec": duration_ch2}
+            f"ch{ch_id}": {
+                "files": ch_stats[ch_id]["files"],
+                "size_bytes": ch_stats[ch_id]["size"],
+                "duration_sec": ch_stats[ch_id]["duration"]
+            } for ch_id in ("1", "2", "3", "4")
         },
         "logs": {
-            "ch1_bytes": log1_sz,
-            "ch2_bytes": log2_sz
+            f"ch{ch_id}_bytes": log_sizes[ch_id] for ch_id in ("1", "2", "3", "4")
         },
         "access": {
             "total_logins": len(ACCESS_LOG),
