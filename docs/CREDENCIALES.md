@@ -3,25 +3,22 @@
 ## 👤 Usuario Administrador
 
 ```
-Usuario: administrador
-Contraseña: 2wq3ew4re
+Usuario: [VER_ARCHIVO_.ENV]
+Contraseña: [VER_ARCHIVO_.ENV]
 ```
 
 **Importante:**
-- ⚠️ Solo se acepta el usuario completo: `administrador`
-- ❌ NO se aceptan alias como 'admin'
+- ⚠️ Las credenciales reales se encuentran en el archivo `.env` del servidor.
+- ❌ NUNCA compartas el archivo `.env` ni lo subas a repositorios públicos.
 
 ---
 
 ## 👥 Usuario Operador
 
 ```
-Usuario: operador
-Contraseña: (verificar en .env)
+Usuario: [VER_ARCHIVO_.ENV]
+Contraseña: [VER_ARCHIVO_.ENV]
 ```
-
-**Alias permitidos:**
-- `operador` (nombre completo)
 
 ---
 
@@ -33,33 +30,9 @@ Si necesitas cambiar la contraseña:
 # Ejecutar script de reset
 python3 reset_admin_password.py "nueva_contraseña"
 
-# Copiar el hash generado al archivo .env
-# Reiniciar el servidor
-pkill -f "python.*main.py"
-python3 main.py &
+# El script generará un hash y actualizará el archivo .env (o indicará cómo hacerlo)
+# Reiniciar el servidor para aplicar cambios
 ```
-
----
-
-## 📝 Notas Importantes
-
-1. **Las contraseñas están hasheadas** con bcrypt en el archivo `.env`
-2. **Nunca subir `.env` a git** - contiene credenciales sensibles
-3. **Backup automático** se crea en `.env.backup` antes de cambios
-4. **Sesión única** para administrador (solo 1 sesión activa)
-5. **Rate limiting** - 5 intentos fallidos = bloqueo de 5 minutos por IP
-
----
-
-## 🚀 Acceso al Sistema
-
-```
-http://192.168.22.130:8000
-```
-
-1. Ingresa usuario: `admin` o `administrador`
-2. Ingresa contraseña: `vtv2024`
-3. Click en "Iniciar Sesión"
 
 ---
 
@@ -73,5 +46,4 @@ http://192.168.22.130:8000
 
 ---
 
-**Fecha de actualización**: 27 de Marzo, 2026  
-**Contraseña actual**: vtv2024
+**Nota de Seguridad**: Este archivo ha sido saneado para eliminar información sensible tras la publicación del repositorio.
