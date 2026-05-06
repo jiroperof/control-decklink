@@ -969,8 +969,9 @@
 
     <!-- MODAL GESTIÓN DE LIMPIEZA -->
     <div id="modalCleanup"
-        class="fixed inset-0 z-[60] hidden flex items-center justify-center bg-slate-950/80 backdrop-blur-md p-6">
-        <div class="glass-panel-blur w-full max-w-md p-8 rounded-3xl shadow-2xl animate-fade-in-fast">
+        class="fixed inset-0 z-[60] hidden flex items-center justify-center bg-slate-950/80 backdrop-blur-md p-4">
+        <div class="glass-panel-blur w-full max-w-md rounded-3xl shadow-2xl animate-fade-in-fast overflow-hidden flex flex-col" style="max-height:90vh">
+        <div class="overflow-y-auto flex-1 p-6">
             <div class="flex justify-between items-center mb-6 border-b border-slate-700 pb-3">
                 <h3 class="text-sm font-black uppercase tracking-widest text-white flex items-center gap-2">
                     <svg class="w-5 h-5 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
@@ -1053,8 +1054,9 @@
                     <p class="text-[9px] text-slate-500 text-center mt-1">Requerido para cualquier acción de limpieza</p>
                 </div>
             </div>
-        </div>
-    </div>
+        </div><!-- /scrollable content -->
+        </div><!-- /modal panel -->
+    </div><!-- /modalCleanup -->
 
     <!-- MODAL ADMIN: GESTIÓN DE USUARIOS Y GRUPOS -->
     <div id="modalAdmin" class="fixed inset-0 z-[65] hidden flex items-center justify-center bg-slate-950/85 backdrop-blur-md p-6">
