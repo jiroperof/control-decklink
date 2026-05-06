@@ -267,11 +267,11 @@
     </div>
 
     <!-- ════════════════════════════════ DASHBOARD ════════════════════════════════ -->
-    <div id="mainSection" class="hidden container mx-auto px-6 pt-4 pb-10 flex-1">
+    <div id="mainSection" class="hidden flex-1 flex flex-col">
 
         <!-- HEADER -->
         <header id="mainHeader"
-            class="sticky top-0 z-50 bg-slate-900/80 backdrop-blur-xl border-b border-transparent transition-[background-color,border-color,box-shadow] duration-300 ease-out font-mono -mx-6 px-6 sm:-mx-8 sm:px-8 mb-4 py-1.5 shadow-sm animate-fade-in-up">
+            class="sticky top-0 z-50 w-full bg-slate-900/80 backdrop-blur-xl border-b border-transparent transition-[background-color,border-color,box-shadow] duration-300 ease-out font-mono px-6 sm:px-10 py-1.5 shadow-sm animate-fade-in-up rounded-b-xl">
             <div class="flex flex-col md:flex-row justify-between items-center max-w-7xl mx-auto gap-2 md:gap-0">
                 <div class="flex items-center gap-3">
                     <!-- Drop shadow on logo to make it pop over blurred background -->
@@ -330,6 +330,9 @@
                 </div>
             </div>
         </header>
+
+        <!-- DASHBOARD CONTENT -->
+        <div class="container mx-auto px-6 pt-4 pb-10 flex-1">
 
         <!-- BANNERS -->
         <div id="networkError"
@@ -960,7 +963,9 @@
             </div><!-- /logBody inner wrapper -->
             </div><!-- /logBody collapsible -->
         </div>
-    </div>
+
+        </div><!-- /dashboard content container -->
+    </div><!-- /mainSection -->
 
     <!-- MODAL GESTIÓN DE LIMPIEZA -->
     <div id="modalCleanup"
