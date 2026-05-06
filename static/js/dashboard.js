@@ -1,6 +1,6 @@
         // ── Interfaz Multi-Canal ──────────────────────────────────────────────────────
         function renderAllChannels() {
-            ['1', '2'].forEach(id => {
+            ['1', '2', '3', '4'].forEach(id => {
                 const c = channels[id];
                 const isAdmin = localStorage.getItem(ROLE_KEY) === 'admin';
 
@@ -61,7 +61,7 @@
                 }
             });
 
-            if (logAutoTimer || (!document.getElementById('logBox_1').textContent && !document.getElementById('logBox_2').textContent)) loadLog();
+            if (logAutoTimer || (['1','2','3','4'].every(id => !document.getElementById('logBox_' + id)?.textContent))) loadLog();
         }
         // ── Polling Global y Mantenimiento ─────────────────────────────────────────────
         function startUpdates() {
@@ -96,16 +96,15 @@
 
                 // Lógica de Tiempo Restante Predictivo
                 const freeGB = d.disk_total * (1 - (d.disk / 100));
-                let br1 = document.getElementById('bitrate_1')?.value || "15M";
-                let br2 = document.getElementById('bitrate_2')?.value || "15M";
-                let num1 = parseInt(br1.replace('M',''));
-                let num2 = parseInt(br2.replace('M',''));
-                
-                let isC1Running = channels['1']?.running ? 1 : 0;
-                let isC2Running = channels['2']?.running ? 1 : 0;
-                
-                let activeBitrateMbps = (num1 * isC1Running) + (num2 * isC2Running);
-                if (activeBitrateMbps === 0) activeBitrateMbps = num1; // Si ambos parados, dar estimado base
+                let activeBitrateMbps = 0;
+                let fallbackBitrate = 15;
+                ['1', '2', '3', '4'].forEach(id => {
+                    const brEl = document.getElementById('bitrate_' + id);
+                    const bnum = parseInt((brEl?.value || '15M').replace('M', '')) || 15;
+                    if (id === '1') fallbackBitrate = bnum;
+                    if (channels[id]?.running) activeBitrateMbps += bnum;
+                });
+                if (activeBitrateMbps === 0) activeBitrateMbps = fallbackBitrate;
                 
                 let MBps = (activeBitrateMbps * 1.5) / 8; // x1.5 x maxrate de ffmpeg vbr
                 if (MBps === 0) MBps = 1;
@@ -137,14 +136,18 @@
 
         async function updateStatus() {
             try {
-                const [r1, r2] = await Promise.all([
+                const [r1, r2, r3, r4] = await Promise.all([
                     fetch('/api/status/1', { headers: { 'X-Token': TOKEN } }),
-                    fetch('/api/status/2', { headers: { 'X-Token': TOKEN } })
+                    fetch('/api/status/2', { headers: { 'X-Token': TOKEN } }),
+                    fetch('/api/status/3', { headers: { 'X-Token': TOKEN } }),
+                    fetch('/api/status/4', { headers: { 'X-Token': TOKEN } })
                 ]);
-                if (!r1.ok || !r2.ok) { onNetFail(); return; }
+                if (!r1.ok || !r2.ok || !r3.ok || !r4.ok) { onNetFail(); return; }
 
                 applyStatusData('1', await r1.json());
                 applyStatusData('2', await r2.json());
+                applyStatusData('3', await r3.json());
+                applyStatusData('4', await r4.json());
 
                 renderAllChannels();
                 onNetOk();
@@ -179,7 +182,7 @@
             if (b) {
                 const role = localStorage.getItem(ROLE_KEY) || '';
                 const uCh = localStorage.getItem(CHANNEL_KEY) || null;
-                const isGroup = (role === 'group1' || role === 'group2');
+                const isGroup = role && role.startsWith('group');
                 const shouldHide = isGroup && (uCh !== id);
                 
                 if (shouldHide) {
@@ -676,18 +679,14 @@
         // ── Filtro de Canal por Grupo ─────────────────────────────────────────────────
         function applyChannelFilter() {
             if (!USER_CHANNEL) return;
-            // Ocultar la tarjeta del canal que NO pertenece al grupo
-            const hiddenCh = USER_CHANNEL === '1' ? '2' : '1';
-
-            // Ocultar la tarjeta del canal ajeno mediante su ID estricto
-            const card = document.getElementById(`cardCH${hiddenCh}`);
-            if (card) card.classList.add('hidden');
-
-            // Ocultar el badge del canal ajeno en el header
-            const badge = document.getElementById(`badgeCH${hiddenCh}`);
-            if (badge) badge.classList.add('hidden');
-
-            // Ocultar el log del canal ajeno
-            const logSection = document.querySelector(`#logBox_${hiddenCh}`)?.closest('.flex.flex-col');
-            if (logSection) logSection.classList.add('hidden');
+            // Ocultar todas las tarjetas, badges y logs que NO pertenecen al grupo
+            ['1', '2', '3', '4'].forEach(id => {
+                if (id === USER_CHANNEL) return;
+                const card = document.getElementById(`cardCH${id}`);
+                if (card) card.classList.add('hidden');
+                const badge = document.getElementById(`badgeCH${id}`);
+                if (badge) badge.classList.add('hidden');
+                const logSection = document.querySelector(`#logBox_${id}`)?.closest('.flex.flex-col');
+                if (logSection) logSection.classList.add('hidden');
+            });
         }

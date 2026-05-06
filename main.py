@@ -1,4 +1,5 @@
 import subprocess, os, re, signal, asyncio, logging, psutil, time, json, shlex, uuid, secrets
+from logging.handlers import RotatingFileHandler
 from datetime import datetime, date, timedelta
 from datetime import time as dtime
 from pathlib import Path
@@ -13,9 +14,48 @@ from pydantic import BaseModel, field_validator
 import bcrypt
 
 # ── Logging ───────────────────────────────────────────────────────────────────
-logging.basicConfig(level=logging.INFO,
-    format="%(asctime)s [%(levelname)s] %(name)s — %(message)s",
-    datefmt="%Y-%m-%d %H:%M:%S")
+# Write logs to both stdout and a rotating file in logs/.
+_LOG_FORMAT = "%(asctime)s [%(levelname)s] %(name)s — %(message)s"
+_LOG_DATEFMT = "%Y-%m-%d %H:%M:%S"
+
+_BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+_DATA_DIR = os.path.join(_BASE_DIR, "data")
+_LOGS_DIR = os.path.join(_BASE_DIR, "logs")
+os.makedirs(_DATA_DIR, exist_ok=True)
+os.makedirs(_LOGS_DIR, exist_ok=True)
+
+def _setup_logging():
+    level_name = os.environ.get("LOG_LEVEL", "INFO").upper()
+    level = getattr(logging, level_name, logging.INFO)
+    max_mb = int(os.environ.get("LOG_MAX_MB", "10"))
+    backups = int(os.environ.get("LOG_BACKUPS", "10"))
+    max_bytes = max(1, max_mb) * 1024 * 1024
+    backups = min(100, max(1, backups))
+
+    root = logging.getLogger()
+    root.setLevel(level)
+
+    formatter = logging.Formatter(_LOG_FORMAT, datefmt=_LOG_DATEFMT)
+
+    # Avoid duplicating handlers on reload.
+    if not any(isinstance(h, RotatingFileHandler) for h in root.handlers):
+        fh = RotatingFileHandler(
+            os.path.join(_LOGS_DIR, "server.log"),
+            maxBytes=max_bytes,
+            backupCount=backups,
+            encoding="utf-8",
+        )
+        fh.setFormatter(formatter)
+        fh.setLevel(level)
+        root.addHandler(fh)
+
+    if not any(isinstance(h, logging.StreamHandler) and getattr(h, "stream", None) is not None for h in root.handlers):
+        sh = logging.StreamHandler()
+        sh.setFormatter(formatter)
+        sh.setLevel(level)
+        root.addHandler(sh)
+
+_setup_logging()
 logger = logging.getLogger("vtv")
 
 CPU_MODEL = "Intel Xeon CPU E5-2620 v4"
@@ -36,13 +76,6 @@ cached_metrics = {
     "cpu_name": CPU_MODEL, "gpu_name": GPU_MODEL
 }
 cached_processes = {"processes": [], "count": 0}
-
-# ── Directorios del proyecto ─────────────────────────────────────────────────
-_BASE_DIR = os.path.dirname(os.path.abspath(__file__))
-_DATA_DIR = os.path.join(_BASE_DIR, "data")
-_LOGS_DIR = os.path.join(_BASE_DIR, "logs")
-os.makedirs(_DATA_DIR, exist_ok=True)
-os.makedirs(_LOGS_DIR, exist_ok=True)
 
 # ── Duration Cache con evicción LRU ───────────────────────────────────────────
 CACHE_FILE = os.path.join(_DATA_DIR, "duration_cache.json")
@@ -182,8 +215,8 @@ TOKEN_TO_ROLE = {u["token"]: u["role"] for u in USERS.values()}
 
 # Sessions for single-login per user
 ACTIVE_SESSIONS = {
-    ADMIN_USER: {"session_id": None, "last_ping": 0},
-    OPERATOR_USER: {"session_id": None, "last_ping": 0}
+    ADMIN_USER: [],
+    OPERATOR_USER: []
 }
 TOKEN_TO_USER = {u["token"]: name for name, u in USERS.items()}
 
@@ -306,6 +339,26 @@ class RecordingManager:
             ts = datetime.now().strftime("%Y%m%d_%H%M%S")
             rotated = os.path.join(_LOGS_DIR, f"ffmpeg_debug_{self.source_id}_{ts}.log")
             os.rename(self.log_file, rotated)
+            # Retención: mantener solo los últimos N logs rotados por canal
+            try:
+                keep = int(os.environ.get("FFMPEG_LOG_ROTATED_KEEP", "10"))
+                keep = min(200, max(1, keep))
+            except Exception:
+                keep = 10
+            try:
+                pattern = os.path.join(_LOGS_DIR, f"ffmpeg_debug_{self.source_id}_*.log")
+                rotated_logs = sorted(
+                    [p for p in Path(_LOGS_DIR).glob(f"ffmpeg_debug_{self.source_id}_*.log")],
+                    key=lambda p: p.stat().st_mtime,
+                    reverse=True,
+                )
+                for old in rotated_logs[keep:]:
+                    try:
+                        old.unlink()
+                    except Exception:
+                        pass
+            except Exception:
+                pass
 
     def _stop_sync(self, graceful: bool = True):
         """Detiene ffmpeg de forma ordenada:
@@ -550,6 +603,34 @@ async def system_monitor_task():
 
         await asyncio.sleep(2)
 
+async def disk_cleanup_task():
+    """Tarea en segundo plano para verificar espacio en disco y limpiar si es necesario (cada 2 minutos)"""
+    logger.info("[DISK-CLEANUP] Iniciando tarea de monitoreo de espacio en disco.")
+    while True:
+        try:
+            # Esperar antes de la primera ejecución para dejar que el sistema arranque bien
+            await asyncio.sleep(120)
+            
+            # Verificamos si el disco supera el umbral antes de llamar al script (eficiencia)
+            dsk = psutil.disk_usage("/")
+            if dsk.percent >= 90: 
+                script_path = os.path.join(_BASE_DIR, "scripts", "cleanup.sh")
+                proc = await asyncio.create_subprocess_exec(
+                    "sudo", script_path, "--auto-disk",
+                    stdout=asyncio.subprocess.PIPE,
+                    stderr=asyncio.subprocess.PIPE
+                )
+                stdout, stderr = await proc.communicate()
+                output = stdout.decode()
+                if "ALERTA" in output:
+                    logger.warning(f"[DISK-CLEANUP] Limpieza automática ejecutada:\n{output}")
+                elif proc.returncode != 0:
+                    logger.error(f"[DISK-CLEANUP] Error ejecutando script: {stderr.decode()}")
+        except Exception as e:
+            logger.error(f"[DISK-CLEANUP] Error en tarea de fondo: {e}")
+        
+        await asyncio.sleep(120)
+
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     # Limpiar procesos ffmpeg huérfanos del Decklink al arrancar
@@ -569,6 +650,8 @@ async def lifespan(app: FastAPI):
     asyncio.create_task(watchdog_task())
     asyncio.create_task(schedule_checker_task())
     asyncio.create_task(system_monitor_task())
+    asyncio.create_task(disk_cleanup_task())
+    asyncio.create_task(disk_guard_task())
     yield
     for mgr in managers.values():
         if mgr.process: mgr._stop_sync()
@@ -812,6 +895,156 @@ async def api_log(source_id: str = FastAPIPath(..., pattern="^(1|2|3|4)$"), line
 CLEANUP_CONFIG = os.path.join(_DATA_DIR, "cleanup_config.json")
 CLEANUP_SCRIPT = os.path.join(_BASE_DIR, "scripts", "cleanup.sh")
 
+# Auto-cleanup when disk is full (delete oldest MP4 files).
+DEFAULT_CLEANUP_CONFIG = {
+    "retention_days": 2,
+    "disk_guard": {
+        "enabled": False,
+        # If disk usage percent is >= trigger_percent, start deleting.
+        "trigger_percent": 92,
+        # Stop deleting once disk usage percent is <= target_percent.
+        "target_percent": 88,
+        # How often to check.
+        "check_interval_sec": 30,
+        # Safety: avoid deleting files modified very recently (likely in-progress segments).
+        "min_file_age_sec": 300,
+        # Maximum files to delete per pass (prevents long blocking loops).
+        "max_delete_files": 10,
+    },
+}
+
+def _merge_dict(dst: dict, src: dict) -> dict:
+    """Shallow/recursive merge: src values override dst."""
+    for k, v in (src or {}).items():
+        if isinstance(v, dict) and isinstance(dst.get(k), dict):
+            _merge_dict(dst[k], v)
+        else:
+            dst[k] = v
+    return dst
+
+def _load_cleanup_config_sync() -> dict:
+    cfg = json.loads(json.dumps(DEFAULT_CLEANUP_CONFIG))
+    try:
+        if os.path.exists(CLEANUP_CONFIG):
+            with open(CLEANUP_CONFIG, "r") as f:
+                loaded = json.load(f) or {}
+            _merge_dict(cfg, loaded)
+    except Exception as e:
+        logger.error(f"Error leyendo cleanup_config: {e}")
+    return cfg
+
+def _save_cleanup_config_sync(cfg: dict) -> None:
+    try:
+        with open(CLEANUP_CONFIG, "w") as f:
+            json.dump(cfg, f, indent=2)
+    except Exception as e:
+        logger.error(f"Error guardando cleanup_config: {e}")
+
+def _iter_mp4_files_sorted_oldest(base: Path) -> list[Path]:
+    files: list[Path] = []
+    try:
+        for p in base.rglob("*.mp4"):
+            try:
+                if p.is_file():
+                    files.append(p)
+            except Exception:
+                pass
+    except Exception:
+        return []
+    files.sort(key=lambda p: p.stat().st_mtime if p.exists() else 0)
+    return files
+
+def _disk_guard_delete_oldest_sync(base: Path, cfg: dict) -> dict:
+    """Delete oldest MP4s until target_percent is met or max_delete_files reached."""
+    dg = (cfg or {}).get("disk_guard") or {}
+    try:
+        trigger = int(dg.get("trigger_percent", 92))
+        target = int(dg.get("target_percent", 88))
+        interval = int(dg.get("check_interval_sec", 30))
+        min_age = int(dg.get("min_file_age_sec", 300))
+        max_delete = int(dg.get("max_delete_files", 10))
+    except Exception:
+        trigger, target, interval, min_age, max_delete = 92, 88, 30, 300, 10
+
+    # Sanity bounds
+    trigger = min(99, max(1, trigger))
+    target = min(99, max(1, target))
+    if target > trigger:
+        # Keep a sensible order to prevent endless loops.
+        target = max(1, trigger - 2)
+    max_delete = min(500, max(1, max_delete))
+    min_age = min(24 * 3600, max(0, min_age))
+
+    usage = psutil.disk_usage(str(base)) if base.exists() else psutil.disk_usage("/")
+    deleted = []
+    skipped_recent = 0
+
+    if usage.percent < trigger:
+        return {
+            "trigger_percent": trigger,
+            "target_percent": target,
+            "disk_percent": usage.percent,
+            "deleted": deleted,
+            "skipped_recent": skipped_recent,
+            "max_delete_files": max_delete,
+        }
+
+    now_ts = time.time()
+    for p in _iter_mp4_files_sorted_oldest(base):
+        if len(deleted) >= max_delete:
+            break
+        try:
+            st = p.stat()
+        except Exception:
+            continue
+        # Avoid touching very recent files (likely in-progress segment writes).
+        if min_age and (now_ts - st.st_mtime) < min_age:
+            skipped_recent += 1
+            continue
+        try:
+            size = st.st_size
+            p.unlink()
+            deleted.append({"path": str(p), "size_bytes": size, "mtime": st.st_mtime})
+        except Exception as e:
+            logger.warning(f"[DISK_GUARD] No se pudo borrar {p}: {e}")
+            continue
+
+        usage = psutil.disk_usage(str(base))
+        if usage.percent <= target:
+            break
+
+    return {
+        "trigger_percent": trigger,
+        "target_percent": target,
+        "disk_percent": usage.percent,
+        "deleted": deleted,
+        "skipped_recent": skipped_recent,
+        "max_delete_files": max_delete,
+    }
+
+async def disk_guard_task():
+    """Background task: if disk usage crosses threshold, delete oldest MP4s."""
+    while True:
+        cfg = await asyncio.to_thread(_load_cleanup_config_sync)
+        dg = cfg.get("disk_guard", {})
+        enabled = bool(dg.get("enabled", False))
+        try:
+            interval = int(dg.get("check_interval_sec", 30))
+        except Exception:
+            interval = 30
+        interval = min(3600, max(5, interval))
+
+        if enabled:
+            try:
+                base = _resolve_dest_path()
+                result = await asyncio.to_thread(_disk_guard_delete_oldest_sync, base, cfg)
+                if result.get("deleted"):
+                    logger.warning(f"[DISK_GUARD] Liberando espacio: borrados {len(result['deleted'])} archivo(s). Disco={result.get('disk_percent')}%")
+            except Exception as e:
+                logger.error(f"[DISK_GUARD] Error: {e}")
+
+        await asyncio.sleep(interval)
+
 # ── Ruta base de grabaciones ──────────────────────────────────────────────────
 def _resolve_dest_path() -> Path:
     """Determina la ruta base de grabaciones a partir de la configuración activa de cada canal."""
@@ -824,16 +1057,17 @@ def _resolve_dest_path() -> Path:
 
 @app.get("/api/cleanup/config")
 async def get_cleanup_config(token: str = Depends(verify_token)):
-    if not os.path.exists(CLEANUP_CONFIG): return {"retention_days": 2}
-    def _read(): 
-        with open(CLEANUP_CONFIG, "r") as f: return json.load(f)
-    return await asyncio.to_thread(_read)
+    return await asyncio.to_thread(_load_cleanup_config_sync)
 
 @app.post("/api/cleanup/config")
 async def save_cleanup_config(cfg: dict, token: str = Depends(require_admin)):
-    def _write():
-        with open(CLEANUP_CONFIG, "w") as f: json.dump(cfg, f, indent=2)
-    await asyncio.to_thread(_write)
+    # Merge updates with existing config so partial updates don't wipe other keys.
+    def _write_merge():
+        current = _load_cleanup_config_sync()
+        if isinstance(cfg, dict):
+            _merge_dict(current, cfg)
+        _save_cleanup_config_sync(current)
+    await asyncio.to_thread(_write_merge)
     return {"status": "ok"}
 
 @app.post("/api/cleanup/execute")
