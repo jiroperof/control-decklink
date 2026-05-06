@@ -1,6 +1,6 @@
         // ── Efecto Animado del Header (Scroll) ─────────────────────────────────────────
         let _scrollTicking = false;
-        let _headerScrolled = null; // null = estado desconocido, true/false = estado actual
+        let _headerScrolled = null;
         window.addEventListener('scroll', () => {
             if (_scrollTicking) return;
             _scrollTicking = true;
@@ -11,22 +11,13 @@
 
                 const header = document.getElementById('mainHeader');
                 if (!header) { _scrollTicking = false; return; }
-                const logo = document.getElementById('logoImg');
-                const title = document.getElementById('headerTitle');
-                const subtitle = document.getElementById('headerSubtitle');
 
                 if (scrolled) {
-                    header.classList.add('shadow-[0_20px_40px_-15px_rgba(0,0,0,0.8)]', 'border-slate-700/60', 'bg-slate-900/95', 'py-1');
-                    header.classList.remove('bg-slate-900/80', 'border-transparent', 'shadow-sm', 'py-1.5');
-                    if (logo) { logo.classList.replace('h-6', 'h-5'); logo.classList.replace('md:h-7', 'md:h-6'); }
-                    if (title) { title.classList.replace('text-base', 'text-sm'); title.classList.replace('md:text-lg', 'md:text-base'); title.classList.replace('tracking-tighter', 'tracking-normal'); }
-                    if (subtitle) subtitle.classList.add('opacity-60');
+                    header.classList.add('shadow-[0_8px_32px_-8px_rgba(0,0,0,0.7)]', 'border-slate-700/50', 'bg-slate-900/98');
+                    header.classList.remove('bg-slate-900/80', 'border-transparent', 'shadow-sm');
                 } else {
-                    header.classList.remove('shadow-[0_20px_40px_-15px_rgba(0,0,0,0.8)]', 'border-slate-700/60', 'bg-slate-900/95', 'py-1', 'pt-6', 'pb-6', 'pt-3', 'pb-3');
-                    header.classList.add('bg-slate-900/80', 'border-transparent', 'shadow-sm', 'py-1.5');
-                    if (logo) { logo.classList.replace('h-5', 'h-6'); logo.classList.replace('md:h-6', 'md:h-7'); logo.classList.replace('h-8', 'h-6'); logo.classList.replace('h-11', 'h-6'); }
-                    if (title) { title.classList.replace('text-sm', 'text-base'); title.classList.replace('md:text-base', 'md:text-lg'); title.classList.replace('tracking-normal', 'tracking-tighter'); title.classList.replace('text-xl', 'text-base'); title.classList.replace('text-2xl', 'text-base'); }
-                    if (subtitle) subtitle.classList.remove('opacity-60');
+                    header.classList.remove('shadow-[0_8px_32px_-8px_rgba(0,0,0,0.7)]', 'border-slate-700/50', 'bg-slate-900/98');
+                    header.classList.add('bg-slate-900/80', 'border-transparent', 'shadow-sm');
                 }
                 _scrollTicking = false;
             });
