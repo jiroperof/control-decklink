@@ -1,6 +1,6 @@
         // ── Interfaz Multi-Canal ──────────────────────────────────────────────────────
         function renderAllChannels() {
-            ['1', '2', '3', '4'].forEach(id => {
+            ['1', '2'].forEach(id => {
                 const c = channels[id];
                 const isAdmin = localStorage.getItem(ROLE_KEY) === 'admin';
 
@@ -61,7 +61,7 @@
                 }
             });
 
-            if (logAutoTimer || (!document.getElementById('logBox_1').textContent && !document.getElementById('logBox_2').textContent && !document.getElementById('logBox_3')?.textContent && !document.getElementById('logBox_4')?.textContent)) loadLog();
+            if (logAutoTimer || (!document.getElementById('logBox_1').textContent && !document.getElementById('logBox_2').textContent)) loadLog();
         }
         // ── Polling Global y Mantenimiento ─────────────────────────────────────────────
         function startUpdates() {
@@ -98,19 +98,13 @@
                 const freeGB = d.disk_total * (1 - (d.disk / 100));
                 let br1 = document.getElementById('bitrate_1')?.value || "15M";
                 let br2 = document.getElementById('bitrate_2')?.value || "15M";
-                let br3 = document.getElementById('bitrate_3')?.value || "15M";
-                let br4 = document.getElementById('bitrate_4')?.value || "15M";
                 let num1 = parseInt(br1.replace('M',''));
                 let num2 = parseInt(br2.replace('M',''));
-                let num3 = parseInt(br3.replace('M',''));
-                let num4 = parseInt(br4.replace('M',''));
                 
                 let isC1Running = channels['1']?.running ? 1 : 0;
                 let isC2Running = channels['2']?.running ? 1 : 0;
-                let isC3Running = channels['3']?.running ? 1 : 0;
-                let isC4Running = channels['4']?.running ? 1 : 0;
                 
-                let activeBitrateMbps = (num1 * isC1Running) + (num2 * isC2Running) + (num3 * isC3Running) + (num4 * isC4Running);
+                let activeBitrateMbps = (num1 * isC1Running) + (num2 * isC2Running);
                 if (activeBitrateMbps === 0) activeBitrateMbps = num1; // Si ambos parados, dar estimado base
                 
                 let MBps = (activeBitrateMbps * 1.5) / 8; // x1.5 x maxrate de ffmpeg vbr
@@ -124,7 +118,7 @@
                     else if (hoursLeft < 1) dr.textContent = "⏱ " + Math.floor(hoursLeft * 60) + "min restantes";
                     else dr.textContent = "⏱ " + hoursLeft.toFixed(1) + "h restantes";
                     
-                    if (freeGB < 50 && (isC1Running + isC2Running + isC3Running + isC4Running) > 0) playErrorBeep();
+                    if (freeGB < 50 && (isC1Running + isC2Running) > 0) playErrorBeep();
                 }
 
                 // Network specific update
@@ -143,18 +137,14 @@
 
         async function updateStatus() {
             try {
-                const [r1, r2, r3, r4] = await Promise.all([
+                const [r1, r2] = await Promise.all([
                     fetch('/api/status/1', { headers: { 'X-Token': TOKEN } }),
-                    fetch('/api/status/2', { headers: { 'X-Token': TOKEN } }),
-                    fetch('/api/status/3', { headers: { 'X-Token': TOKEN } }),
-                    fetch('/api/status/4', { headers: { 'X-Token': TOKEN } })
+                    fetch('/api/status/2', { headers: { 'X-Token': TOKEN } })
                 ]);
-                if (!r1.ok || !r2.ok || !r3.ok || !r4.ok) { onNetFail(); return; }
+                if (!r1.ok || !r2.ok) { onNetFail(); return; }
 
                 applyStatusData('1', await r1.json());
                 applyStatusData('2', await r2.json());
-                applyStatusData('3', await r3.json());
-                applyStatusData('4', await r4.json());
 
                 renderAllChannels();
                 onNetOk();
@@ -189,7 +179,7 @@
             if (b) {
                 const role = localStorage.getItem(ROLE_KEY) || '';
                 const uCh = localStorage.getItem(CHANNEL_KEY) || null;
-                const isGroup = role.startsWith('group');
+                const isGroup = (role === 'group1' || role === 'group2');
                 const shouldHide = isGroup && (uCh !== id);
                 
                 if (shouldHide) {
@@ -391,16 +381,15 @@
             </tr></thead>
             <tbody>${files.map(f => {
                 const enc = encodeURIComponent(f.name);
-                const chColor = f.name.includes('CH1') ? 'text-red-400' : f.name.includes('CH2') ? 'text-blue-400' : f.name.includes('CH3') ? 'text-green-400' : f.name.includes('CH4') ? 'text-fuchsia-400' : 'text-slate-300';
                 return `
             <tr class="border-b border-slate-700/30 hover:bg-slate-700/20 transition-colors">
-                <td class="py-2 pr-4 flex-1 truncate max-w-[200px] ${chColor}">${f.name}</td>
+                <td class="py-2 pr-4 flex-1 truncate max-w-[200px] ${f.name.includes('CH1') ? 'text-red-400' : f.name.includes('CH2') ? 'text-blue-400' : 'text-green-400'}">${f.name}</td>
                 <td class="py-2 pr-4 text-slate-400 text-right font-bold whitespace-nowrap">${f.duration > 0 ? fmtDuration(Math.round(f.duration)) : 'N/A'}</td>
                 <td class="py-2 pr-4 text-slate-300 text-right whitespace-nowrap">${fmtBytes(f.size_bytes)}</td>
                 <td class="py-2 pr-4 text-slate-400 text-right whitespace-nowrap">${fmtIso(f.created)}</td>
                 <td class="py-2 text-right whitespace-nowrap flex gap-1 justify-end">
                     <button onclick="playVideo('${enc}')" class="bg-blue-600/20 hover:bg-blue-600 text-blue-400 hover:text-white px-2 py-1 rounded transition-colors" title="Reproducir">▶️</button>
-                    <button onclick="downloadFile('${enc}')" class="bg-green-600/20 hover:bg-green-600 text-green-400 hover:text-white px-2 py-1 rounded transition-colors" title="Descargar">⬇️</button>
+                    <a href="/api/files/download?file=${enc}&token=${TOKEN}" class="bg-green-600/20 hover:bg-green-600 text-green-400 hover:text-white px-2 py-1 rounded transition-colors" title="Descargar" download>⬇️</a>
                     ${isAdmin ? `<button onclick="deleteVideo('${enc}')" class="bg-red-600/20 hover:bg-red-600 text-red-400 hover:text-white px-2 py-1 rounded transition-colors" title="Eliminar"><svg class="w-4 h-4 inline-block" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg></button>` : ''}
                 </td>
             </tr>`}).join('')}
@@ -515,47 +504,6 @@
                 const res = await fetch('/api/cleanup/execute?force_all=true', { method: 'POST', headers: { 'X-Token': TOKEN } });
                 const data = await res.json();
                 showToast('Limpieza profunda completada.', 'success');
-                closeCleanupModal();
-                loadFiles();
-            } catch (e) { showToast('Error: ' + e, 'error'); }
-            finally { btn.disabled = false; btn.textContent = oldText; }
-        }
-
-        async function runSpecificCleanup() {
-            const pass = document.getElementById('cleanupPass').value;
-            const dateVal = document.getElementById('cleanupSpecificDate').value;
-            
-            if (!pass) { showToast('Ingresa la contraseña de administrador.', 'warning'); return; }
-            if (!dateVal) { showToast('Selecciona un día específico.', 'warning'); return; }
-
-            // Convertir YYYY-MM-DD a DD-MM-YYYY
-            const parts = dateVal.split('-');
-            const formattedDate = `${parts[2]}-${parts[1]}-${parts[0]}`;
-
-            try {
-                const chk = await fetch('/api/verify-password', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json', 'X-Token': TOKEN },
-                    body: JSON.stringify({ password: pass })
-                });
-                if (!chk.ok) { showToast('Contraseña incorrecta.', 'error'); return; }
-            } catch (_) { showToast('Error de conexión al verificar contraseña.', 'error'); return; }
-
-            if (!confirm(`¿Estás seguro de querer borrar todos los videos del día ${formattedDate}?`)) return;
-            
-            const btn = document.getElementById('btnSpecificCleanup');
-            const oldText = btn.textContent;
-            btn.disabled = true; btn.textContent = 'Borrando...';
-            try {
-                const res = await fetch(`/api/cleanup/execute?specific_day=${formattedDate}`, { method: 'POST', headers: { 'X-Token': TOKEN } });
-                const data = await res.json();
-                if (res.ok) {
-                    showToast(`Limpieza del día ${formattedDate} completada.`, 'success');
-                    closeCleanupModal();
-                    loadFiles();
-                } else {
-                    showToast('Error: ' + data.detail, 'error');
-                }
             } catch (e) { showToast('Error: ' + e, 'error'); }
             finally { btn.disabled = false; btn.textContent = oldText; }
         }
@@ -599,72 +547,84 @@
             } catch (e) { showToast('Error de conexión', 'error'); }
         }
 
-        // Descarga autenticada via header (evita exponer el token en la URL)
-        async function downloadFile(encName) {
-            try {
-                const res = await fetch(`/api/files/download?file=${encName}`, {
-                    headers: { 'X-Token': TOKEN }
-                });
-                if (!res.ok) {
-                    showToast('Error al descargar archivo.', 'error');
-                    return;
-                }
-                const blob = await res.blob();
-                const url = URL.createObjectURL(blob);
-                const a = document.createElement('a');
-                a.href = url;
-                a.download = decodeURIComponent(encName).split('/').pop();
-                document.body.appendChild(a);
-                a.click();
-                a.remove();
-                URL.revokeObjectURL(url);
-            } catch (e) { showToast('Error de conexión al descargar.', 'error'); }
-        }
-
         // --- VISTA PREVIA ---
-        function _findJpegBoundary(buf, pattern, from = 0) {
-            outer: for (let i = from; i <= buf.length - pattern.length; i++) {
-                for (let j = 0; j < pattern.length; j++) {
-                    if (buf[i + j] !== pattern[j]) continue outer;
-                }
-                return i;
+        async function streamMjpeg(id, img, loader) {
+            if (previewAbortController) {
+                previewAbortController.abort();
             }
-            return -1;
-        }
+            previewAbortController = new AbortController();
+            const signal = previewAbortController.signal;
 
-        async function _streamMjpeg(url, imgEl, signal, onFirstFrame) {
-            const res = await fetch(url, { signal, headers: { 'X-Token': TOKEN } });
-            if (!res.ok) throw new Error(`HTTP ${res.status}`);
-            const reader = res.body.getReader();
-            const SOI = new Uint8Array([0xFF, 0xD8]);
-            const EOI = new Uint8Array([0xFF, 0xD9]);
-            let buf = new Uint8Array(0);
-            let firstFrameSent = false;
-            while (true) {
-                const { done, value } = await reader.read();
-                if (done) break;
-                const merged = new Uint8Array(buf.length + value.length);
-                merged.set(buf); merged.set(value, buf.length);
-                buf = merged;
-                while (buf.length > 3) {
-                    const s = _findJpegBoundary(buf, SOI);
-                    if (s === -1) { buf = new Uint8Array(0); break; }
-                    const e = _findJpegBoundary(buf, EOI, s + 2);
-                    if (e === -1) { if (s > 0) buf = buf.slice(s); break; }
-                    const frame = buf.slice(s, e + 2);
-                    buf = buf.slice(e + 2);
-                    const blobUrl = URL.createObjectURL(new Blob([frame], { type: 'image/jpeg' }));
-                    const prev = imgEl.src;
-                    imgEl.src = blobUrl;
-                    if (prev && prev.startsWith('blob:')) URL.revokeObjectURL(prev);
-                    // Ocultar el loader y notificar en el primer frame
-                    if (!firstFrameSent) {
-                        firstFrameSent = true;
-                        document.getElementById('previewLoader')?.classList.add('hidden');
-                        if (onFirstFrame) onFirstFrame();
+            let response;
+            try {
+                response = await fetch(`/api/preview/${id}`, {
+                    headers: { 'X-Token': TOKEN },
+                    signal
+                });
+            } catch (e) {
+                if (e.name !== 'AbortError') {
+                    showToast('No se pudo conectar al stream de vista previa.', 'error');
+                    closePreview();
+                }
+                return;
+            }
+
+            if (!response.ok) {
+                const errData = await response.json().catch(() => ({}));
+                showToast('Error preview: ' + (errData.detail || response.status), 'error');
+                closePreview();
+                return;
+            }
+
+            const reader = response.body.getReader();
+            let buffer = new Uint8Array(0);
+
+            const append = (a, b) => {
+                const tmp = new Uint8Array(a.length + b.length);
+                tmp.set(a, 0); tmp.set(b, a.length);
+                return tmp;
+            };
+
+            try {
+                while (true) {
+                    const { value, done } = await reader.read();
+                    if (done) break;
+                    buffer = append(buffer, value);
+
+                    // Find complete JPEG frames: SOI=0xFFD8 ... EOI=0xFFD9
+                    while (true) {
+                        let start = -1;
+                        for (let i = 0; i < buffer.length - 1; i++) {
+                            if (buffer[i] === 0xFF && buffer[i+1] === 0xD8) { start = i; break; }
+                        }
+                        if (start === -1) { buffer = new Uint8Array(0); break; }
+
+                        let end = -1;
+                        for (let i = start + 2; i < buffer.length - 1; i++) {
+                            if (buffer[i] === 0xFF && buffer[i+1] === 0xD9) { end = i + 1; break; }
+                        }
+                        if (end === -1) {
+                            if (buffer.length > 500000) buffer = buffer.slice(start);
+                            break;
+                        }
+
+                        const frame = buffer.slice(start, end + 1);
+                        buffer = buffer.slice(end + 1);
+
+                        const blob = new Blob([frame], { type: 'image/jpeg' });
+                        const url = URL.createObjectURL(blob);
+                        const oldUrl = img.src;
+                        img.src = url;
+                        if (oldUrl && oldUrl.startsWith('blob:')) URL.revokeObjectURL(oldUrl);
+                        loader.classList.add('hidden');
                     }
                 }
-                if (buf.length > 2000000) buf = new Uint8Array(0); // safety valve
+            } catch (e) {
+                if (e.name !== 'AbortError') {
+                    console.error('[PREVIEW] Stream error:', e);
+                }
+            } finally {
+                reader.cancel().catch(() => {});
             }
         }
 
@@ -677,45 +637,14 @@
             const modal = document.getElementById('modalPreview');
             const img = document.getElementById('previewImg');
             const loader = document.getElementById('previewLoader');
+            const title = document.getElementById('previewTitle');
 
-            document.getElementById('previewTitle').textContent = `Señal en Vivo: Canal ${id}`;
+            title.textContent = `Señal en Vivo: Canal ${id}`;
             loader.classList.remove('hidden');
-            img.onload = () => loader.classList.add('hidden');
+            img.src = '';
             modal.classList.remove('hidden');
 
-            const controller = new AbortController();
-            previewAbortController = controller;
-
-            // Timeout: si no llega ningún frame en 10s mostrar error claro
-            const previewTimeout = setTimeout(() => {
-                if (previewAbortController) {
-                    previewAbortController.abort();
-                    previewAbortController = null;
-                }
-                const loader = document.getElementById('previewLoader');
-                if (loader && !loader.classList.contains('hidden')) {
-                    loader.innerHTML = `
-                        <div class="flex flex-col items-center gap-3 text-center px-6">
-                            <svg class="w-12 h-12 text-red-500 opacity-80" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                    d="M12 9v2m0 4h.01M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/>
-                            </svg>
-                            <p class="text-red-400 font-black uppercase tracking-widest text-xs">Sin señal o canal ocupado</p>
-                            <p class="text-slate-500 text-[10px]">Verifica que el canal no esté grabando y que haya señal SDI activa.</p>
-                            <button onclick="closePreview()" class="mt-2 bg-red-600/20 hover:bg-red-600 text-red-400 hover:text-white px-4 py-2 rounded-lg text-xs font-bold transition-all">Cerrar</button>
-                        </div>`;
-                }
-            }, 10000);
-
-            _streamMjpeg(`/api/preview/${id}?t=${Date.now()}`, img, controller.signal, () => clearTimeout(previewTimeout))
-                .then(() => clearTimeout(previewTimeout))
-                .catch(e => {
-                    clearTimeout(previewTimeout);
-                    if (e.name !== 'AbortError') {
-                        showToast('No se pudo cargar la vista previa. Verifica que el canal no esté ocupado.', 'error');
-                        closePreview();
-                    }
-                });
+            streamMjpeg(id, img, loader);
         }
 
         async function closePreview() {
@@ -723,10 +652,16 @@
             const img = document.getElementById('previewImg');
             const loader = document.getElementById('previewLoader');
 
-            img.onload = null;
-            if (previewAbortController) { previewAbortController.abort(); previewAbortController = null; }
+            // Abortar el fetch stream en curso
+            if (previewAbortController) {
+                previewAbortController.abort();
+                previewAbortController = null;
+            }
+
+            // Revocar blob URL si existe
             if (img.src && img.src.startsWith('blob:')) URL.revokeObjectURL(img.src);
             img.src = '';
+
             modal.classList.add('hidden');
             loader.classList.remove('hidden');
 
@@ -741,14 +676,18 @@
         // ── Filtro de Canal por Grupo ─────────────────────────────────────────────────
         function applyChannelFilter() {
             if (!USER_CHANNEL) return;
-            ['1', '2', '3', '4'].forEach(ch => {
-                if(ch !== USER_CHANNEL) {
-                    const card = document.getElementById(`cardCH${ch}`);
-                    if (card) card.classList.add('hidden');
-                    const badge = document.getElementById(`badgeCH${ch}`);
-                    if (badge) badge.classList.add('hidden');
-                    const logSection = document.querySelector(`#logBox_${ch}`)?.closest('.flex.flex-col');
-                    if (logSection) logSection.classList.add('hidden');
-                }
-            });
+            // Ocultar la tarjeta del canal que NO pertenece al grupo
+            const hiddenCh = USER_CHANNEL === '1' ? '2' : '1';
+
+            // Ocultar la tarjeta del canal ajeno mediante su ID estricto
+            const card = document.getElementById(`cardCH${hiddenCh}`);
+            if (card) card.classList.add('hidden');
+
+            // Ocultar el badge del canal ajeno en el header
+            const badge = document.getElementById(`badgeCH${hiddenCh}`);
+            if (badge) badge.classList.add('hidden');
+
+            // Ocultar el log del canal ajeno
+            const logSection = document.querySelector(`#logBox_${hiddenCh}`)?.closest('.flex.flex-col');
+            if (logSection) logSection.classList.add('hidden');
         }
