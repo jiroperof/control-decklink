@@ -52,7 +52,7 @@
             document.getElementById('kpiTotalLogins').textContent = data.access.total_logins;
 
             Chart.defaults.color = '#94a3b8';
-            Chart.defaults.font.family = 'Inter, sans-serif';
+            Chart.defaults.font.family = 'Outfit, system-ui, sans-serif';
 
             // Storage Chart — 4 canales
             const ctx1 = document.getElementById('storageChart').getContext('2d');

@@ -108,74 +108,12 @@ function closeModalWithFocus(modalId) {
     }
 }
 
-// ── Modal Helpers (Override existing functions) ──────────────────────────────
-window.openCleanupModal = function() {
-    openModalWithFocus('modalCleanup', '#cleanupDays');
-};
-
-window.closeCleanupModal = function() {
-    closeModalWithFocus('modalCleanup');
-};
-
-window.openAdminModal = function() {
-    if (typeof loadAdminUsers === 'function') loadAdminUsers();
-    openModalWithFocus('modalAdmin', '#inputG1Name');
-};
-
-window.closeAdminModal = function() {
-    closeModalWithFocus('modalAdmin');
-};
-
-window.openStatsModal = function() {
-    if (typeof loadStats === 'function') loadStats();
-    openModalWithFocus('modalStats');
-};
-
-window.closeStatsModal = function() {
-    closeModalWithFocus('modalStats');
-};
-
-window.openPreview = function(channelId) {
-    const modal = document.getElementById('modalPreview');
-    if (!modal) return;
-    
-    const title = document.getElementById('previewTitle');
-    const img = document.getElementById('previewImg');
-    const loader = document.getElementById('previewLoader');
-    
-    if (title) title.textContent = `Señal en Vivo: Canal ${channelId}`;
-    if (loader) loader.classList.remove('hidden');
-    if (img) img.src = '';
-    
-    openModalWithFocus('modalPreview');
-    
-    // Start preview stream
-    if (img) {
-        const token = localStorage.getItem('vtv_token');
-        img.src = `/api/preview/${channelId}?token=${token}&t=${Date.now()}`;
-        img.onload = () => {
-            if (loader) loader.classList.add('hidden');
-        };
-    }
-    
-    window.activePreviewId = channelId;
-};
-
-window.closePreview = function() {
-    const img = document.getElementById('previewImg');
-    if (img) img.src = '';
-    window.activePreviewId = null;
-    closeModalWithFocus('modalPreview');
-};
-
-window.closePlayer = function() {
-    const video = document.getElementById('vodPlayer');
-    if (video) {
-        video.pause();
-        video.src = '';
-    }
-    closeModalWithFocus('modalPlayer');
-};
+// ── Modal Helpers (ESC / focus trap integration only) ────────────────────────
+// NOTE: Do NOT override openCleanupModal, openAdminModal, openStatsModal,
+// openPreview, closePreview, or closePlayer here.
+// Those functions contain critical logic (fetch, MJPEG streaming, AbortController)
+// defined in dashboard.js, admin.js and stats.js.
+// Overriding them here would silently break authentication and data loading.
 
 // ── Keyboard Shortcuts ────────────────────────────────────────────────────────
 document.addEventListener('keydown', (e) => {

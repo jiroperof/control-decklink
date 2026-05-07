@@ -1092,7 +1092,8 @@ class VerifyPasswordRequest(BaseModel):
 async def verify_admin_password(req: VerifyPasswordRequest, token: str = Depends(require_admin)):
     """Verifica que la contraseña proporcionada corresponde a algún usuario con rol admin.
     Permite que el frontend valide la contraseña SIN exponerla en el código fuente del cliente."""
-    user_data = next((u for u in USERS.values() if verify_password(req.password, u["password"]) and u["role"] == "admin"), None)
+    all_users = list(USERS.values()) + list(USERS_DB["users"].values())
+    user_data = next((u for u in all_users if verify_password(req.password, u["password"]) and u["role"] == "admin"), None)
     if not user_data:
         raise HTTPException(status_code=401, detail="Contraseña incorrecta")
     return {"status": "ok"}

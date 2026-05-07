@@ -117,7 +117,7 @@
                     else if (hoursLeft < 1) dr.textContent = "⏱ " + Math.floor(hoursLeft * 60) + "min restantes";
                     else dr.textContent = "⏱ " + hoursLeft.toFixed(1) + "h restantes";
                     
-                    if (freeGB < 50 && (isC1Running + isC2Running) > 0) playErrorBeep();
+                    if (freeGB < 50 && Object.values(channels).some(c => c.running)) playErrorBeep();
                 }
 
                 // Network specific update
