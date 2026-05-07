@@ -11,9 +11,9 @@
 
         function closeStatsModal() {
             document.getElementById('modalStats').classList.add('hidden');
-            document.body.style.overflow = 'auto';
-            if(storageChartInst) storageChartInst.destroy();
-            if(usersChartInst) usersChartInst.destroy();
+            document.body.style.overflow = '';
+            if(storageChartInst) { storageChartInst.destroy(); storageChartInst = null; }
+            if(usersChartInst) { usersChartInst.destroy(); usersChartInst = null; }
         }
 
         async function fetchStats() {
