@@ -212,33 +212,26 @@
             border-bottom-color: #cbd5e1 !important;
         }
 
-        /* TODOS los textos blancos y grises claros a oscuro en modo claro */
-        [data-theme="light"] .text-white,
-        [data-theme="light"] .text-slate-100,
-        [data-theme="light"] .text-slate-200,
-        [data-theme="light"] .text-slate-300,
-        [data-theme="light"] .text-slate-400 {
+        /* Solo en paneles de fondo claro: cambiar textos blancos a oscuro */
+        [data-theme="light"] .glass-panel .text-white,
+        [data-theme="light"] #mainHeader .text-white,
+        [data-theme="light"] .glass-panel .text-slate-100,
+        [data-theme="light"] #mainHeader .text-slate-100,
+        [data-theme="light"] .glass-panel .text-slate-200,
+        [data-theme="light"] #mainHeader .text-slate-200,
+        [data-theme="light"] .glass-panel .text-slate-300,
+        [data-theme="light"] #mainHeader .text-slate-300,
+        [data-theme="light"] .glass-panel .text-slate-400,
+        [data-theme="light"] #mainHeader .text-slate-400 {
             color: #1e293b !important;
         }
 
-        /* Textos slate-500 y 600 más suaves */
-        [data-theme="light"] .text-slate-500,
-        [data-theme="light"] .text-slate-600 {
+        /* Textos slate-500 y 600 más suaves en paneles claros */
+        [data-theme="light"] .glass-panel .text-slate-500,
+        [data-theme="light"] #mainHeader .text-slate-500,
+        [data-theme="light"] .glass-panel .text-slate-600,
+        [data-theme="light"] #mainHeader .text-slate-600 {
             color: #334155 !important;
-        }
-
-        /* Excepción: mantener colores de acento */
-        [data-theme="light"] .text-red-400,
-        [data-theme="light"] .text-red-500,
-        [data-theme="light"] .text-green-400,
-        [data-theme="light"] .text-green-500,
-        [data-theme="light"] .text-blue-400,
-        [data-theme="light"] .text-blue-500,
-        [data-theme="light"] .text-yellow-400,
-        [data-theme="light"] .text-yellow-500,
-        [data-theme="light"] .text-teal-400,
-        [data-theme="light"] .text-teal-500 {
-            color: inherit !important;
         }
 
         /* Header text */
