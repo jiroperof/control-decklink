@@ -1208,35 +1208,122 @@ def _save_email_config_sync(cfg: dict) -> None:
         logger.error(f"[EMAIL] Error guardando email_config: {e}")
 
 def _build_html_email(subject: str, event_type: str, body_lines: list[str]) -> str:
-    color_map = {
-        "start":    ("#16a34a", "▶ GRABACIÓN INICIADA"),
-        "stop":     ("#dc2626", "⏹ GRABACIÓN DETENIDA"),
-        "login":    ("#2563eb", "🔐 ACCESO AL SISTEMA"),
-        "login_fail": ("#d97706", "⚠ INTENTO FALLIDO"),
-        "watchdog": ("#7c3aed", "🔄 REINICIO AUTOMÁTICO"),
-        "disk_guard": ("#b45309", "🗑 GUARDIÁN DE DISCO"),
-        "disk_critical": ("#dc2626", "💾 DISCO CRÍTICO"),
-        "test":     ("#0891b2", "✉ CORREO DE PRUEBA"),
+    event_map = {
+        "start":         ("#16a34a", "#bbf7d0", "▶", "GRABACIÓN INICIADA"),
+        "stop":          ("#dc2626", "#fecaca", "⏹", "GRABACIÓN DETENIDA"),
+        "login":         ("#2563eb", "#bfdbfe", "🔐", "ACCESO AL SISTEMA"),
+        "login_fail":    ("#b45309", "#fde68a", "⚠", "INTENTO FALLIDO"),
+        "watchdog":      ("#7c3aed", "#ddd6fe", "🔄", "REINICIO AUTOMÁTICO"),
+        "disk_guard":    ("#b45309", "#fed7aa", "🗑", "GUARDIÁN DE DISCO"),
+        "disk_critical": ("#dc2626", "#fecaca", "💾", "DISCO CRÍTICO"),
+        "test":          ("#0891b2", "#a5f3fc", "✉", "CORREO DE PRUEBA"),
     }
-    accent, label = color_map.get(event_type, ("#475569", subject))
-    rows = "".join(f"<tr><td style='padding:6px 0;color:#cbd5e1;font-size:13px;'>{ln}</td></tr>" for ln in body_lines)
+    accent, pill_color, icon, event_label = event_map.get(event_type, ("#475569", "#cbd5e1", "•", subject.upper()))
     now_str = datetime.now().strftime("%d/%m/%Y %H:%M:%S")
-    return f"""<!DOCTYPE html><html><body style="margin:0;padding:0;background:#0f172a;font-family:'Segoe UI',Arial,sans-serif;">
-<table width="100%" cellpadding="0" cellspacing="0" style="background:#0f172a;padding:32px 0;">
+
+    # Build data rows — split each line on first ":" to make key/value pairs
+    rows_html = ""
+    for ln in body_lines:
+        if ":" in ln:
+            key, _, val = ln.partition(":")
+            rows_html += f"""
+            <tr>
+              <td style="padding:10px 16px;border-bottom:1px solid #1e293b;width:38%;">
+                <span style="color:#64748b;font-size:10px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;font-family:monospace;">{key.strip()}</span>
+              </td>
+              <td style="padding:10px 16px;border-bottom:1px solid #1e293b;">
+                <span style="color:#e2e8f0;font-size:13px;font-weight:600;font-family:monospace;">{val.strip()}</span>
+              </td>
+            </tr>"""
+        else:
+            rows_html += f"""
+            <tr>
+              <td colspan="2" style="padding:10px 16px;border-bottom:1px solid #1e293b;">
+                <span style="color:#94a3b8;font-size:12px;font-style:italic;">{ln}</span>
+              </td>
+            </tr>"""
+
+    return f"""<!DOCTYPE html>
+<html lang="es">
+<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0"></head>
+<body style="margin:0;padding:0;background-color:#020617;font-family:'Segoe UI',system-ui,Arial,sans-serif;">
+
+<!-- Outer wrapper -->
+<table width="100%" cellpadding="0" cellspacing="0" style="background-color:#020617;padding:40px 16px;">
 <tr><td align="center">
-<table width="560" cellpadding="0" cellspacing="0" style="background:#1e293b;border-radius:16px;overflow:hidden;border:1px solid #334155;">
-  <tr><td style="background:{accent};padding:20px 32px;">
-    <span style="color:#fff;font-size:11px;font-weight:900;letter-spacing:3px;text-transform:uppercase;">{label}</span>
-    <h2 style="color:#fff;margin:4px 0 0;font-size:20px;font-weight:900;">{subject}</h2>
-  </td></tr>
-  <tr><td style="padding:28px 32px;">
-    <table width="100%" cellpadding="0" cellspacing="0">{rows}</table>
-  </td></tr>
-  <tr><td style="padding:16px 32px;border-top:1px solid #334155;background:#0f172a;">
-    <span style="color:#475569;font-size:11px;">Sistema Multicanal VTV · Capturadora 2.0 &nbsp;·&nbsp; {now_str}</span>
-  </td></tr>
+
+<!-- Card -->
+<table width="100%" cellpadding="0" cellspacing="0" style="max-width:580px;background-color:#0f172a;border-radius:20px;overflow:hidden;border:1px solid #1e293b;">
+
+  <!-- Top red VTV bar -->
+  <tr><td style="background-color:#dc2626;height:4px;font-size:0;">&nbsp;</td></tr>
+
+  <!-- Header -->
+  <tr>
+    <td style="padding:28px 32px 24px;background-color:#0f172a;border-bottom:1px solid #1e293b;">
+      <table width="100%" cellpadding="0" cellspacing="0">
+        <tr>
+          <td style="vertical-align:middle;">
+            <!-- Logo text (SVG inline not supported in all clients, use text) -->
+            <table cellpadding="0" cellspacing="0">
+              <tr>
+                <td style="border-left:4px solid #dc2626;padding-left:10px;vertical-align:middle;">
+                  <div style="color:#ffffff;font-size:16px;font-weight:900;letter-spacing:-0.5px;text-transform:uppercase;line-height:1.1;">CAPTURADORA 2.0</div>
+                  <div style="color:#475569;font-size:9px;font-weight:700;letter-spacing:3px;text-transform:uppercase;margin-top:2px;">Sistema Multicanal VTV</div>
+                </td>
+              </tr>
+            </table>
+          </td>
+          <td align="right" style="vertical-align:middle;">
+            <span style="display:inline-block;background-color:{accent}1a;color:{pill_color};border:1px solid {accent}4d;padding:4px 10px;border-radius:999px;font-size:10px;font-weight:900;letter-spacing:2px;text-transform:uppercase;">{icon} {event_label}</span>
+          </td>
+        </tr>
+      </table>
+    </td>
+  </tr>
+
+  <!-- Subject -->
+  <tr>
+    <td style="padding:20px 32px 4px;background-color:#0f172a;">
+      <div style="color:#f1f5f9;font-size:20px;font-weight:900;letter-spacing:-0.3px;">{subject}</div>
+    </td>
+  </tr>
+
+  <!-- Data table -->
+  <tr>
+    <td style="padding:8px 20px 20px;">
+      <table width="100%" cellpadding="0" cellspacing="0" style="background-color:#0a0f1e;border-radius:12px;border:1px solid #1e293b;overflow:hidden;">
+        {rows_html}
+      </table>
+    </td>
+  </tr>
+
+  <!-- Footer -->
+  <tr>
+    <td style="padding:16px 32px;background-color:#020617;border-top:1px solid #1e293b;">
+      <table width="100%" cellpadding="0" cellspacing="0">
+        <tr>
+          <td>
+            <span style="color:#334155;font-size:10px;font-weight:700;letter-spacing:1px;text-transform:uppercase;font-family:monospace;">
+              C.A. Venezolana de Televisión &nbsp;·&nbsp; {now_str}
+            </span>
+          </td>
+          <td align="right">
+            <span style="color:#dc2626;font-size:10px;font-weight:900;letter-spacing:2px;font-family:monospace;">VTV</span>
+          </td>
+        </tr>
+      </table>
+    </td>
+  </tr>
+
 </table>
-</td></tr></table></body></html>"""
+<!-- /Card -->
+
+</td></tr></table>
+<!-- /Outer wrapper -->
+
+</body>
+</html>"""
 
 async def send_email(event_type: str, subject: str, body_lines: list[str], cooldown_key: str | None = None) -> bool:
     """Envía un correo HTML de forma asíncrona (en hilo). Respeta rate-limiting."""
