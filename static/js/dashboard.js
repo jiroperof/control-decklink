@@ -366,26 +366,37 @@
             } catch (_) { showToast('Error al cancelar programación.', 'error'); }
         }
         // ── Historial de archivos ─────────────────────────────────────────────────────
-        async function loadFiles() {
+        let _allFiles = []; // Almacena todos los archivos para filtrado
+        let _filesDestPath = '/home/administrador/Capturas';
+
+        function renderFilesTable(files) {
             const el = document.getElementById('filesTable');
+            const cnt = document.getElementById('filesCount');
             if (!el) return;
-            el.innerHTML = '<span class="italic text-slate-500">Cargando...</span>';
-            try {
-                const res = await fetch('/api/files', { headers: { 'X-Token': TOKEN } });
-                if (!res.ok) { el.innerHTML = '<span class="text-red-400">Error al cargar archivos.</span>'; return; }
-                const d = await res.json();
-                const cnt = document.getElementById('filesCount');
 
-                // Filtrar por canal si el usuario es de un grupo
-                let files = d.files;
-                if (USER_CHANNEL) {
-                    files = files.filter(f => f.name.includes(`CH${USER_CHANNEL}`));
+            // Actualizar contador
+            const searchVal = document.getElementById('fileSearch')?.value?.trim();
+            if (cnt) {
+                if (searchVal) {
+                    cnt.textContent = `${files.length} resultado(s) de ${_allFiles.length} total`;
+                    cnt.classList.add('text-red-400');
+                    cnt.classList.remove('text-slate-500');
+                } else {
+                    cnt.textContent = `${files.length} archivo(s)`;
+                    cnt.classList.remove('text-red-400');
+                    cnt.classList.add('text-slate-500');
                 }
+            }
 
-                if (cnt) cnt.textContent = `${files.length} archivo(s) en ${d.dest_path}`;
-                if (!files.length) { el.innerHTML = '<span class="italic text-slate-500">No hay archivos grabados aún.</span>'; return; }
-                const isAdmin = localStorage.getItem(ROLE_KEY) === 'admin';
-                el.innerHTML = `<div class="overflow-x-auto"><table class="w-full text-xs min-w-[600px]">
+            if (!files.length) {
+                el.innerHTML = searchVal
+                    ? `<span class="italic text-slate-500 flex items-center gap-2"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg> No hay resultados para "${searchVal}"</span>`
+                    : '<span class="italic text-slate-500">No hay archivos grabados aún.</span>';
+                return;
+            }
+
+            const isAdmin = localStorage.getItem(ROLE_KEY) === 'admin';
+            el.innerHTML = `<div class="overflow-x-auto"><table class="w-full text-xs min-w-[600px]">
             <thead><tr class="text-left text-slate-500 border-b border-slate-700 pb-2">
                 <th class="pb-3 pr-4 uppercase">Archivo (Pestaña Global)</th>
                 <th class="pb-3 pr-4 uppercase text-right">Duración</th>
@@ -408,7 +419,50 @@
                 </td>
             </tr>`}).join('')}
             </tbody></table></div>`;
+        }
+
+        async function loadFiles() {
+            const el = document.getElementById('filesTable');
+            if (!el) return;
+            el.innerHTML = '<span class="italic text-slate-500">Cargando...</span>';
+            try {
+                const res = await fetch('/api/files', { headers: { 'X-Token': TOKEN } });
+                if (!res.ok) { el.innerHTML = '<span class="text-red-400">Error al cargar archivos.</span>'; return; }
+                const d = await res.json();
+                _filesDestPath = d.dest_path || '/home/administrador/Capturas';
+
+                // Filtrar por canal si el usuario es de un grupo
+                let files = d.files;
+                if (USER_CHANNEL) {
+                    files = files.filter(f => f.name.includes(`CH${USER_CHANNEL}`));
+                }
+
+                _allFiles = files;
+
+                // Limpiar búsqueda al recargar
+                const searchInput = document.getElementById('fileSearch');
+                if (searchInput) searchInput.value = '';
+
+                renderFilesTable(files);
             } catch (_) { el.innerHTML = '<span class="text-red-400">Error de conexión.</span>'; }
+        }
+
+        function filterFiles() {
+            const searchInput = document.getElementById('fileSearch');
+            if (!searchInput) return;
+            const query = searchInput.value.toLowerCase().trim();
+
+            if (!query) {
+                renderFilesTable(_allFiles);
+                return;
+            }
+
+            const filtered = _allFiles.filter(f =>
+                f.name.toLowerCase().includes(query) ||
+                f.created.toLowerCase().includes(query) ||
+                fmtIso(f.created).toLowerCase().includes(query)
+            );
+            renderFilesTable(filtered);
         }
         // ── Collapsibles y Utilidades ─────────────────────────────────────────────────
         function toggleSection(id) {
