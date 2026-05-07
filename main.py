@@ -1,4 +1,4 @@
-import subprocess, os, re, signal, asyncio, logging, psutil, time, json, shlex, uuid, secrets, smtplib
+import subprocess, os, re, signal, asyncio, logging, psutil, time, json, shlex, uuid, secrets, smtplib, base64 as _b64
 from logging.handlers import RotatingFileHandler
 from datetime import datetime, date, timedelta
 from datetime import time as dtime
@@ -682,176 +682,261 @@ async def lifespan(app: FastAPI):
 
 # ══ Reporte Diario ─────────────────────────────────────────────────────────────────
 
-async def _build_and_send_daily_report():
-    """Construye y envía el reporte diario completo del sistema."""
+def _logo_b64() -> str:
+    """Devuelve el logo VTV como cadena base64 PNG para embeber en emails."""
+    logo_path = os.path.join(_BASE_DIR, "static", "logo.png")
+    try:
+        with open(logo_path, "rb") as f:
+            return _b64.b64encode(f.read()).decode()
+    except Exception:
+        return ""
+
+async def _build_and_send_daily_report(turno: str = "mañana"):
+    """Construye y envía el reporte completo del sistema.
+    turno: 'mañana' (06:00) o 'noche' (22:00)
+    """
     try:
         now = datetime.now()
         dsk = psutil.disk_usage("/")
         mem = psutil.virtual_memory()
         cpu = psutil.cpu_percent(interval=1)
 
-        # Estado de canales
+        # ── Helpers ──────────────────────────────────────────────────────────
+        def _bar(pct, col):
+            return (f'<div style="background:#1e293b;border-radius:999px;height:8px;overflow:hidden;margin-top:6px;">'
+                    f'<div style="background:{col};width:{min(100,round(pct))}%;height:8px;border-radius:999px;"></div></div>')
+
+        def _seccion(titulo):
+            return (f'<tr><td colspan="4" style="padding:14px 20px 8px;background:#0f172a;border-top:1px solid #1e293b;">'
+                    f'<span style="color:#475569;font-size:9px;font-weight:700;letter-spacing:2px;text-transform:uppercase;">{titulo}</span>'
+                    f'</td></tr>')
+
+        # ── Colores según umbral ──────────────────────────────────────────────
+        disk_col = "#f87171" if dsk.percent >= 85 else "#fbbf24" if dsk.percent >= 65 else "#4ade80"
+        cpu_col  = "#f87171" if cpu >= 90 else "#fbbf24" if cpu >= 70 else "#4ade80"
+        ram_col  = "#f87171" if mem.percent >= 90 else "#fbbf24" if mem.percent >= 70 else "#60a5fa"
+
+        disk_free_gb  = round(dsk.free  / (1024**3), 1)
+        disk_total_gb = round(dsk.total / (1024**3), 1)
+        ram_used_gb   = round((mem.total - mem.available) / (1024**3), 1)
+        ram_total_gb  = round(mem.total / (1024**3), 1)
+
+        # ── Carpeta de videos ─────────────────────────────────────────────────
+        def _folder_stats_sync():
+            base = _resolve_dest_path()
+            total_bytes = 0
+            total_files = 0
+            try:
+                for f in base.rglob("*.mp4"):
+                    try:
+                        total_bytes += f.stat().st_size
+                        total_files += 1
+                    except Exception:
+                        pass
+            except Exception:
+                pass
+            gb = round(total_bytes / (1024**3), 2)
+            return total_files, gb
+
+        video_count, folder_gb = await asyncio.to_thread(_folder_stats_sync)
+
+        # ── Canales ───────────────────────────────────────────────────────────
         channel_rows = ""
         for ch_id, mgr in managers.items():
-            estado = "● GRABANDO" if mgr.is_recording() else "○ Inactivo"
-            color  = "#4ade80" if mgr.is_recording() else "#475569"
-            bitrate = mgr.config.get("bitrate", "—") if mgr.config else "—"
-            elapsed = int(time.time() - mgr.started_at) if mgr.started_at and mgr.is_recording() else 0
-            h, m, s = elapsed // 3600, (elapsed % 3600) // 60, elapsed % 60
-            dur = f"{h:02d}:{m:02d}:{s:02d}" if elapsed else "—"
+            grabando = mgr.is_recording()
+            estado   = "&#9679; GRABANDO" if grabando else "&#9675; Inactivo"
+            col      = "#4ade80" if grabando else "#475569"
+            bitrate  = mgr.config.get("bitrate", "—") if mgr.config else "—"
+            elapsed  = int(time.time() - mgr.started_at) if mgr.started_at and grabando else 0
+            h2, m2, s2 = elapsed // 3600, (elapsed % 3600) // 60, elapsed % 60
+            dur = f"{h2:02d}h {m2:02d}m {s2:02d}s" if elapsed else "—"
+            destino = mgr.config.get("dest_path", "—") if mgr.config else "—"
             channel_rows += f"""
             <tr>
-              <td style="padding:10px 16px;border-bottom:1px solid #1e293b;">
-                <span style="color:#e2e8f0;font-family:monospace;font-weight:700;">Canal {ch_id}</span>
-                <span style="color:#475569;font-size:11px;font-family:monospace;"> &mdash; {mgr.input_name}</span>
+              <td style="padding:10px 16px;border-bottom:1px solid #0f172a;">
+                <div style="color:#e2e8f0;font-family:monospace;font-size:12px;font-weight:700;">Canal {ch_id}</div>
+                <div style="color:#334155;font-family:monospace;font-size:10px;margin-top:2px;">{mgr.input_name}</div>
               </td>
-              <td style="padding:10px 16px;border-bottom:1px solid #1e293b;text-align:center;">
-                <span style="color:{color};font-family:monospace;font-weight:700;font-size:11px;letter-spacing:1px;">{estado}</span>
+              <td style="padding:10px 16px;border-bottom:1px solid #0f172a;text-align:center;">
+                <span style="color:{col};font-family:monospace;font-size:10px;font-weight:900;letter-spacing:1px;">{estado}</span>
               </td>
-              <td style="padding:10px 16px;border-bottom:1px solid #1e293b;text-align:center;">
-                <span style="color:#94a3b8;font-family:monospace;font-size:12px;">{bitrate}</span>
+              <td style="padding:10px 16px;border-bottom:1px solid #0f172a;text-align:center;">
+                <span style="color:#94a3b8;font-family:monospace;font-size:11px;">{bitrate}</span>
               </td>
-              <td style="padding:10px 16px;border-bottom:1px solid #1e293b;text-align:center;">
-                <span style="color:#94a3b8;font-family:monospace;font-size:12px;">{dur}</span>
+              <td style="padding:10px 16px;border-bottom:1px solid #0f172a;text-align:center;">
+                <span style="color:#94a3b8;font-family:monospace;font-size:11px;">{dur}</span>
               </td>
             </tr>"""
 
-        # Métricas del sistema
-        disk_color  = "#f87171" if dsk.percent >= 80 else "#fbbf24" if dsk.percent >= 60 else "#4ade80"
-        cpu_color   = "#f87171" if cpu >= 90 else "#fbbf24" if dsk.percent >= 70 else "#4ade80"
-        ram_color   = "#f87171" if mem.percent >= 90 else "#fbbf24" if mem.percent >= 70 else "#60a5fa"
-
-        def _bar(pct, color):
-            return (f'<div style="background:#1e293b;border-radius:999px;height:8px;overflow:hidden;">'
-                    f'<div style="background:{color};width:{min(100,round(pct))}%;height:8px;"></div></div>')
-
-        # Accesos del día
-        day_start = now.replace(hour=0, minute=0, second=0, microsecond=0).timestamp()
-        day_logs  = [e for e in ACCESS_LOG if e.get("timestamp", 0) >= day_start]
+        # ── Últimos 3 accesos ─────────────────────────────────────────────────
+        day_start  = now.replace(hour=0, minute=0, second=0, microsecond=0).timestamp()
+        day_logs   = [e for e in ACCESS_LOG if e.get("timestamp", 0) >= day_start]
         ok_count   = sum(1 for e in day_logs if e.get("role") not in ("", "fallido"))
         fail_count = sum(1 for e in day_logs if e.get("role") == "fallido")
-        last_10 = day_logs[-10:][::-1]
+        last_3     = list(reversed(ACCESS_LOG[-3:])) if ACCESS_LOG else []
 
         access_rows = ""
-        for entry in last_10:
-            ts  = datetime.fromtimestamp(entry.get("timestamp", 0)).strftime("%H:%M:%S")
+        for entry in last_3:
+            ts_entry  = datetime.fromtimestamp(entry.get("timestamp", 0)).strftime("%d/%m %H:%M:%S")
             usr = entry.get("username", "—")
             rol = entry.get("role", "—")
             ip  = entry.get("ip", "—")
-            row_color = "#f87171" if rol == "fallido" else "#94a3b8"
+            rc  = "#f87171" if rol == "fallido" else "#4ade80"
             access_rows += f"""
             <tr>
-              <td style="padding:8px 16px;border-bottom:1px solid #1e293b;"><span style="color:#64748b;font-family:monospace;font-size:11px;">{ts}</span></td>
-              <td style="padding:8px 16px;border-bottom:1px solid #1e293b;"><span style="color:#e2e8f0;font-family:monospace;font-size:12px;">{usr}</span></td>
-              <td style="padding:8px 16px;border-bottom:1px solid #1e293b;"><span style="color:{row_color};font-family:monospace;font-size:11px;font-weight:700;">{rol.upper()}</span></td>
-              <td style="padding:8px 16px;border-bottom:1px solid #1e293b;"><span style="color:#475569;font-family:monospace;font-size:11px;">{ip}</span></td>
+              <td style="padding:8px 16px;border-bottom:1px solid #0f172a;">
+                <span style="color:#64748b;font-family:monospace;font-size:11px;">{ts_entry}</span>
+              </td>
+              <td style="padding:8px 16px;border-bottom:1px solid #0f172a;">
+                <span style="color:#e2e8f0;font-family:monospace;font-size:12px;font-weight:600;">{usr}</span>
+              </td>
+              <td style="padding:8px 16px;border-bottom:1px solid #0f172a;">
+                <span style="color:{rc};font-family:monospace;font-size:10px;font-weight:700;letter-spacing:1px;">{rol.upper()}</span>
+              </td>
+              <td style="padding:8px 16px;border-bottom:1px solid #0f172a;">
+                <span style="color:#475569;font-family:monospace;font-size:11px;">{ip}</span>
+              </td>
             </tr>"""
         if not access_rows:
-            access_rows = '<tr><td colspan="4" style="padding:12px 16px;color:#475569;font-style:italic;font-size:12px;">Sin accesos registrados hoy.</td></tr>'
+            access_rows = '<tr><td colspan="4" style="padding:12px 20px;color:#334155;font-size:11px;font-style:italic;">Sin accesos registrados.</td></tr>'
 
-        fecha_str = now.strftime("%A %d de %B de %Y").capitalize()
-        disk_free_gb = round(dsk.free / (1024**3), 1)
-        disk_total_gb = round(dsk.total / (1024**3), 1)
-        ram_used_gb  = round((mem.total - mem.available) / (1024**3), 1)
-        ram_total_gb = round(mem.total / (1024**3), 1)
+        # ── Logo base64 ───────────────────────────────────────────────────────
+        logo_data = await asyncio.to_thread(_logo_b64)
+        logo_tag  = (f'<img src="data:image/png;base64,{logo_data}" alt="VTV" '
+                     f'style="height:40px;vertical-align:middle;display:block;">'
+                     if logo_data else
+                     '<span style="color:#dc2626;font-size:22px;font-weight:900;font-family:monospace;">VTV</span>')
 
+        # ── Turno label ───────────────────────────────────────────────────────
+        turno_label = "REPORTE DE LA MA&#209;ANA" if turno == "ma\u00f1ana" else "REPORTE DE LA NOCHE"
+        turno_color = "#fbbf24" if turno == "ma\u00f1ana" else "#818cf8"
+        fecha_str   = now.strftime("%A %d de %B de %Y").capitalize()
+
+        # ── HTML ──────────────────────────────────────────────────────────────
         html = f"""<!DOCTYPE html>
 <html lang="es">
 <head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0"></head>
 <body style="margin:0;padding:0;background-color:#020617;font-family:'Segoe UI',system-ui,Arial,sans-serif;">
-<table width="100%" cellpadding="0" cellspacing="0" style="background-color:#020617;padding:36px 16px;">
+<table width="100%" cellpadding="0" cellspacing="0" style="background-color:#020617;padding:32px 12px;">
 <tr><td align="center">
-<table width="100%" cellpadding="0" cellspacing="0" style="max-width:620px;">
+<table width="100%" cellpadding="0" cellspacing="0" style="max-width:640px;">
 
-  <!-- Top bar -->
-  <tr><td style="background-color:#dc2626;height:4px;border-radius:4px 4px 0 0;font-size:0;">&nbsp;</td></tr>
+  <!-- Barra roja VTV -->
+  <tr><td style="background-color:#dc2626;height:5px;border-radius:6px 6px 0 0;font-size:0;">&nbsp;</td></tr>
 
-  <!-- Header -->
-  <tr><td style="background-color:#0f172a;border:1px solid #1e293b;border-top:none;padding:28px 32px 24px;">
+  <!-- Cabecera -->
+  <tr><td style="background-color:#0f172a;border:1px solid #1e293b;border-top:none;padding:24px 28px;">
     <table width="100%" cellpadding="0" cellspacing="0">
       <tr>
-        <td style="vertical-align:middle;border-left:4px solid #dc2626;padding-left:12px;">
-          <div style="color:#fff;font-size:17px;font-weight:900;text-transform:uppercase;letter-spacing:-0.3px;">CAPTURADORA 2.0</div>
-          <div style="color:#475569;font-size:9px;font-weight:700;letter-spacing:3px;text-transform:uppercase;margin-top:2px;">Sistema Multicanal VTV</div>
+        <td style="vertical-align:middle;width:60px;">{logo_tag}</td>
+        <td style="vertical-align:middle;padding-left:14px;border-left:3px solid #dc2626;">
+          <div style="color:#fff;font-size:16px;font-weight:900;text-transform:uppercase;letter-spacing:-0.3px;line-height:1.1;">CAPTURADORA 2.0</div>
+          <div style="color:#475569;font-size:9px;font-weight:700;letter-spacing:3px;text-transform:uppercase;margin-top:3px;">Sistema Multicanal &mdash; C.A. Venezolana de Televisi&oacute;n</div>
         </td>
         <td align="right" style="vertical-align:middle;">
-          <div style="color:#64748b;font-family:monospace;font-size:10px;font-weight:700;letter-spacing:1px;">REPORTE DIARIO</div>
-          <div style="color:#e2e8f0;font-family:monospace;font-size:13px;font-weight:900;margin-top:2px;">{fecha_str}</div>
+          <div style="display:inline-block;background:{turno_color}22;color:{turno_color};border:1px solid {turno_color}55;padding:4px 12px;border-radius:999px;font-size:9px;font-weight:900;letter-spacing:2px;text-transform:uppercase;white-space:nowrap;">{turno_label}</div>
+          <div style="color:#64748b;font-family:monospace;font-size:11px;font-weight:700;margin-top:6px;text-align:right;">{fecha_str}</div>
         </td>
       </tr>
     </table>
   </td></tr>
 
-  <!-- Metricas del sistema -->
-  <tr><td style="background-color:#0f172a;border:1px solid #1e293b;border-top:none;padding:0 32px 4px;">
-    <div style="border-top:1px solid #1e293b;padding-top:20px;margin-bottom:4px;">
-      <span style="color:#475569;font-size:9px;font-weight:700;letter-spacing:2px;text-transform:uppercase;">RECURSOS DEL SERVIDOR</span>
-    </div>
-    <table width="100%" cellpadding="0" cellspacing="0" style="margin-bottom:20px;">
+  <!-- RECURSOS DEL SERVIDOR -->
+  <tr><td style="background-color:#0a0f1e;border:1px solid #1e293b;border-top:none;padding:20px 28px;">
+    <div style="color:#475569;font-size:9px;font-weight:700;letter-spacing:2px;text-transform:uppercase;margin-bottom:16px;">Recursos del Servidor</div>
+    <table width="100%" cellpadding="0" cellspacing="0">
       <tr>
-        <td style="width:33%;padding:10px 12px 10px 0;vertical-align:top;">
-          <div style="color:#64748b;font-size:9px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;margin-bottom:6px;">CPU</div>
-          {_bar(cpu, cpu_color)}
-          <div style="color:{cpu_color};font-family:monospace;font-size:18px;font-weight:900;margin-top:6px;">{round(cpu)}%</div>
+        <td style="width:33%;padding-right:16px;vertical-align:top;">
+          <div style="color:#64748b;font-size:9px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;">Procesador (CPU)</div>
+          {_bar(cpu, cpu_col)}
+          <div style="color:{cpu_col};font-family:monospace;font-size:22px;font-weight:900;margin-top:4px;">{round(cpu)}%</div>
         </td>
-        <td style="width:33%;padding:10px 12px;vertical-align:top;">
-          <div style="color:#64748b;font-size:9px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;margin-bottom:6px;">RAM</div>
-          {_bar(mem.percent, ram_color)}
-          <div style="color:{ram_color};font-family:monospace;font-size:18px;font-weight:900;margin-top:6px;">{ram_used_gb} / {ram_total_gb} GB</div>
+        <td style="width:33%;padding:0 8px;vertical-align:top;">
+          <div style="color:#64748b;font-size:9px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;">Memoria RAM</div>
+          {_bar(mem.percent, ram_col)}
+          <div style="color:{ram_col};font-family:monospace;font-size:22px;font-weight:900;margin-top:4px;">{ram_used_gb}<span style="font-size:12px;color:#475569;"> / {ram_total_gb} GB</span></div>
         </td>
-        <td style="width:33%;padding:10px 0 10px 12px;vertical-align:top;">
-          <div style="color:#64748b;font-size:9px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;margin-bottom:6px;">DISCO</div>
-          {_bar(dsk.percent, disk_color)}
-          <div style="color:{disk_color};font-family:monospace;font-size:18px;font-weight:900;margin-top:6px;">{dsk.percent:.1f}%
-            <span style="font-size:11px;color:#475569;"> ({disk_free_gb} GB libres de {disk_total_gb} GB)</span>
+        <td style="width:33%;padding-left:16px;vertical-align:top;">
+          <div style="color:#64748b;font-size:9px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;">Disco del Sistema</div>
+          {_bar(dsk.percent, disk_col)}
+          <div style="color:{disk_col};font-family:monospace;font-size:22px;font-weight:900;margin-top:4px;">{dsk.percent:.1f}%</div>
+          <div style="color:#475569;font-size:10px;font-family:monospace;">{disk_free_gb} GB libres de {disk_total_gb} GB</div>
+        </td>
+      </tr>
+    </table>
+  </td></tr>
+
+  <!-- ALMACENAMIENTO DE VIDEOS -->
+  <tr><td style="background-color:#0f172a;border:1px solid #1e293b;border-top:none;padding:16px 28px;">
+    <div style="color:#475569;font-size:9px;font-weight:700;letter-spacing:2px;text-transform:uppercase;margin-bottom:12px;">Almacenamiento de Videos</div>
+    <table width="100%" cellpadding="0" cellspacing="0">
+      <tr>
+        <td style="width:50%;padding-right:12px;">
+          <div style="background:#0a0f1e;border:1px solid #1e293b;border-radius:12px;padding:14px 18px;text-align:center;">
+            <div style="color:#475569;font-size:9px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;">Videos grabados (.mp4)</div>
+            <div style="color:#60a5fa;font-family:monospace;font-size:28px;font-weight:900;margin-top:4px;">{video_count}</div>
+          </div>
+        </td>
+        <td style="width:50%;padding-left:12px;">
+          <div style="background:#0a0f1e;border:1px solid #1e293b;border-radius:12px;padding:14px 18px;text-align:center;">
+            <div style="color:#475569;font-size:9px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;">Tama&ntilde;o de la carpeta</div>
+            <div style="color:#a78bfa;font-family:monospace;font-size:28px;font-weight:900;margin-top:4px;">{folder_gb} <span style="font-size:14px;">GB</span></div>
           </div>
         </td>
       </tr>
     </table>
   </td></tr>
 
-  <!-- Estado canales -->
+  <!-- ESTADO DE CANALES -->
   <tr><td style="background-color:#0a0f1e;border:1px solid #1e293b;border-top:none;">
-    <div style="padding:16px 32px 10px;">
-      <span style="color:#475569;font-size:9px;font-weight:700;letter-spacing:2px;text-transform:uppercase;">ESTADO DE CANALES</span>
+    <div style="padding:14px 28px 8px;">
+      <span style="color:#475569;font-size:9px;font-weight:700;letter-spacing:2px;text-transform:uppercase;">Estado de Canales de Grabaci&oacute;n</span>
     </div>
     <table width="100%" cellpadding="0" cellspacing="0">
       <tr style="background:#0f172a;">
-        <th style="padding:8px 16px;text-align:left;"><span style="color:#334155;font-size:9px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;">Canal</span></th>
-        <th style="padding:8px 16px;text-align:center;"><span style="color:#334155;font-size:9px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;">Estado</span></th>
-        <th style="padding:8px 16px;text-align:center;"><span style="color:#334155;font-size:9px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;">Bitrate</span></th>
-        <th style="padding:8px 16px;text-align:center;"><span style="color:#334155;font-size:9px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;">Tiempo</span></th>
+        <th style="padding:7px 16px;text-align:left;"><span style="color:#1e293b;font-size:9px;font-weight:700;letter-spacing:1px;text-transform:uppercase;">Canal / Dispositivo</span></th>
+        <th style="padding:7px 16px;text-align:center;"><span style="color:#1e293b;font-size:9px;font-weight:700;letter-spacing:1px;text-transform:uppercase;">Estado</span></th>
+        <th style="padding:7px 16px;text-align:center;"><span style="color:#1e293b;font-size:9px;font-weight:700;letter-spacing:1px;text-transform:uppercase;">Bitrate</span></th>
+        <th style="padding:7px 16px;text-align:center;"><span style="color:#1e293b;font-size:9px;font-weight:700;letter-spacing:1px;text-transform:uppercase;">En grabaci&oacute;n</span></th>
       </tr>
       {channel_rows}
     </table>
   </td></tr>
 
-  <!-- Accesos del dia -->
+  <!-- ÚLTIMOS 3 ACCESOS -->
   <tr><td style="background-color:#0f172a;border:1px solid #1e293b;border-top:none;">
-    <div style="padding:16px 32px 10px;">
-      <span style="color:#475569;font-size:9px;font-weight:700;letter-spacing:2px;text-transform:uppercase;">ACCESOS HOY</span>
+    <div style="padding:14px 28px 8px;">
+      <span style="color:#475569;font-size:9px;font-weight:700;letter-spacing:2px;text-transform:uppercase;">
+        &Uacute;ltimos Accesos al Sistema
+      </span>
+      &nbsp;&nbsp;
+      <span style="background:#16a34a22;color:#4ade80;border:1px solid #16a34a44;padding:2px 8px;border-radius:999px;font-size:9px;font-weight:700;font-family:monospace;">{ok_count} exitosos hoy</span>
       &nbsp;
-      <span style="background:#16a34a22;color:#4ade80;border:1px solid #16a34a44;padding:2px 8px;border-radius:999px;font-size:10px;font-weight:700;font-family:monospace;">{ok_count} exitosos</span>
-      &nbsp;
-      <span style="background:#dc262622;color:#f87171;border:1px solid #dc262644;padding:2px 8px;border-radius:999px;font-size:10px;font-weight:700;font-family:monospace;">{fail_count} fallidos</span>
+      <span style="background:#dc262622;color:#f87171;border:1px solid #dc262644;padding:2px 8px;border-radius:999px;font-size:9px;font-weight:700;font-family:monospace;">{fail_count} fallidos hoy</span>
     </div>
     <table width="100%" cellpadding="0" cellspacing="0">
       <tr style="background:#0a0f1e;">
-        <th style="padding:8px 16px;text-align:left;"><span style="color:#334155;font-size:9px;font-weight:700;letter-spacing:1px;text-transform:uppercase;">Hora</span></th>
-        <th style="padding:8px 16px;text-align:left;"><span style="color:#334155;font-size:9px;font-weight:700;letter-spacing:1px;text-transform:uppercase;">Usuario</span></th>
-        <th style="padding:8px 16px;text-align:left;"><span style="color:#334155;font-size:9px;font-weight:700;letter-spacing:1px;text-transform:uppercase;">Rol</span></th>
-        <th style="padding:8px 16px;text-align:left;"><span style="color:#334155;font-size:9px;font-weight:700;letter-spacing:1px;text-transform:uppercase;">IP</span></th>
+        <th style="padding:7px 16px;text-align:left;"><span style="color:#1e293b;font-size:9px;font-weight:700;letter-spacing:1px;text-transform:uppercase;">Fecha/Hora</span></th>
+        <th style="padding:7px 16px;text-align:left;"><span style="color:#1e293b;font-size:9px;font-weight:700;letter-spacing:1px;text-transform:uppercase;">Usuario</span></th>
+        <th style="padding:7px 16px;text-align:left;"><span style="color:#1e293b;font-size:9px;font-weight:700;letter-spacing:1px;text-transform:uppercase;">Rol</span></th>
+        <th style="padding:7px 16px;text-align:left;"><span style="color:#1e293b;font-size:9px;font-weight:700;letter-spacing:1px;text-transform:uppercase;">IP</span></th>
       </tr>
       {access_rows}
     </table>
   </td></tr>
 
-  <!-- Footer -->
-  <tr><td style="background-color:#020617;border:1px solid #1e293b;border-top:none;border-radius:0 0 16px 16px;padding:16px 32px;">
+  <!-- Pie de p&aacute;gina -->
+  <tr><td style="background-color:#020617;border:1px solid #1e293b;border-top:none;border-radius:0 0 12px 12px;padding:14px 28px;">
     <table width="100%" cellpadding="0" cellspacing="0">
       <tr>
-        <td><span style="color:#334155;font-size:10px;font-weight:700;letter-spacing:1px;text-transform:uppercase;font-family:monospace;">C.A. Venezolana de Televisión &nbsp;·&nbsp; Generado: {now.strftime('%d/%m/%Y %H:%M:%S')}</span></td>
-        <td align="right"><span style="color:#dc2626;font-size:11px;font-weight:900;letter-spacing:2px;font-family:monospace;">VTV</span></td>
+        <td>
+          <span style="color:#1e293b;font-size:10px;font-weight:700;letter-spacing:1px;font-family:monospace;">
+            Generado autom&aacute;ticamente el {now.strftime('%d/%m/%Y a las %H:%M:%S')}
+          </span>
+        </td>
+        <td align="right">
+          <span style="color:#dc2626;font-size:12px;font-weight:900;letter-spacing:3px;font-family:monospace;">VTV</span>
+        </td>
       </tr>
     </table>
   </td></tr>
@@ -860,25 +945,26 @@ async def _build_and_send_daily_report():
 </td></tr></table>
 </body></html>"""
 
+        # ── Envío ─────────────────────────────────────────────────────────────
         cfg_e = await asyncio.to_thread(_load_email_config_sync)
         recipients = [r.strip() for r in cfg_e.get("recipients", []) if r.strip()]
         if not recipients:
             logger.warning("[REPORTE] No hay destinatarios configurados")
             return
 
+        hora_str = now.strftime("%H:%M")
+        subject  = f"[Capturadora VTV] Reporte {turno.capitalize()} — {now.strftime('%d/%m/%Y')} {hora_str}"
+
         def _send_report():
-            import smtplib
-            from email.mime.text import MIMEText
-            from email.mime.multipart import MIMEMultipart
             msg = MIMEMultipart("alternative")
-            msg["Subject"] = f"[Capturadora VTV] Reporte Diario — {now.strftime('%d/%m/%Y')}"
+            msg["Subject"] = subject
             msg["From"]    = f"{cfg_e['from_name']} <{cfg_e['from_addr']}>"
             msg["To"]      = ", ".join(recipients)
-            msg.attach(MIMEText(f"Reporte diario Capturadora 2.0 — {now.strftime('%d/%m/%Y')}", "plain", "utf-8"))
+            msg.attach(MIMEText(f"Reporte {turno} Capturadora 2.0 — {now.strftime('%d/%m/%Y')}", "plain", "utf-8"))
             msg.attach(MIMEText(html, "html", "utf-8"))
             host = cfg_e.get("smtp_host", "127.0.0.1")
             port = int(cfg_e.get("smtp_port", 25))
-            srv = smtplib.SMTP(host, port, timeout=10)
+            srv  = smtplib.SMTP(host, port, timeout=10)
             srv.ehlo()
             if cfg_e.get("smtp_tls"):
                 srv.starttls(); srv.ehlo()
@@ -888,23 +974,30 @@ async def _build_and_send_daily_report():
             srv.quit()
 
         await asyncio.to_thread(_send_report)
-        logger.info(f"[REPORTE] Reporte diario enviado a {recipients}")
+        logger.info(f"[REPORTE] Reporte '{turno}' enviado a {recipients}")
     except Exception as e:
-        logger.error(f"[REPORTE] Error enviando reporte diario: {e}")
+        logger.error(f"[REPORTE] Error enviando reporte '{turno}': {e}")
 
 
 async def daily_report_task():
-    """Envía el reporte diario a las 06:30 cada día."""
-    logger.info("[REPORTE] Tarea de reporte diario iniciada (06:30 cada día)")
+    """Dispara el reporte a las 06:00 (mañana) y 22:00 (noche) cada día."""
+    logger.info("[REPORTE] Tarea iniciada — envíos a las 06:00 y 22:00")
+    TURNOS = [(6, 0, "mañana"), (22, 0, "noche")]
     while True:
         now = datetime.now()
-        target = now.replace(hour=6, minute=30, second=0, microsecond=0)
-        if now >= target:
-            target += timedelta(days=1)
-        wait_secs = (target - now).total_seconds()
-        logger.info(f"[REPORTE] Próximo reporte en {int(wait_secs//3600)}h {int((wait_secs%3600)//60)}m")
+        # Calcular el próximo turno
+        proximos = []
+        for h, m, label in TURNOS:
+            t = now.replace(hour=h, minute=m, second=0, microsecond=0)
+            if now >= t:
+                t += timedelta(days=1)
+            proximos.append((t, label))
+        proximos.sort(key=lambda x: x[0])
+        next_target, next_label = proximos[0]
+        wait_secs = (next_target - now).total_seconds()
+        logger.info(f"[REPORTE] Próximo reporte ({next_label}) en {int(wait_secs//3600)}h {int((wait_secs%3600)//60)}m")
         await asyncio.sleep(wait_secs)
-        await _build_and_send_daily_report()
+        await _build_and_send_daily_report(next_label)
 
 
 # ══ App ─────────────────────────────────────────────────────────────────────────────
