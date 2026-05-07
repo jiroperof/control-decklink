@@ -386,7 +386,7 @@
                 const enc = encodeURIComponent(f.name);
                 return `
             <tr class="border-b border-slate-700/30 hover:bg-slate-700/20 transition-colors">
-                <td class="py-2 pr-4 flex-1 truncate max-w-[200px] ${f.name.includes('CH1') ? 'text-red-400' : f.name.includes('CH2') ? 'text-blue-400' : 'text-green-400'}">${f.name}</td>
+                <td class="py-2 pr-4 flex-1 truncate max-w-[200px] ${f.name.includes('CH1') ? 'text-red-400' : f.name.includes('CH2') ? 'text-blue-400' : f.name.includes('CH3') ? 'text-yellow-400' : f.name.includes('CH4') ? 'text-purple-400' : 'text-slate-300'}">${f.name}</td>
                 <td class="py-2 pr-4 text-slate-400 text-right font-bold whitespace-nowrap">${f.duration > 0 ? fmtDuration(Math.round(f.duration)) : 'N/A'}</td>
                 <td class="py-2 pr-4 text-slate-300 text-right whitespace-nowrap">${fmtBytes(f.size_bytes)}</td>
                 <td class="py-2 pr-4 text-slate-400 text-right whitespace-nowrap">${fmtIso(f.created)}</td>
@@ -444,9 +444,23 @@
 
         // --- GESTORIAL DE LIMPIEZA ---
         async function openCleanupModal() {
-            const res = await fetch('/api/cleanup/config', { headers: { 'X-Token': TOKEN } });
-            const cfg = await res.json();
-            document.getElementById('cleanupDays').value = cfg.retention_days;
+            try {
+                const res = await fetch('/api/cleanup/config', { headers: { 'X-Token': TOKEN } });
+                if (!res.ok) { showToast('Error cargando configuración.', 'error'); return; }
+                const cfg = await res.json();
+                document.getElementById('cleanupDays').value = cfg.retention_days ?? 2;
+                const dg = cfg.disk_guard || {};
+                const toggle = document.getElementById('diskGuardEnabled');
+                if (toggle) toggle.checked = !!dg.enabled;
+                const trigger = document.getElementById('diskGuardTrigger');
+                if (trigger) trigger.value = dg.trigger_percent ?? 92;
+                const target = document.getElementById('diskGuardTarget');
+                if (target) target.value = dg.target_percent ?? 88;
+                const interval = document.getElementById('diskGuardInterval');
+                if (interval) interval.value = dg.check_interval_sec ?? 30;
+                const maxDel = document.getElementById('diskGuardMaxDelete');
+                if (maxDel) maxDel.value = dg.max_delete_files ?? 10;
+            } catch (_) { showToast('Error de conexión al abrir configuración.', 'error'); return; }
             document.getElementById('modalCleanup').classList.remove('hidden');
         }
         function closeCleanupModal() {
@@ -482,6 +496,66 @@
             showToast('Configuración guardada y protegida.', 'success');
             closeCleanupModal();
         }
+        async function saveDiskGuardConfig() {
+            const pass = document.getElementById('cleanupPass').value;
+            if (!pass) { showToast('Ingresa la contraseña de administrador.', 'warning'); return; }
+            try {
+                const chk = await fetch('/api/verify-password', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json', 'X-Token': TOKEN },
+                    body: JSON.stringify({ password: pass })
+                });
+                if (!chk.ok) { showToast('Contraseña incorrecta.', 'error'); return; }
+            } catch (_) { showToast('Error de conexión al verificar contraseña.', 'error'); return; }
+
+            const payload = {
+                disk_guard: {
+                    enabled: document.getElementById('diskGuardEnabled').checked,
+                    trigger_percent: parseInt(document.getElementById('diskGuardTrigger').value),
+                    target_percent: parseInt(document.getElementById('diskGuardTarget').value),
+                    check_interval_sec: parseInt(document.getElementById('diskGuardInterval').value),
+                    max_delete_files: parseInt(document.getElementById('diskGuardMaxDelete').value),
+                }
+            };
+            try {
+                const res = await fetch('/api/cleanup/config', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json', 'X-Token': TOKEN },
+                    body: JSON.stringify(payload)
+                });
+                if (res.ok) showToast('Guardián de disco guardado.', 'success');
+                else { const e = await res.json(); showToast('Error: ' + (e.detail || 'Desconocido'), 'error'); }
+            } catch (_) { showToast('Error de conexión.', 'error'); }
+        }
+
+        async function runSpecificCleanup() {
+            const pass = document.getElementById('cleanupPass').value;
+            if (!pass) { showToast('Ingresa la contraseña de administrador.', 'warning'); return; }
+            const dateVal = document.getElementById('cleanupSpecificDate').value;
+            if (!dateVal) { showToast('Selecciona una fecha antes de borrar.', 'warning'); return; }
+            try {
+                const chk = await fetch('/api/verify-password', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json', 'X-Token': TOKEN },
+                    body: JSON.stringify({ password: pass })
+                });
+                if (!chk.ok) { showToast('Contraseña incorrecta.', 'error'); return; }
+            } catch (_) { showToast('Error de conexión al verificar contraseña.', 'error'); return; }
+
+            if (!confirm(`¿Borrar todos los videos del día ${dateVal}?`)) return;
+            const btn = document.getElementById('btnSpecificCleanup');
+            const oldText = btn.textContent;
+            btn.disabled = true; btn.textContent = 'Borrando…';
+            try {
+                const res = await fetch(`/api/cleanup/execute?specific_day=${encodeURIComponent(dateVal)}`, {
+                    method: 'POST', headers: { 'X-Token': TOKEN }
+                });
+                if (res.ok) showToast(`Limpieza del día ${dateVal} completada.`, 'success');
+                else { const e = await res.json(); showToast('Error: ' + (e.detail || 'Desconocido'), 'error'); }
+            } catch (e) { showToast('Error: ' + e, 'error'); }
+            finally { btn.disabled = false; btn.textContent = oldText; }
+        }
+
         async function runManualCleanup() {
             const pass = document.getElementById('cleanupPass').value;
             if (!pass) { showToast('Ingresa la contraseña de administrador.', 'warning'); return; }

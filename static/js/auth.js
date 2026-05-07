@@ -79,7 +79,7 @@
         let TOKEN = null, failCount = 0, logAutoTimer = null;
         let ROLE = null;
         let USERNAME = null, SESSION_ID = null;
-        let USER_CHANNEL = null; // "1", "2", or null
+        let USER_CHANNEL = null; // "1", "2", "3", "4", or null
         let metricsTimer = null, statusTimer = null;
         let activePreviewId = null;
         let previewAbortController = null;

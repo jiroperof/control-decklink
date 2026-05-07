@@ -608,12 +608,12 @@ async def disk_cleanup_task():
     logger.info("[DISK-CLEANUP] Iniciando tarea de monitoreo de espacio en disco.")
     while True:
         try:
-            # Esperar antes de la primera ejecución para dejar que el sistema arranque bien
-            await asyncio.sleep(120)
-            
-            # Verificamos si el disco supera el umbral antes de llamar al script (eficiencia)
+            cfg = await asyncio.to_thread(_load_cleanup_config_sync)
+            trigger = int((cfg.get("disk_guard") or {}).get("trigger_percent", 90))
+            trigger = min(99, max(1, trigger))
+
             dsk = psutil.disk_usage("/")
-            if dsk.percent >= 90: 
+            if dsk.percent >= trigger:
                 script_path = os.path.join(_BASE_DIR, "scripts", "cleanup.sh")
                 proc = await asyncio.create_subprocess_exec(
                     "sudo", script_path, "--auto-disk",
@@ -628,7 +628,7 @@ async def disk_cleanup_task():
                     logger.error(f"[DISK-CLEANUP] Error ejecutando script: {stderr.decode()}")
         except Exception as e:
             logger.error(f"[DISK-CLEANUP] Error en tarea de fondo: {e}")
-        
+
         await asyncio.sleep(120)
 
 @asynccontextmanager
