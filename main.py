@@ -1,4 +1,4 @@
-import subprocess, os, re, signal, asyncio, logging, psutil, time, json, shlex, uuid, secrets
+import subprocess, os, re, signal, asyncio, logging, psutil, time, json, shlex, uuid, secrets, smtplib
 from logging.handlers import RotatingFileHandler
 from datetime import datetime, date, timedelta
 from datetime import time as dtime
@@ -11,6 +11,8 @@ from fastapi.staticfiles import StaticFiles
 from fastapi.middleware.cors import CORSMiddleware
 from starlette.middleware.base import BaseHTTPMiddleware
 from pydantic import BaseModel, field_validator
+from email.mime.text import MIMEText
+from email.mime.multipart import MIMEMultipart
 import bcrypt
 
 # ── Logging ───────────────────────────────────────────────────────────────────
@@ -547,6 +549,16 @@ async def watchdog_task():
                         ok, msg = await mgr.start(RecordConfig(**old_cfg))
                         mgr.auto_restarted = ok
                         logger.info(f"[CH{ch}] Auto-reinicio: {'OK' if ok else 'FALLO'} — {msg}")
+                        cfg_e = await asyncio.to_thread(_load_email_config_sync)
+                        if cfg_e.get("notify_watchdog"):
+                            asyncio.create_task(send_email(
+                                "watchdog", f"Canal {ch} — Proceso reiniciado automáticamente",
+                                [f"Canal: DeckLink Duo ({ch})",
+                                 f"FFmpeg terminó inesperadamente y fue reiniciado.",
+                                 f"Estado: {'✅ Reinicio exitoso' if ok else '❌ Reinicio fallido'}",
+                                 f"Hora: {datetime.now().strftime('%d/%m/%Y %H:%M:%S')}"],
+                                cooldown_key=f"watchdog_{ch}"
+                            ))
                     except Exception as e:
                         logger.error(f"[CH{ch}] Error en auto-reinicio: {e}")
 
@@ -624,6 +636,17 @@ async def disk_cleanup_task():
                 output = stdout.decode()
                 if "ALERTA" in output:
                     logger.warning(f"[DISK-CLEANUP] Limpieza automática ejecutada:\n{output}")
+                    cfg_e = await asyncio.to_thread(_load_email_config_sync)
+                    if cfg_e.get("notify_disk_guard"):
+                        dsk = psutil.disk_usage("/")
+                        asyncio.create_task(send_email(
+                            "disk_guard", "Limpieza automática de disco ejecutada",
+                            ["El disco superó el umbral configurado y se ejecutó limpieza automática.",
+                             f"Uso actual: {dsk.percent:.1f}%",
+                             f"Libre: {dsk.free//(1024**3)} GB",
+                             f"Hora: {datetime.now().strftime('%d/%m/%Y %H:%M:%S')}"],
+                            cooldown_key="disk_cleanup"
+                        ))
                 elif proc.returncode != 0:
                     logger.error(f"[DISK-CLEANUP] Error ejecutando script: {stderr.decode()}")
         except Exception as e:
@@ -748,6 +771,14 @@ async def login(data: LoginRequest, request: Request):
         elif role == "group4":
             channel = "4"
         
+        cfg_e = await asyncio.to_thread(_load_email_config_sync)
+        if cfg_e.get("notify_login_ok"):
+            asyncio.create_task(send_email(
+                "login", f"Acceso al sistema — {real_user}",
+                [f"Usuario: {real_user}", f"Rol: {role}", f"IP: {ip}",
+                 f"Hora: {datetime.fromtimestamp(now).strftime('%d/%m/%Y %H:%M:%S')}"],
+                cooldown_key=f"login_ok_{real_user}"
+            ))
         return {
             "token": user_data["token"], "role": role,
             "username": real_user, "session_id": new_sess,
@@ -768,7 +799,15 @@ async def login(data: LoginRequest, request: Request):
             "role": "fallido"
         })
     await _save_access_log()
-    
+    cfg_e = await asyncio.to_thread(_load_email_config_sync)
+    if cfg_e.get("notify_login_fail"):
+        asyncio.create_task(send_email(
+            "login_fail", f"Intento fallido de acceso — {data.username}",
+            [f"Usuario: {data.username}", f"IP: {ip}",
+             f"Intentos: {attempt['count']}",
+             f"Hora: {datetime.fromtimestamp(now).strftime('%d/%m/%Y %H:%M:%S')}"],
+            cooldown_key=f"login_fail_{ip}"
+        ))
     raise HTTPException(status_code=401, detail="Credenciales incorrectas")
 
 @app.get("/api/metrics")
@@ -847,13 +886,36 @@ async def api_start(config: RecordConfig, source_id: str = FastAPIPath(..., patt
     
     ok, msg = await mgr.start(config)
     if not ok: raise HTTPException(status_code=400, detail=msg)
+    user = TOKEN_TO_USER.get(token, "desconocido")
+    cfg_e = await asyncio.to_thread(_load_email_config_sync)
+    if cfg_e.get("notify_recording_start"):
+        asyncio.create_task(send_email(
+            "start", f"Canal {source_id} — Grabación iniciada",
+            [f"Canal: DeckLink Duo ({source_id})", f"Usuario: {user}",
+             f"Bitrate: {config.bitrate}", f"Segmentos: {config.segment_minutes} min",
+             f"Destino: {config.dest_path}", f"Hora: {datetime.now().strftime('%d/%m/%Y %H:%M:%S')}"],
+            cooldown_key=f"start_{source_id}"
+        ))
     return {"status": "ok", "message": msg}
 
 @app.post("/api/stop/{source_id}")
 async def api_stop(source_id: str = FastAPIPath(..., pattern="^(1|2|3|4)$"), token: str = Depends(verify_token)):
     if not require_channel_access(source_id, token):
         raise HTTPException(status_code=403, detail="Acceso denegado a este canal.")
-    await get_mgr(source_id).stop_and_clean()
+    mgr_stop = get_mgr(source_id)
+    elapsed_stop = int(time.time() - mgr_stop.started_at) if mgr_stop.started_at else 0
+    await mgr_stop.stop_and_clean()
+    user_stop = TOKEN_TO_USER.get(token, "desconocido")
+    cfg_e = await asyncio.to_thread(_load_email_config_sync)
+    if cfg_e.get("notify_recording_stop"):
+        h, m, s = elapsed_stop//3600, (elapsed_stop%3600)//60, elapsed_stop%60
+        asyncio.create_task(send_email(
+            "stop", f"Canal {source_id} — Grabación detenida",
+            [f"Canal: DeckLink Duo ({source_id})", f"Usuario: {user_stop}",
+             f"Duración: {h:02d}:{m:02d}:{s:02d}",
+             f"Hora: {datetime.now().strftime('%d/%m/%Y %H:%M:%S')}"],
+            cooldown_key=f"stop_{source_id}"
+        ))
     return {"status": "ok"}
 
 @app.post("/api/schedule/{source_id}")
@@ -1039,7 +1101,19 @@ async def disk_guard_task():
                 base = _resolve_dest_path()
                 result = await asyncio.to_thread(_disk_guard_delete_oldest_sync, base, cfg)
                 if result.get("deleted"):
-                    logger.warning(f"[DISK_GUARD] Liberando espacio: borrados {len(result['deleted'])} archivo(s). Disco={result.get('disk_percent')}%")
+                    n_del = len(result['deleted'])
+                    logger.warning(f"[DISK_GUARD] Liberando espacio: borrados {n_del} archivo(s). Disco={result.get('disk_percent')}%")
+                    cfg_e = await asyncio.to_thread(_load_email_config_sync)
+                    if cfg_e.get("notify_disk_guard"):
+                        dsk = psutil.disk_usage("/")
+                        asyncio.create_task(send_email(
+                            "disk_guard", f"Guardián de disco eliminó {n_del} archivo(s)",
+                            [f"Archivos eliminados: {n_del}",
+                             f"Uso del disco: {result.get('disk_percent')}% → {dsk.percent:.1f}%",
+                             f"Libre: {dsk.free//(1024**3)} GB",
+                             f"Hora: {datetime.now().strftime('%d/%m/%Y %H:%M:%S')}"],
+                            cooldown_key="disk_guard_action"
+                        ))
             except Exception as e:
                 logger.error(f"[DISK_GUARD] Error: {e}")
 
@@ -1084,6 +1158,176 @@ async def execute_cleanup(force_all: bool = False, specific_day: str = None, tok
     )
     stdout, stderr = await proc.communicate()
     return {"status": "ok", "out": stdout.decode(), "err": stderr.decode()}
+
+# ══════════════════════════════════════════════════════════════════════════════
+# SISTEMA DE NOTIFICACIONES POR CORREO
+# ══════════════════════════════════════════════════════════════════════════════
+EMAIL_CONFIG_FILE = os.path.join(_DATA_DIR, "email_config.json")
+
+DEFAULT_EMAIL_CONFIG = {
+    "enabled": True,
+    "smtp_host": "127.0.0.1",
+    "smtp_port": 25,
+    "smtp_user": "capturadora@vtv.gob.ve",
+    "smtp_pass": "V12345678",
+    "smtp_tls": False,
+    "from_addr": "capturadora@vtv.gob.ve",
+    "from_name": "Capturadora 2.0 VTV",
+    "recipients": [],
+    "notify_recording_start": True,
+    "notify_recording_stop": True,
+    "notify_login_ok": True,
+    "notify_login_fail": True,
+    "notify_watchdog": True,
+    "notify_disk_guard": True,
+    "notify_disk_critical": True,
+}
+
+_email_config_lock = asyncio.Lock()
+
+# Rate-limiting: key → last sent timestamp
+_email_rate: dict[str, float] = {}
+_EMAIL_COOLDOWN = 60  # segundos mínimos entre emails del mismo tipo
+
+def _load_email_config_sync() -> dict:
+    cfg = dict(DEFAULT_EMAIL_CONFIG)
+    try:
+        if os.path.exists(EMAIL_CONFIG_FILE):
+            with open(EMAIL_CONFIG_FILE, "r") as f:
+                loaded = json.load(f) or {}
+            cfg.update(loaded)
+    except Exception as e:
+        logger.error(f"[EMAIL] Error leyendo email_config: {e}")
+    return cfg
+
+def _save_email_config_sync(cfg: dict) -> None:
+    try:
+        with open(EMAIL_CONFIG_FILE, "w") as f:
+            json.dump(cfg, f, indent=2)
+    except Exception as e:
+        logger.error(f"[EMAIL] Error guardando email_config: {e}")
+
+def _build_html_email(subject: str, event_type: str, body_lines: list[str]) -> str:
+    color_map = {
+        "start":    ("#16a34a", "▶ GRABACIÓN INICIADA"),
+        "stop":     ("#dc2626", "⏹ GRABACIÓN DETENIDA"),
+        "login":    ("#2563eb", "🔐 ACCESO AL SISTEMA"),
+        "login_fail": ("#d97706", "⚠ INTENTO FALLIDO"),
+        "watchdog": ("#7c3aed", "🔄 REINICIO AUTOMÁTICO"),
+        "disk_guard": ("#b45309", "🗑 GUARDIÁN DE DISCO"),
+        "disk_critical": ("#dc2626", "💾 DISCO CRÍTICO"),
+        "test":     ("#0891b2", "✉ CORREO DE PRUEBA"),
+    }
+    accent, label = color_map.get(event_type, ("#475569", subject))
+    rows = "".join(f"<tr><td style='padding:6px 0;color:#cbd5e1;font-size:13px;'>{ln}</td></tr>" for ln in body_lines)
+    now_str = datetime.now().strftime("%d/%m/%Y %H:%M:%S")
+    return f"""<!DOCTYPE html><html><body style="margin:0;padding:0;background:#0f172a;font-family:'Segoe UI',Arial,sans-serif;">
+<table width="100%" cellpadding="0" cellspacing="0" style="background:#0f172a;padding:32px 0;">
+<tr><td align="center">
+<table width="560" cellpadding="0" cellspacing="0" style="background:#1e293b;border-radius:16px;overflow:hidden;border:1px solid #334155;">
+  <tr><td style="background:{accent};padding:20px 32px;">
+    <span style="color:#fff;font-size:11px;font-weight:900;letter-spacing:3px;text-transform:uppercase;">{label}</span>
+    <h2 style="color:#fff;margin:4px 0 0;font-size:20px;font-weight:900;">{subject}</h2>
+  </td></tr>
+  <tr><td style="padding:28px 32px;">
+    <table width="100%" cellpadding="0" cellspacing="0">{rows}</table>
+  </td></tr>
+  <tr><td style="padding:16px 32px;border-top:1px solid #334155;background:#0f172a;">
+    <span style="color:#475569;font-size:11px;">Sistema Multicanal VTV · Capturadora 2.0 &nbsp;·&nbsp; {now_str}</span>
+  </td></tr>
+</table>
+</td></tr></table></body></html>"""
+
+async def send_email(event_type: str, subject: str, body_lines: list[str], cooldown_key: str | None = None) -> bool:
+    """Envía un correo HTML de forma asíncrona (en hilo). Respeta rate-limiting."""
+    global _email_rate
+    now = time.time()
+    key = cooldown_key or event_type
+    if key in _email_rate and (now - _email_rate[key]) < _EMAIL_COOLDOWN:
+        return False  # silently throttled
+    try:
+        cfg = await asyncio.to_thread(_load_email_config_sync)
+        if not cfg.get("enabled"):
+            return False
+        recipients = [r.strip() for r in cfg.get("recipients", []) if r.strip()]
+        if not recipients:
+            logger.warning("[EMAIL] No hay destinatarios configurados")
+            return False
+
+        def _send_sync():
+            msg = MIMEMultipart("alternative")
+            msg["Subject"] = f"[Capturadora VTV] {subject}"
+            msg["From"]    = f"{cfg['from_name']} <{cfg['from_addr']}>"
+            msg["To"]      = ", ".join(recipients)
+            html_body = _build_html_email(subject, event_type, body_lines)
+            plain = "\n".join(body_lines)
+            msg.attach(MIMEText(plain, "plain", "utf-8"))
+            msg.attach(MIMEText(html_body, "html", "utf-8"))
+            host = cfg.get("smtp_host", "127.0.0.1")
+            port = int(cfg.get("smtp_port", 25))
+            use_tls = bool(cfg.get("smtp_tls", False))
+            user = cfg.get("smtp_user", "")
+            pwd  = cfg.get("smtp_pass", "")
+            if use_tls:
+                server = smtplib.SMTP(host, port, timeout=10)
+                server.ehlo()
+                server.starttls()
+                server.ehlo()
+            else:
+                server = smtplib.SMTP(host, port, timeout=10)
+            if user and pwd:
+                server.login(user, pwd)
+            server.sendmail(cfg["from_addr"], recipients, msg.as_string())
+            server.quit()
+
+        await asyncio.to_thread(_send_sync)
+        _email_rate[key] = now
+        logger.info(f"[EMAIL] Enviado '{subject}' → {recipients}")
+        return True
+    except Exception as e:
+        logger.error(f"[EMAIL] Error enviando correo '{subject}': {e}")
+        return False
+
+# ── Endpoints de configuración de notificaciones ──────────────────────────────
+@app.get("/api/admin/email-config")
+async def get_email_config(token: str = Depends(require_admin)):
+    cfg = await asyncio.to_thread(_load_email_config_sync)
+    cfg.pop("smtp_pass", None)  # no exponer contraseña en GET
+    return cfg
+
+@app.post("/api/admin/email-config")
+async def save_email_config(cfg: dict, token: str = Depends(require_admin)):
+    async with _email_config_lock:
+        current = await asyncio.to_thread(_load_email_config_sync)
+        # Si no se envió contraseña (campo vacío o ausente), conservar la existente
+        if not cfg.get("smtp_pass"):
+            cfg["smtp_pass"] = current.get("smtp_pass", "")
+        current.update(cfg)
+        await asyncio.to_thread(_save_email_config_sync, current)
+    return {"status": "ok"}
+
+@app.post("/api/admin/email-test")
+async def test_email(token: str = Depends(require_admin)):
+    cfg = await asyncio.to_thread(_load_email_config_sync)
+    if not cfg.get("enabled"):
+        raise HTTPException(status_code=400, detail="Las notificaciones están desactivadas.")
+    if not cfg.get("recipients"):
+        raise HTTPException(status_code=400, detail="No hay destinatarios configurados.")
+    ok = await send_email(
+        "test",
+        "Prueba de Notificaciones",
+        [
+            "Este es un correo de prueba del sistema Capturadora 2.0.",
+            "Si lo recibes, la configuración SMTP es correcta.",
+            f"Servidor SMTP: {cfg.get('smtp_host')}:{cfg.get('smtp_port')}",
+            f"Desde: {cfg.get('from_addr')}",
+        ],
+        cooldown_key="test_manual"
+    )
+    if not ok:
+        raise HTTPException(status_code=500, detail="Error al enviar el correo de prueba. Revisa los logs del servidor.")
+    return {"status": "ok"}
+
 
 class VerifyPasswordRequest(BaseModel):
     password: str

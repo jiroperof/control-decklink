@@ -4,15 +4,92 @@
             loadGroupNamesIntoModal();
             loadAdminUsers();
         }
+
+        async function loadEmailConfig() {
+            try {
+                const res = await fetch('/api/admin/email-config', { headers: { 'X-Token': TOKEN } });
+                if (!res.ok) return;
+                const d = await res.json();
+                const s = (id, val) => { const el = document.getElementById(id); if (el) { if (el.type === 'checkbox') el.checked = !!val; else el.value = val ?? ''; } };
+                s('emailEnabled', d.enabled);
+                s('smtpHost', d.smtp_host);
+                s('smtpPort', d.smtp_port);
+                s('smtpUser', d.smtp_user);
+                s('smtpTls', d.smtp_tls);
+                s('smtpFrom', d.from_addr);
+                s('smtpFromName', d.from_name);
+                const rec = document.getElementById('emailRecipients');
+                if (rec) rec.value = (d.recipients || []).join('\n');
+                s('notifStart', d.notify_recording_start);
+                s('notifStop', d.notify_recording_stop);
+                s('notifLoginOk', d.notify_login_ok);
+                s('notifLoginFail', d.notify_login_fail);
+                s('notifWatchdog', d.notify_watchdog);
+                s('notifDiskGuard', d.notify_disk_guard);
+                s('notifDiskCritical', d.notify_disk_critical);
+            } catch(_) { showToast('Error cargando configuración de notificaciones.', 'error'); }
+        }
+
+        async function saveEmailConfig() {
+            const g = (id) => { const el = document.getElementById(id); if (!el) return null; return el.type === 'checkbox' ? el.checked : el.value.trim(); };
+            const recipients = (document.getElementById('emailRecipients')?.value || '')
+                .split('\n').map(r => r.trim()).filter(Boolean);
+            const payload = {
+                enabled: g('emailEnabled'),
+                smtp_host: g('smtpHost'),
+                smtp_port: parseInt(g('smtpPort')) || 25,
+                smtp_user: g('smtpUser'),
+                smtp_pass: g('smtpPass'),
+                smtp_tls: g('smtpTls'),
+                from_addr: g('smtpFrom'),
+                from_name: g('smtpFromName'),
+                recipients,
+                notify_recording_start: g('notifStart'),
+                notify_recording_stop: g('notifStop'),
+                notify_login_ok: g('notifLoginOk'),
+                notify_login_fail: g('notifLoginFail'),
+                notify_watchdog: g('notifWatchdog'),
+                notify_disk_guard: g('notifDiskGuard'),
+                notify_disk_critical: g('notifDiskCritical'),
+            };
+            try {
+                const res = await fetch('/api/admin/email-config', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json', 'X-Token': TOKEN },
+                    body: JSON.stringify(payload)
+                });
+                if (res.ok) {
+                    showToast('Configuración de notificaciones guardada.', 'success');
+                    document.getElementById('smtpPass').value = '';
+                } else { const e = await res.json(); showToast('Error: ' + e.detail, 'error'); }
+            } catch(_) { showToast('Error de conexión.', 'error'); }
+        }
+
+        async function testEmail() {
+            const btn = event.currentTarget;
+            if (btn) { btn.disabled = true; btn.textContent = 'Enviando...'; }
+            try {
+                const res = await fetch('/api/admin/email-test', {
+                    method: 'POST',
+                    headers: { 'X-Token': TOKEN }
+                });
+                if (res.ok) {
+                    showToast('✅ Correo de prueba enviado. Revisa tu bandeja.', 'success');
+                } else { const e = await res.json(); showToast('Error: ' + e.detail, 'error'); }
+            } catch(_) { showToast('Error de conexión.', 'error'); }
+            finally { if (btn) { btn.disabled = false; btn.textContent = '✉ Enviar Prueba'; } }
+        }
         function closeAdminModal() {
             document.getElementById('modalAdmin').classList.add('hidden');
         }
         function switchAdminTab(tab) {
-            const isGrupos = tab === 'grupos';
-            document.getElementById('tabGrupos').classList.toggle('hidden', !isGrupos);
-            document.getElementById('tabUsuarios').classList.toggle('hidden', isGrupos);
-            document.getElementById('tabBtnGrupos').className = `flex-1 py-3 text-[11px] font-black uppercase tracking-widest transition-all ${isGrupos ? 'tab-active' : 'tab-inactive'}`;
-            document.getElementById('tabBtnUsuarios').className = `flex-1 py-3 text-[11px] font-black uppercase tracking-widest transition-all ${!isGrupos ? 'tab-active' : 'tab-inactive'}`;
+            ['grupos','usuarios','notif'].forEach(t => {
+                const body = document.getElementById('tab' + t.charAt(0).toUpperCase() + t.slice(1));
+                const btn  = document.getElementById('tabBtn' + t.charAt(0).toUpperCase() + t.slice(1));
+                if (body) body.classList.toggle('hidden', t !== tab);
+                if (btn)  btn.className = `flex-1 py-3 text-[11px] font-black uppercase tracking-widest transition-all ${t === tab ? 'tab-active' : 'tab-inactive'}`;
+            });
+            if (tab === 'notif') loadEmailConfig();
         }
         async function loadGroupNamesIntoModal() {
             try {
