@@ -69,7 +69,7 @@
             const btn = event.currentTarget;
             if (btn) { btn.disabled = true; btn.textContent = 'Enviando...'; }
             try {
-                const res = await fetch('/api/admin/email-test', {
+                const res = await fetch('/api/admin/send-report', {
                     method: 'POST',
                     headers: { 'X-Token': TOKEN }
                 });
