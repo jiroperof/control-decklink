@@ -818,9 +818,18 @@
                         const blob = new Blob([frame], { type: 'image/jpeg' });
                         const url = URL.createObjectURL(blob);
                         const oldUrl = img.src;
+
+                        // Ocultar imagen hasta que esté completamente cargada
+                        img.style.opacity = '0';
+
+                        img.onload = () => {
+                            // Mostrar imagen solo cuando esté lista
+                            img.style.opacity = '1';
+                            loader.classList.add('hidden');
+                        };
+
                         img.src = url;
                         if (oldUrl && oldUrl.startsWith('blob:')) URL.revokeObjectURL(oldUrl);
-                        loader.classList.add('hidden');
                     }
                 }
             } catch (e) {
@@ -846,6 +855,7 @@
             title.textContent = `Señal en Vivo: Canal ${id}`;
             loader.classList.remove('hidden');
             img.src = '';
+            img.style.opacity = '0'; // Iniciar oculta para evitar artefactos
             modal.classList.remove('hidden');
 
             streamMjpeg(id, img, loader);
