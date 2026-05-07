@@ -35,3 +35,34 @@
                 loadLog(); logAutoTimer = setInterval(loadLog, 5000);
             }
         }
+
+        function exportLogs() {
+            const now = new Date().toISOString().replace(/[:.]/g, '-');
+            let content = `=== Logs FFmpeg Exportados - Capturadora 2.0 ===\n`;
+            content += `Fecha: ${new Date().toLocaleString('es-VE')}\n`;
+            content += `Usuario: ${USERNAME || 'N/A'}\n`;
+            content += `========================================\n\n`;
+
+            ['1', '2', '3', '4'].forEach(id => {
+                const box = document.getElementById('logBox_' + id);
+                const sizeEl = document.getElementById('logSize_' + id);
+                const logText = box ? box.textContent : '';
+                const sizeInfo = sizeEl ? sizeEl.textContent : '';
+
+                content += `\n=== CANAL ${id} ${sizeInfo} ===\n`;
+                content += logText || '(Sin contenido)';
+                content += '\n\n';
+            });
+
+            const blob = new Blob([content], { type: 'text/plain;charset=utf-8' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `logs-ffmpeg-${now}.txt`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+
+            showToast('Logs exportados correctamente', 'success');
+        }

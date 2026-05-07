@@ -70,10 +70,32 @@
             statusTimer = setInterval(updateStatus, 5000);
         }
 
-        function onNetOk() { if (failCount > 0) { failCount = 0; document.getElementById('networkError').classList.add('hidden'); } }
+        function updateConnStatus(connected) {
+            const dot = document.getElementById('connDot');
+            const text = document.getElementById('connText');
+            if (dot) {
+                dot.classList.remove('bg-green-500', 'bg-red-500', 'animate-pulse');
+                dot.classList.add(connected ? 'bg-green-500' : 'bg-red-500');
+                if (connected) dot.classList.add('animate-pulse');
+            }
+            if (text) {
+                text.textContent = connected ? 'Conectado' : 'Sin conexión';
+                text.classList.remove('text-slate-500', 'text-red-400');
+                text.classList.add(connected ? 'text-slate-500' : 'text-red-400');
+            }
+        }
+
+        function onNetOk() {
+            if (failCount > 0) {
+                failCount = 0;
+                document.getElementById('networkError').classList.add('hidden');
+            }
+            updateConnStatus(true);
+        }
         function onNetFail() {
             failCount++;
             document.getElementById('networkError').classList.remove('hidden');
+            updateConnStatus(false);
             if (failCount >= MAX_FAILS) {
                 clearInterval(metricsTimer); clearInterval(statusTimer);
                 document.getElementById('networkError').textContent = '⚠ Servidor no responde. Recarga la página para reintentar.';
@@ -236,6 +258,19 @@
                     } else {
                         title.classList.add('text-green-500');
                         alert.classList.add('hidden');
+                    }
+                }
+
+                // Actualizar banner de disco crítico
+                const critBanner = document.getElementById('diskCriticalBanner');
+                const critPercent = document.getElementById('diskCritPercent');
+                if (critBanner && critPercent) {
+                    const freePercent = 100 - rounded;
+                    critPercent.textContent = freePercent + '%';
+                    if (freePercent <= 10 && !_diskAlertDismissed) {
+                        critBanner.classList.remove('hidden');
+                    } else {
+                        critBanner.classList.add('hidden');
                     }
                 }
             }
@@ -480,6 +515,15 @@
             const h = Math.floor(s / 3600), m = Math.floor((s % 3600) / 60), sec = s % 60;
             return `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}:${String(sec).padStart(2, '0')}`;
         }
+        let _diskAlertDismissed = false;
+
+        function dismissDiskAlert() {
+            _diskAlertDismissed = true;
+            const banner = document.getElementById('diskCriticalBanner');
+            if (banner) banner.classList.add('hidden');
+            showToast('Alerta de disco ignorada temporalmente', 'warning');
+        }
+
         function fmtBytes(b) {
             if (b < 1024) return b + ' B';
             if (b < 1048576) return (b / 1024).toFixed(1) + ' KB';
