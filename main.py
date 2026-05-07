@@ -1166,7 +1166,7 @@ EMAIL_CONFIG_FILE = os.path.join(_DATA_DIR, "email_config.json")
 
 DEFAULT_EMAIL_CONFIG = {
     "enabled": True,
-    "smtp_host": "127.0.0.1",
+    "smtp_host": "vtvcorreo.vtv.gob.ve",
     "smtp_port": 25,
     "smtp_user": "capturadora@vtv.gob.ve",
     "smtp_pass": "V12345678",
@@ -1275,7 +1275,8 @@ async def send_email(event_type: str, subject: str, body_lines: list[str], coold
                 server.ehlo()
             else:
                 server = smtplib.SMTP(host, port, timeout=10)
-            if user and pwd:
+                server.ehlo()
+            if user and pwd and server.has_extn("AUTH"):
                 server.login(user, pwd)
             server.sendmail(cfg["from_addr"], recipients, msg.as_string())
             server.quit()
