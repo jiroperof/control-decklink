@@ -5,7 +5,7 @@ from datetime import time as dtime
 from pathlib import Path
 from typing import Optional
 from contextlib import asynccontextmanager
-from fastapi import FastAPI, HTTPException, Depends, Request, Query, Header, Path as FastAPIPath
+from fastapi import FastAPI, HTTPException, Depends, Request, Query, Header, Path as FastAPIPath, Body
 from fastapi.responses import JSONResponse, StreamingResponse, FileResponse, RedirectResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.middleware.cors import CORSMiddleware
@@ -1296,7 +1296,7 @@ async def get_email_config(token: str = Depends(require_admin)):
     return cfg
 
 @app.post("/api/admin/email-config")
-async def save_email_config(cfg: dict, token: str = Depends(require_admin)):
+async def save_email_config(cfg: dict = Body(...), token: str = Depends(require_admin)):
     async with _email_config_lock:
         current = await asyncio.to_thread(_load_email_config_sync)
         # Si no se envió contraseña (campo vacío o ausente), conservar la existente
