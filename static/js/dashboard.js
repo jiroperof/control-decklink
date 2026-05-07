@@ -752,12 +752,15 @@
         }
 
         // --- VISTA PREVIA ---
+        let previewFirstFrameLoaded = false;
+
         async function streamMjpeg(id, img, loader) {
             if (previewAbortController) {
                 previewAbortController.abort();
             }
             previewAbortController = new AbortController();
             const signal = previewAbortController.signal;
+            previewFirstFrameLoaded = false;
 
             let response;
             try {
@@ -819,23 +822,17 @@
                         const url = URL.createObjectURL(blob);
                         const oldUrl = img.src;
 
-                        // Solo ocultar loader en el primer frame, no en actualizaciones
-                        const isFirstFrame = !img.src || img.src === '';
-
-                        if (isFirstFrame) {
-                            // Para el primer frame, esperar a que cargue completamente
+                        // Solo en el primer frame, esperar a cargar antes de ocultar loader
+                        if (!previewFirstFrameLoaded) {
                             img.onload = () => {
                                 loader.classList.add('hidden');
+                                previewFirstFrameLoaded = true;
+                                img.onload = null; // Limpiar handler
                             };
                         }
 
                         img.src = url;
                         if (oldUrl && oldUrl.startsWith('blob:')) URL.revokeObjectURL(oldUrl);
-
-                        // Limpiar onload después de usarlo para no interferir con frames siguientes
-                        if (!isFirstFrame) {
-                            img.onload = null;
-                        }
                     }
                 }
             } catch (e) {
