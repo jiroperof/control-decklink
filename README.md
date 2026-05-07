@@ -1,6 +1,6 @@
 <div align="center">
   <img src="static/logo.png" alt="VTV Logo" width="140"/>
-  <h1>VTV — Capturadora Multicanal 2.1</h1>
+  <h1>VTV — Capturadora Multicanal 2.2</h1>
   <p><strong>Sistema de grabación SDI en tiempo real con Blackmagic DeckLink + NVIDIA NVENC</strong></p>
 
   ![Python](https://img.shields.io/badge/Python-3.12-blue?logo=python&logoColor=white)
@@ -14,7 +14,7 @@
 
 ## 📺 Acerca del Proyecto
 
-**Capturadora Multicanal 2.1** es una plataforma web para la ingesta y codificación en tiempo real de señales SDI profesionales. Diseñada para entornos *broadcast* 24/7, controla de forma independiente dos canales DeckLink con aceleración GPU NVENC, segmentación automática de archivos MP4, recuperación ante caídas y un panel de administración completo accesible desde el navegador.
+**Capturadora Multicanal 2.2** es una plataforma web para la ingesta y codificación en tiempo real de señales SDI profesionales. Diseñada para entornos *broadcast* 24/7, controla de forma independiente cuatro canales DeckLink con aceleración GPU NVENC, segmentación automática de archivos MP4, recuperación ante caídas, reportes automáticos por correo y un panel de administración completo accesible desde el navegador.
 
 ---
 
@@ -22,7 +22,7 @@
 
 | Módulo | Descripción |
 |--------|-------------|
-| 🎙️ **Grabación dual** | Control asíncrono e independiente de 2 señales DeckLink SDI |
+| 🎙️ **Grabación multicanal** | Control asíncrono e independiente de hasta 4 señales DeckLink SDI |
 | 🏎️ **NVENC H.264** | Codificación por hardware (preset P4/HQ + VBR), desentrelazado `bwdif`, 29.97 fps |
 | 🔐 **RBAC 4 roles** | `admin` · `operator` · `group1` · `group2` — permisos granulares por canal |
 | 👁️ **Live preview** | Stream MJPEG en el navegador sin interrumpir la grabación |
@@ -32,6 +32,8 @@
 | 🧹 **Limpieza automática** | Script de retención configurable (N días), con opción de limpieza manual desde la UI |
 | 📈 **Panel estadísticas** | Gráficas Chart.js: almacenamiento, horas grabadas, audit log de accesos |
 | 🔒 **Brute-force protection** | Bloqueo temporal de IP tras 5 intentos fallidos (rate limiting) |
+| 📧 **Notificaciones por correo** | Alertas SMTP para 7 tipos de eventos con rate-limiting y plantilla HTML branded |
+| 📋 **Reportes diarios** | Reporte automático a las 06:00 y 22:00 con logo VTV, métricas, canales y accesos |
 | ⚡ **UI sin build step** | Vanilla JS + Tailwind CDN — sin Node.js, sin bundler |
 
 ---
@@ -42,6 +44,7 @@
 - **Frontend:** HTML5 · Vanilla JS · Tailwind CSS CDN · Chart.js
 - **Autenticación:** Token estático por usuario + UUID de sesión + bcrypt
 - **Proceso de grabación:** `subprocess.Popen` con FFmpeg, señal `q` a stdin para cierre limpio de segmentos MP4
+- **Correo:** `smtplib` + MIME multipart HTML, sin dependencias externas
 - **Hardware:** Blackmagic DeckLink Duo + NVIDIA Quadro (NVENC)
 
 ---
@@ -58,16 +61,18 @@ control-decklink/
 │
 ├── static/               # Frontend
 │   ├── index.html
+│   ├── logo.png
 │   └── js/
 │       ├── auth.js       # Autenticación, sesión, idle-logout
 │       ├── dashboard.js  # UI principal, polling, controles
-│       ├── admin.js      # Panel de administración de usuarios
+│       ├── admin.js      # Panel admin: usuarios + notificaciones
 │       ├── stats.js      # Modal de estadísticas + Chart.js
 │       └── logs.js       # Visor de logs FFmpeg en vivo
 │
 ├── data/                 # Datos de runtime (excluidos del repo)
 │   ├── users_db.json     # Usuarios dinámicos
 │   ├── access_log.json   # Audit log de accesos
+│   ├── email_config.json # Configuración SMTP y notificaciones
 │   ├── cleanup_config.json
 │   └── duration_cache.json
 │
@@ -99,6 +104,7 @@ control-decklink/
 1. **Drivers Blackmagic Desktop Video** instalados y tarjeta DeckLink reconocida
 2. **FFmpeg** compilado con `--enable-decklink` y `--enable-nvenc`
 3. **Python 3.12+** y `pip`
+4. **Servidor SMTP** accesible en la red (por defecto `vtvcorreo.vtv.gob.ve:25`)
 
 ### Configuración
 
@@ -137,12 +143,51 @@ cp .env.example .env   # editar con tus valores
 
 | Rol | Acceso |
 |-----|--------|
-| `admin` | Control total: todos los canales, gestión de usuarios, estadísticas, limpieza |
+| `admin` | Control total: todos los canales, gestión de usuarios, estadísticas, limpieza, notificaciones |
 | `operator` | Solo lectura: métricas y estado de canales |
 | `group1` | Canal 1 únicamente: iniciar/detener grabación, ver telemetría, preview |
 | `group2` | Canal 2 únicamente: igual que group1 |
 
 Los usuarios `group1`/`group2` se crean desde el panel de Administración dentro de la propia web app.
+
+---
+
+## 📧 Sistema de Notificaciones por Correo
+
+Configurable desde **Admin → Notif.** en el panel web. Se guarda en `data/email_config.json`.
+
+### Eventos notificados
+
+| Evento | Descripción |
+|--------|-------------|
+| ▶ Inicio de grabación | Al iniciar grabación en cualquier canal |
+| ⏹ Detención de grabación | Al detener, incluye duración total |
+| 🔐 Login exitoso | Acceso válido al sistema |
+| ⚠ Login fallido | Intento con credenciales incorrectas |
+| 🔄 Auto-reinicio watchdog | FFmpeg relanzado automáticamente |
+| 🗑 Guardián de disco | Limpieza automática por espacio |
+| 💾 Disco crítico | Uso de disco supera el 90% |
+
+### Reportes diarios automáticos
+
+Se envían **dos veces al día** con información completa del sistema:
+
+| Turno | Hora | Badge |
+|-------|------|-------|
+| Mañana | 06:00 | 🟡 amarillo |
+| Noche  | 22:00 | 🟣 violeta |
+
+Cada reporte incluye: logo VTV · recursos del servidor (CPU/RAM/Disco) · cantidad de videos y tamaño de carpeta · estado de los 4 canales · últimos 3 accesos al sistema.
+
+> Para enviar el reporte manualmente: **Admin → Notif. → ✉ Enviar Prueba**
+
+### Endpoints de la API
+
+| Método | Ruta | Descripción |
+|--------|------|-------------|
+| `GET` | `/api/admin/email-config` | Obtener configuración SMTP (sin contraseña) |
+| `POST` | `/api/admin/email-config` | Guardar configuración SMTP y toggles |
+| `POST` | `/api/admin/send-report` | Enviar reporte completo manualmente |
 
 ---
 
@@ -163,6 +208,31 @@ ALLOWED_ORIGINS=http://localhost:8000,http://192.168.1.x:8000
 
 ---
 
+## 📝 Changelog
+
+### v2.2 — Mayo 2026
+- **Nuevo:** Sistema completo de notificaciones por correo (`smtplib`, sin dependencias externas)
+- **Nuevo:** 7 tipos de eventos con plantilla HTML branded (dark mode, logo VTV, colores por tipo)
+- **Nuevo:** Reportes diarios automáticos a las 06:00 y 22:00 con métricas del sistema
+- **Nuevo:** Tab "Notif." en el panel de admin con formulario SMTP, destinatarios y toggles por evento
+- **Nuevo:** `POST /api/admin/send-report` para envío manual del reporte
+- **Fix:** `Body(...)` en endpoint `POST /api/admin/email-config` (405 Method Not Allowed)
+- **Fix:** SMTP sin autenticación (`has_extn("AUTH")`) compatible con servidores relay internos
+
+### v2.1
+- Panel de estadísticas con Chart.js
+- Scheduler de grabación por hora
+- Guardián de disco con limpieza automática
+- RBAC expandido a 4 roles
+
+### v2.0
+- Reescritura completa en FastAPI async
+- Soporte multicanal (hasta 4 DeckLink)
+- Live preview MJPEG
+- Watchdog de procesos FFmpeg
+
+---
+
 <div align="center">
-  <sub>Desarrollado para entornos de transmisión y broadcast SDI continuo · v2.1</sub>
+  <sub>Desarrollado para entornos de transmisión y broadcast SDI continuo · C.A. Venezolana de Televisión · v2.2</sub>
 </div>
