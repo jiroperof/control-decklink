@@ -241,12 +241,12 @@
                 <span id="btnRoleG4Label" class="hidden">Capturadora2.0IV</span>
 
                 <div>
-                    <input type="text" id="user" placeholder="Usuario de acceso"
+                    <input type="text" id="user" placeholder="Usuario de acceso" aria-label="Nombre de usuario" aria-required="true"
                         class="w-full px-6 py-5 rounded-2xl outline-none bg-slate-800/60 border border-slate-600/50 text-white focus:bg-slate-800 focus:border-red-500 focus:ring-4 focus:ring-red-500/20 transition-all text-lg font-medium placeholder:text-slate-500 shadow-inner" autocomplete="username">
                 </div>
 
                 <div class="relative w-full">
-                    <input type="password" id="pass" placeholder="Contraseña de seguridad"
+                    <input type="password" id="pass" placeholder="Contraseña de seguridad" aria-label="Contraseña" aria-required="true" aria-describedby="loginError"
                         class="w-full px-6 py-5 rounded-2xl outline-none bg-slate-800/60 border border-slate-600/50 text-white focus:bg-slate-800 focus:border-red-500 focus:ring-4 focus:ring-red-500/20 transition-all text-lg font-medium placeholder:text-slate-500 shadow-inner" autocomplete="current-password">
                     <button type="button" onmousedown="document.getElementById('pass').type='text'" onmouseup="document.getElementById('pass').type='password'" onmouseleave="document.getElementById('pass').type='password'" ontouchstart="document.getElementById('pass').type='text'" ontouchend="document.getElementById('pass').type='password'" class="absolute right-5 top-1/2 -translate-y-1/2 text-yellow-500/80 hover:text-yellow-400 p-2 cursor-pointer transition-colors" title="Mantener para ver clave">
                         <svg xmlns="http://www.w3.org/2000/svg" class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -259,7 +259,7 @@
                 <p id="loginError"
                     class="hidden text-red-400 text-sm font-semibold bg-red-900/30 border border-red-700/50 rounded-xl py-3 px-5 shadow-inner">
                 </p>
-                <button id="btnLogin" onclick="login()"
+                <button id="btnLogin" onclick="login()" aria-label="Iniciar sesión en el sistema"
                     class="w-full bg-red-600 py-5 rounded-2xl font-black text-base uppercase tracking-widest shadow-lg hover:shadow-red-600/40 hover:bg-red-500 active:scale-95 transition-all mt-4 border border-red-500/50">
                     Iniciar Sesión
                 </button>
@@ -808,7 +808,7 @@
                             <div class="bg-slate-900 h-1.5 rounded-full overflow-hidden border border-slate-700/50">
                                 <div id="ramBar" class="bar h-full bg-blue-500 transition-all duration-500" style="width:0%"></div>
                             </div>
-                            <div id="ramModel" class="text-[8px] text-slate-500 uppercase tracking-widest text-right mt-0.5">Cargando...</div>
+                            <div id="ramModel" class="text-[8px] text-slate-500 uppercase tracking-widest text-right mt-0.5">Esperando datos...</div>
                         </div>
 
                         <!-- GPU -->
@@ -830,7 +830,7 @@
                             <div class="bg-slate-900 h-1.5 rounded-full overflow-hidden border border-slate-700/50">
                                 <div id="vramBar" class="bar h-full bg-red-400 transition-all duration-500" style="width:0%"></div>
                             </div>
-                            <div id="vramModel" class="text-[8px] text-slate-500 uppercase tracking-widest text-right mt-0.5">Cargando...</div>
+                            <div id="vramModel" class="text-[8px] text-slate-500 uppercase tracking-widest text-right mt-0.5">Esperando datos...</div>
                         </div>
 
                         <!-- DISCO -->
@@ -853,7 +853,7 @@
                             </div>
                             <div class="flex justify-between items-center text-[8px] uppercase tracking-widest mt-0.5">
                                 <span id="diskRemaining" class="font-bold text-yellow-400">Calculando...</span>
-                                <div id="diskModel" class="text-slate-500">Cargando...</div>
+                                <div id="diskModel" class="text-slate-500">Analizando...</div>
                             </div>
                         </div>
 
@@ -877,7 +877,10 @@
                             <span id="procCount" class="text-[10px] text-slate-600 font-mono"></span>
                         </div>
                         <div id="procList" class="space-y-1.5 text-[11px] font-mono overflow-y-auto pr-1 custom-scrollbar flex-1">
-                            <p class="text-slate-600">Cargando...</p>
+                            <p class="text-slate-500/60 italic text-[10px] flex items-center gap-1">
+                                <span class="w-1.5 h-1.5 rounded-full bg-slate-600 animate-pulse"></span>
+                                Esperando procesos...
+                            </p>
                         </div>
                     </div>
                 </div>
@@ -903,7 +906,12 @@
                         class="text-[11px] bg-slate-700 hover:bg-slate-600 px-4 py-2 rounded-lg font-bold uppercase transition-all">🔄
                         Actualizar</button>
                 </div>
-                <div id="filesTable" class="text-sm font-mono text-slate-400">Cargando...</div>
+                <div id="filesTable" class="text-sm font-mono text-slate-400">
+                            <div class="flex items-center justify-center gap-3 py-8 text-slate-500">
+                                <div class="w-4 h-4 border-2 border-slate-600 border-t-red-500 rounded-full animate-spin"></div>
+                                <span>Cargando historial de grabaciones...</span>
+                            </div>
+                        </div>
                 </div>
             </div>
         </div>
@@ -1290,7 +1298,10 @@
                         <button onclick="loadAdminUsers()" class="text-[9px] text-slate-500 hover:text-white font-bold uppercase tracking-widest transition-all">🔄 Recargar</button>
                     </div>
                     <div id="adminUsersList" class="space-y-2 max-h-[240px] overflow-y-auto pr-1">
-                        <p class="text-slate-600 text-xs">Cargando...</p>
+                        <p class="text-slate-500/60 text-xs italic flex items-center gap-2">
+                            <span class="w-1.5 h-1.5 rounded-full bg-slate-600 animate-pulse"></span>
+                            Cargando usuarios...
+                        </p>
                     </div>
                 </div>
             </div>
@@ -1341,8 +1352,11 @@
                 </button>
             </div>
             
-            <div id="statsLoader" class="text-center text-slate-400 py-20 font-mono text-sm uppercase tracking-widest animate-pulse">
-                Cargando métricas del sistema...
+            <div id="statsLoader" class="text-center text-slate-400 py-20 font-mono text-sm uppercase tracking-widest">
+                <div class="flex flex-col items-center gap-4">
+                    <div class="w-8 h-8 border-3 border-slate-700 border-t-red-500 rounded-full animate-spin"></div>
+                    <span class="animate-pulse">Cargando métricas del sistema...</span>
+                </div>
             </div>
             
             <div id="statsContent" class="hidden">

@@ -290,7 +290,13 @@
                     <span title="RAM" class="w-16 text-right text-[10px]">🧠${p.mem_mb}MB</span>
                 </div>
             </div>`).join('');
-            } catch (_) { }
+            } catch (e) { 
+                console.error('Error actualizando procesos:', e);
+                const el = document.getElementById('procList');
+                if (el && !el.innerHTML.includes('Error')) {
+                    el.innerHTML = '<p class="text-yellow-500/70 italic text-[10px]">⚠ Sin datos de procesos</p>';
+                }
+            }
         }
 
         // ── Acciones (Por Canal) ──────────────────────────────────────────────────────
@@ -298,6 +304,8 @@
             const bs = document.getElementById('btnStart_' + id), bd = document.getElementById('btnStop_' + id);
             if (bs) bs.disabled = true;
             if (bd) bd.disabled = true;
+            const actionLabel = type === 'start' ? 'Iniciando grabación' : 'Deteniendo grabación';
+            showLoadingOverlay(`${actionLabel} CH${id}...`);
             try {
                 const body = type === 'start' ? JSON.stringify({
                     bitrate: document.getElementById('bitrate_' + id).value,
@@ -320,7 +328,10 @@
                     }
                 }
             } catch (err) { showToast('Fallo Interno UI: ' + err.message, 'error'); console.error(err); }
-            finally { updateStatus(); }
+            finally { 
+                hideLoadingOverlay();
+                updateStatus(); 
+            }
         }
 
         async function setSchedule(id) {
@@ -546,6 +557,7 @@
             const btn = document.getElementById('btnSpecificCleanup');
             const oldText = btn.textContent;
             btn.disabled = true; btn.textContent = 'Borrando…';
+            showLoadingOverlay(`Eliminando videos del ${dateVal}...`);
             try {
                 const res = await fetch(`/api/cleanup/execute?specific_day=${encodeURIComponent(dateVal)}`, {
                     method: 'POST', headers: { 'X-Token': TOKEN }
@@ -553,7 +565,10 @@
                 if (res.ok) showToast(`Limpieza del día ${dateVal} completada.`, 'success');
                 else { const e = await res.json(); showToast('Error: ' + (e.detail || 'Desconocido'), 'error'); }
             } catch (e) { showToast('Error: ' + e, 'error'); }
-            finally { btn.disabled = false; btn.textContent = oldText; }
+            finally { 
+                hideLoadingOverlay();
+                btn.disabled = false; btn.textContent = oldText; 
+            }
         }
 
         async function runManualCleanup() {
@@ -574,6 +589,7 @@
             const btn = document.getElementById('btnManualCleanup');
             const oldText = btn.textContent;
             btn.disabled = true; btn.textContent = 'Borrando Todo...';
+            showLoadingOverlay('Ejecutando limpieza profunda...');
             try {
                 // El backend ejecuta el script con el config actual.
                 // Para asegurar que borre "todo" el pasado, primero guardamos config con 1 dia si es necesario.
@@ -582,7 +598,10 @@
                 const data = await res.json();
                 showToast('Limpieza profunda completada.', 'success');
             } catch (e) { showToast('Error: ' + e, 'error'); }
-            finally { btn.disabled = false; btn.textContent = oldText; }
+            finally { 
+                hideLoadingOverlay();
+                btn.disabled = false; btn.textContent = oldText; 
+            }
         }
 
         function playVideo(encName) {

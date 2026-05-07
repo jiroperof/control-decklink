@@ -156,7 +156,7 @@
                 if (i2) i2.value = d.group2_name;
                 if (i3) i3.value = d.group3_name;
                 if (i4) i4.value = d.group4_name;
-            } catch(_) {}
+            } catch(e) { console.error('Error cargando nombres de grupos:', e); }
         }
 
 

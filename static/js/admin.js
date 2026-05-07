@@ -31,6 +31,7 @@
         }
 
         async function saveEmailConfig() {
+            showLoadingOverlay('Guardando configuración SMTP...');
             const g = (id) => { const el = document.getElementById(id); if (!el) return null; return el.type === 'checkbox' ? el.checked : el.value.trim(); };
             const recipients = (document.getElementById('emailRecipients')?.value || '')
                 .split('\n').map(r => r.trim()).filter(Boolean);
@@ -63,6 +64,7 @@
                     document.getElementById('smtpPass').value = '';
                 } else { const e = await res.json(); showToast('Error: ' + e.detail, 'error'); }
             } catch(_) { showToast('Error de conexión.', 'error'); }
+            finally { hideLoadingOverlay(); }
         }
 
         async function testEmail() {

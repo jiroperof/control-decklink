@@ -19,7 +19,13 @@
                     }
                     const sz = document.getElementById('logSize_' + id);
                     if (sz) sz.textContent = `[${fmtBytes(d.size_bytes)} — ${d.total_lines_shown} líneas]`;
-                } catch (_) { }
+                } catch (e) { 
+                    console.error(`Error cargando log CH${id}:`, e);
+                    const box = document.getElementById('logBox_' + id);
+                    if (box && !box.textContent.includes('Error')) {
+                        box.textContent = `⚠ No se pudo cargar el log de CH${id}. Reintentando...`;
+                    }
+                }
             }));
         }
         function toggleLogAuto() {
