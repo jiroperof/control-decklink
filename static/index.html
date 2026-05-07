@@ -376,6 +376,32 @@
             background: #0f172a !important;
         }
 
+        /* ════════════════════════════════════════════════════════════════
+           LOGIN SCREEN - SIEMPRE MODO OSCURO
+           ════════════════════════════════════════════════════════════════ */
+        /* Forzar fondo oscuro en login sin importar el tema */
+        [data-theme="light"] #loginSection {
+            background: radial-gradient(circle at top right, #162447 0%, #0a0e1a 100%) !important;
+        }
+
+        /* Textos del login en claro (modo oscuro) */
+        [data-theme="light"] #loginSection .text-white,
+        [data-theme="light"] #loginSection .text-slate-100,
+        [data-theme="light"] #loginSection .text-slate-200 {
+            color: white !important;
+        }
+
+        [data-theme="light"] #loginSection .text-slate-300,
+        [data-theme="light"] #loginSection .text-slate-400 {
+            color: #94a3b8 !important;
+        }
+
+        /* Glass panel del login - fondo oscuro translúcido */
+        [data-theme="light"] #loginSection .glass-panel-blur {
+            background: rgba(15, 23, 42, 0.4) !important;
+            border: 1px solid rgba(51, 65, 85, 0.5) !important;
+        }
+
         #mainHeader {
             will-change: transform;
             transform: translateZ(0);
