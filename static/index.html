@@ -188,99 +188,192 @@
         }
 
         /* ════════════════════════════════════════════════════════════════
-           LIGHT THEME - MINIMAL (no rompe colores de botones)
+           LIGHT THEME - PROFESSIONAL VTV
            ════════════════════════════════════════════════════════════════ */
         [data-theme="light"] body {
-            background: linear-gradient(135deg, #e2e8f0 0%, #f1f5f9 100%);
-            color: #0f172a;
+            background: #f8fafc;
+            color: #1e293b;
         }
 
-        /* Solo paneles principales - mantener colores internos */
+        /* Paneles principales - blanco puro con sombra sutil */
         [data-theme="light"] .glass-panel {
-            background: rgba(255, 255, 255, 0.7);
-            border-color: rgba(148, 163, 184, 0.5);
-            box-shadow: 0 10px 30px -10px rgba(0, 0, 0, 0.1);
+            background: #ffffff;
+            border: 1px solid #e2e8f0;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.08), 0 4px 12px rgba(0,0,0,0.05);
         }
 
         [data-theme="light"] .glass-panel-blur {
-            background: rgba(255, 255, 255, 0.65);
+            background: rgba(255, 255, 255, 0.95);
+            border: 1px solid #e2e8f0;
         }
 
-        /* Header - solo fondo y borde */
+        /* Header - blanco limpio */
         [data-theme="light"] #mainHeader {
-            background: rgba(255, 255, 255, 0.85) !important;
-            border-bottom-color: #cbd5e1 !important;
+            background: #ffffff !important;
+            border-bottom: 1px solid #e2e8f0 !important;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.05);
         }
 
-        /* Solo en paneles de fondo claro: cambiar textos blancos a oscuro */
+        /* ════════════════════════════════════════════════════════════════
+           TEXTOS - Todo legible en fondo claro
+           ════════════════════════════════════════════════════════════════ */
+        /* Textos blancos/grises en paneles claros → oscuro */
         [data-theme="light"] .glass-panel .text-white,
-        [data-theme="light"] #mainHeader .text-white,
+        [data-theme="light"] #mainHeader .text-white {
+            color: #0f172a;
+        }
+
         [data-theme="light"] .glass-panel .text-slate-100,
         [data-theme="light"] #mainHeader .text-slate-100,
         [data-theme="light"] .glass-panel .text-slate-200,
-        [data-theme="light"] #mainHeader .text-slate-200,
+        [data-theme="light"] #mainHeader .text-slate-200 {
+            color: #1e293b;
+        }
+
         [data-theme="light"] .glass-panel .text-slate-300,
         [data-theme="light"] #mainHeader .text-slate-300,
         [data-theme="light"] .glass-panel .text-slate-400,
         [data-theme="light"] #mainHeader .text-slate-400 {
-            color: #1e293b !important;
+            color: #334155;
         }
 
-        /* Textos slate-500 y 600 más suaves en paneles claros */
         [data-theme="light"] .glass-panel .text-slate-500,
-        [data-theme="light"] #mainHeader .text-slate-500,
-        [data-theme="light"] .glass-panel .text-slate-600,
-        [data-theme="light"] #mainHeader .text-slate-600 {
-            color: #334155 !important;
-        }
-
-        /* Header text */
-        [data-theme="light"] #mainHeader .text-slate-300,
-        [data-theme="light"] #mainHeader .text-slate-400 {
+        [data-theme="light"] #mainHeader .text-slate-500 {
             color: #475569;
         }
 
-        /* Inputs - solo ajustar para legibilidad */
-        [data-theme="light"] input:not([type="checkbox"]):not([type="radio"]),
-        [data-theme="light"] select {
-            background: #ffffff;
-            border-color: #94a3b8;
-            color: #0f172a;
-        }
-
-        /* Placeholder */
-        [data-theme="light"] input::placeholder,
-        [data-theme="light"] select::placeholder {
+        [data-theme="light"] .glass-panel .text-slate-600,
+        [data-theme="light"] #mainHeader .text-slate-600 {
             color: #64748b;
         }
 
-        /* Sidebar colapsado */
-        [data-theme="light"] #sidebarCollapsed .bg-slate-800\/80 {
-            background: #f1f5f9;
-            border-color: #cbd5e1;
+        /* ════════════════════════════════════════════════════════════════
+           BOTONES - Estilos claros y legibles
+           ════════════════════════════════════════════════════════════════ */
+        /* Botón primario rojo (Iniciar) - SE MANTIENE ROJO */
+        [data-theme="light"] .bg-red-600,
+        [data-theme="light"] .bg-red-500 {
+            background-color: #dc2626 !important;
+            color: white !important;
         }
 
-        /* Botones con fondo gris - forzar texto oscuro */
+        /* Botón secundario (Detener, etc.) - Gris oscuro con texto blanco */
         [data-theme="light"] .bg-slate-700,
-        [data-theme="light"] .bg-slate-700\/50,
-        [data-theme="light"] .bg-slate-700\/40,
+        [data-theme="light"] button[class*="bg-slate-700"] {
+            background-color: #475569 !important;
+            color: white !important;
+            border-color: #334155 !important;
+        }
+
+        [data-theme="light"] .bg-slate-700:hover,
+        [data-theme="light"] button[class*="bg-slate-700"]:hover {
+            background-color: #334155 !important;
+        }
+
+        /* Botones de acción menores - Gris medio con texto oscuro */
         [data-theme="light"] .bg-slate-600,
-        [data-theme="light"] .bg-slate-600\/50,
-        [data-theme="light"] .bg-slate-800\/40,
-        [data-theme="light"] .bg-slate-800\/60,
-        [data-theme="light"] button[class*="bg-slate-700"],
+        [data-theme="light"] .bg-slate-500,
         [data-theme="light"] button[class*="bg-slate-600"] {
-            color: #0f172a !important;
-            background-color: #e2e8f0 !important;
+            background-color: #cbd5e1 !important;
+            color: #1e293b !important;
             border-color: #94a3b8 !important;
         }
 
-        /* Botones hover en modo claro */
-        [data-theme="light"] .bg-slate-700:hover,
         [data-theme="light"] .bg-slate-600:hover,
-        [data-theme="light"] button[class*="bg-slate-700"]:hover,
         [data-theme="light"] button[class*="bg-slate-600"]:hover {
-            background-color: #cbd5e1 !important;
+            background-color: #94a3b8 !important;
+        }
+
+        /* Botones outline/subtle */
+        [data-theme="light"] .bg-slate-800\/60,
+        [data-theme="light"] .bg-slate-800\/40 {
+            background-color: #f1f5f9 !important;
+            color: #334155 !important;
+            border: 1px solid #cbd5e1 !important;
+        }
+
+        /* ════════════════════════════════════════════════════════════════
+           INPUTS - Claros y limpios
+           ════════════════════════════════════════════════════════════════ */
+        [data-theme="light"] input:not([type="checkbox"]):not([type="radio"]),
+        [data-theme="light"] select {
+            background: #ffffff;
+            border: 1px solid #cbd5e1;
+            color: #0f172a;
+        }
+
+        [data-theme="light"] input:focus,
+        [data-theme="light"] select:focus {
+            border-color: #dc2626;
+            box-shadow: 0 0 0 3px rgba(220, 38, 38, 0.15);
+        }
+
+        [data-theme="light"] input::placeholder {
+            color: #94a3b8;
+        }
+
+        /* ════════════════════════════════════════════════════════════════
+           SIDEBAR Y COMPONENTES ESPECÍFICOS
+           ════════════════════════════════════════════════════════════════ */
+        /* Sidebar colapsado */
+        [data-theme="light"] #sidebarCollapsed .bg-slate-800\/80 {
+            background: #ffffff !important;
+            border: 1px solid #e2e8f0;
+        }
+
+        /* Badges de grabación */
+        [data-theme="light"] #badgeCH1,
+        [data-theme="light"] #badgeCH2,
+        [data-theme="light"] #badgeCH3,
+        [data-theme="light"] #badgeCH4 {
+            background: #f1f5f9;
+            border: 1px solid #cbd5e1;
+            color: #64748b;
+        }
+
+        [data-theme="light"] #badgeCH1.recording {
+            background: #dc2626;
+            border-color: #b91c1c;
+            color: white;
+        }
+
+        /* Badges de canal en tarjetas */
+        [data-theme="light"] .text-red-500:not(button):not(a),
+        [data-theme="light"] .text-blue-400:not(button):not(a),
+        [data-theme="light"] .text-green-400:not(button):not(a),
+        [data-theme="light"] .text-yellow-400:not(button):not(a),
+        [data-theme="light"] .text-purple-400:not(button):not(a) {
+            font-weight: 700;
+        }
+
+        /* Tabla de archivos */
+        [data-theme="light"] tbody tr {
+            border-bottom-color: #f1f5f9;
+        }
+
+        [data-theme="light"] tbody tr:hover {
+            background-color: #f8fafc;
+        }
+
+        /* Scrollbar */
+        [data-theme="light"] ::-webkit-scrollbar-track {
+            background: #f1f5f9;
+        }
+
+        [data-theme="light"] ::-webkit-scrollbar-thumb {
+            background: #cbd5e1;
+        }
+
+        [data-theme="light"] ::-webkit-scrollbar-thumb:hover {
+            background: #94a3b8;
+        }
+
+        /* Logs FFmpeg - mantener oscuro */
+        [data-theme="light"] #logBox_1,
+        [data-theme="light"] #logBox_2,
+        [data-theme="light"] #logBox_3,
+        [data-theme="light"] #logBox_4 {
+            background: #0f172a !important;
         }
 
         #mainHeader {
