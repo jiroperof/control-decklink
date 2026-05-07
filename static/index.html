@@ -187,6 +187,89 @@
             border: 1px solid rgba(51, 65, 85, 0.5);
         }
 
+        /* ════════════════════════════════════════════════════════════════
+           LIGHT THEME OVERRIDES
+           ════════════════════════════════════════════════════════════════ */
+        [data-theme="light"] body {
+            background: linear-gradient(135deg, #f1f5f9 0%, #e2e8f0 100%);
+            color: #1e293b;
+        }
+
+        [data-theme="light"] .glass-panel {
+            background: rgba(255, 255, 255, 0.85);
+            border: 1px solid rgba(148, 163, 184, 0.4);
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+        }
+
+        [data-theme="light"] .glass-panel-blur {
+            background: rgba(255, 255, 255, 0.75);
+            border: 1px solid rgba(148, 163, 184, 0.4);
+        }
+
+        [data-theme="light"] #mainHeader {
+            background: rgba(255, 255, 255, 0.9) !important;
+            border-bottom-color: rgba(148, 163, 184, 0.4) !important;
+        }
+
+        [data-theme="light"] .bg-slate-900,
+        [data-theme="light"] .bg-slate-900\/80,
+        [data-theme="light"] .bg-slate-900\/98 {
+            background-color: rgba(241, 245, 249, 0.95) !important;
+        }
+
+        [data-theme="light"] .bg-slate-800\/60,
+        [data-theme="light"] .bg-slate-800\/40 {
+            background-color: rgba(226, 232, 240, 0.8) !important;
+        }
+
+        [data-theme="light"] .text-white,
+        [data-theme="light"] .text-slate-300,
+        [data-theme="light"] .text-slate-400 {
+            color: #334155 !important;
+        }
+
+        [data-theme="light"] .text-slate-500,
+        [data-theme="light"] .text-slate-600 {
+            color: #475569 !important;
+        }
+
+        [data-theme="light"] .border-slate-700,
+        [data-theme="light"] .border-slate-700\/50,
+        [data-theme="light"] .border-slate-600 {
+            border-color: rgba(148, 163, 184, 0.5) !important;
+        }
+
+        [data-theme="light"] input,
+        [data-theme="light"] select {
+            background: #f8fafc !important;
+            border-color: #cbd5e1 !important;
+            color: #1e293b !important;
+        }
+
+        [data-theme="light"] ::-webkit-scrollbar-track {
+            background: #f1f5f9;
+        }
+
+        [data-theme="light"] ::-webkit-scrollbar-thumb {
+            background: #cbd5e1;
+        }
+
+        [data-theme="light"] ::-webkit-scrollbar-thumb:hover {
+            background: #94a3b8;
+        }
+
+        [data-theme="light"] .bg-\[\#0f172a\],
+        [data-theme="light"] .bg-\[\#0a0f1a\] {
+            background-color: #f8fafc !important;
+        }
+
+        [data-theme="light"] #logBox_1,
+        [data-theme="light"] #logBox_2,
+        [data-theme="light"] #logBox_3,
+        [data-theme="light"] #logBox_4 {
+            background-color: #0a0f1a !important;
+        }
+
         #mainHeader {
             will-change: transform;
             transform: translateZ(0);
@@ -321,6 +404,12 @@
                                 <span>Estadísticas</span>
                             </button>
                         </div>
+
+                        <!-- Theme Toggle -->
+                        <button id="themeToggle" onclick="toggleTheme()" class="flex items-center justify-center w-9 h-9 rounded-lg bg-slate-800/60 hover:bg-slate-700/80 border border-slate-700/50 transition-all" title="Cambiar tema">
+                            <svg id="themeIconSun" class="w-5 h-5 text-yellow-400 hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z"></path></svg>
+                            <svg id="themeIconMoon" class="w-5 h-5 text-indigo-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"></path></svg>
+                        </button>
 
                         <!-- User & Session Container (2x1 Grid) -->
                         <div class="flex flex-col justify-center gap-2">
@@ -809,12 +898,64 @@
             </div><!-- /gridCards -->
 
             <!-- Sidebar -->
-            <div class="w-full lg:w-[260px] lg:shrink-0 flex flex-col gap-4">
+            <div id="sidebar" class="w-full lg:w-[260px] lg:shrink-0 flex flex-col gap-4 transition-all duration-300">
+                <!-- Toggle button (visible when expanded) -->
+                <button id="sidebarToggle" onclick="toggleSidebar()" class="hidden lg:flex items-center justify-center gap-2 p-2 rounded-lg bg-slate-800/40 hover:bg-slate-700/60 border border-slate-700/50 transition-all text-[10px] text-slate-400 uppercase font-bold tracking-widest">
+                    <svg id="sidebarIconCollapse" class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 19l-7-7 7-7m8 14l-7-7 7-7"></path></svg>
+                    <svg id="sidebarIconExpand" class="w-4 h-4 hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 5l7 7-7 7M5 5l7 7-7 7"></path></svg>
+                    <span id="sidebarToggleText">Colapsar</span>
+                </button>
+
                 <!-- MÉTRICAS -->
                 <div id="resPanel" class="font-mono h-full">
-                <div class="glass-panel p-6 rounded-3xl shadow-2xl h-full flex flex-col gap-0">
-                    <h3 class="text-xs font-black text-white uppercase mb-5 border-b border-slate-700 pb-2 text-center tracking-widest">
-                        RECURSOS</h3>
+                <div class="glass-panel p-6 rounded-3xl shadow-2xl h-full flex flex-col gap-0 relative">
+                    <!-- Collapsed state: Icon bar -->
+                    <div id="sidebarCollapsed" class="hidden flex-col items-center gap-4 py-2">
+                        <div class="flex flex-col items-center gap-3">
+                            <div class="group relative">
+                                <div class="w-10 h-10 rounded-xl bg-slate-800/80 flex items-center justify-center border border-slate-700/50">
+                                    <span class="text-green-400 text-lg">⚡</span>
+                                </div>
+                                <span id="collapsedCpu" class="absolute -top-1 -right-1 w-5 h-5 bg-green-500 rounded-full text-[9px] flex items-center justify-center text-white font-bold">0</span>
+                                <span class="absolute left-full ml-2 px-2 py-1 bg-slate-800 text-white text-[10px] rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap z-50">CPU</span>
+                            </div>
+                            <div class="group relative">
+                                <div class="w-10 h-10 rounded-xl bg-slate-800/80 flex items-center justify-center border border-slate-700/50">
+                                    <span class="text-blue-400 text-lg">💾</span>
+                                </div>
+                                <span id="collapsedRam" class="absolute -top-1 -right-1 w-5 h-5 bg-blue-500 rounded-full text-[9px] flex items-center justify-center text-white font-bold">0</span>
+                                <span class="absolute left-full ml-2 px-2 py-1 bg-slate-800 text-white text-[10px] rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap z-50">RAM</span>
+                            </div>
+                            <div class="group relative">
+                                <div class="w-10 h-10 rounded-xl bg-slate-800/80 flex items-center justify-center border border-slate-700/50">
+                                    <span class="text-red-400 text-lg">🎬</span>
+                                </div>
+                                <span id="collapsedGpu" class="absolute -top-1 -right-1 w-5 h-5 bg-red-500 rounded-full text-[9px] flex items-center justify-center text-white font-bold">0</span>
+                                <span class="absolute left-full ml-2 px-2 py-1 bg-slate-800 text-white text-[10px] rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap z-50">GPU</span>
+                            </div>
+                            <div class="group relative">
+                                <div class="w-10 h-10 rounded-xl bg-slate-800/80 flex items-center justify-center border border-slate-700/50">
+                                    <span class="text-teal-400 text-lg">💿</span>
+                                </div>
+                                <span id="collapsedDisk" class="absolute -top-1 -right-1 w-5 h-5 bg-green-500 rounded-full text-[9px] flex items-center justify-center text-white font-bold">0</span>
+                                <span class="absolute left-full ml-2 px-2 py-1 bg-slate-800 text-white text-[10px] rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap z-50">Disco</span>
+                            </div>
+                        </div>
+                        <!-- Expand button inline -->
+                        <button onclick="toggleSidebar()" class="mt-4 p-2 rounded-lg bg-slate-800/60 hover:bg-slate-700/80 border border-slate-700/50 transition-all" title="Expandir panel">
+                            <svg class="w-4 h-4 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 5l7 7-7 7M5 5l7 7-7 7"></path></svg>
+                        </button>
+                    </div>
+
+                    <!-- Expanded state: Full panel -->
+                    <div id="sidebarExpanded" class="flex flex-col h-full">
+                    <div class="flex items-center justify-between mb-5 border-b border-slate-700 pb-2">
+                        <h3 class="text-xs font-black text-white uppercase text-center tracking-widest flex-1">RECURSOS</h3>
+                        <!-- Mobile toggle (visible only on small screens) -->
+                        <button onclick="toggleSidebar()" class="lg:hidden p-1 rounded hover:bg-slate-700/50">
+                            <svg class="w-4 h-4 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 19l-7-7 7-7m8 14l-7-7 7-7"></path></svg>
+                        </button>
+                    </div>
 
                     <div class="flex flex-col gap-3">
 
@@ -912,6 +1053,7 @@
                             </p>
                         </div>
                     </div>
+                    </div><!-- /sidebarExpanded -->
                 </div>
             </div>
 

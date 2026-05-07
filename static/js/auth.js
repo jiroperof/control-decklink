@@ -109,8 +109,89 @@
             }
         }, 1000);
 
+        // ── Theme Toggle ───────────────────────────────────────────────────────────
+        const THEME_KEY = 'vtv_theme';
+
+        function initTheme() {
+            const saved = localStorage.getItem(THEME_KEY) || 'dark';
+            document.documentElement.setAttribute('data-theme', saved);
+            updateThemeIcon(saved);
+        }
+
+        function toggleTheme() {
+            const current = document.documentElement.getAttribute('data-theme') || 'dark';
+            const next = current === 'dark' ? 'light' : 'dark';
+            document.documentElement.setAttribute('data-theme', next);
+            localStorage.setItem(THEME_KEY, next);
+            updateThemeIcon(next);
+            showToast(next === 'light' ? '☀️ Tema claro activado' : '🌙 Tema oscuro activado', 'info');
+        }
+
+        function updateThemeIcon(theme) {
+            const sun = document.getElementById('themeIconSun');
+            const moon = document.getElementById('themeIconMoon');
+            if (sun && moon) {
+                sun.classList.toggle('hidden', theme === 'dark');
+                moon.classList.toggle('hidden', theme === 'light');
+            }
+        }
+
+        // ── Sidebar Toggle ─────────────────────────────────────────────────────────
+        const SIDEBAR_KEY = 'vtv_sidebar_collapsed';
+        let _sidebarCollapsed = localStorage.getItem(SIDEBAR_KEY) === 'true';
+
+        function initSidebar() {
+            _sidebarCollapsed = localStorage.getItem(SIDEBAR_KEY) === 'true';
+            updateSidebarState();
+        }
+
+        function toggleSidebar() {
+            _sidebarCollapsed = !_sidebarCollapsed;
+            localStorage.setItem(SIDEBAR_KEY, _sidebarCollapsed);
+            updateSidebarState();
+        }
+
+        function updateSidebarState() {
+            const sidebar = document.getElementById('sidebar');
+            const expanded = document.getElementById('sidebarExpanded');
+            const collapsed = document.getElementById('sidebarCollapsed');
+            const toggleBtn = document.getElementById('sidebarToggle');
+            const iconCollapse = document.getElementById('sidebarIconCollapse');
+            const iconExpand = document.getElementById('sidebarIconExpand');
+            const toggleText = document.getElementById('sidebarToggleText');
+
+            if (!sidebar || !expanded || !collapsed) return;
+
+            if (_sidebarCollapsed) {
+                // Collapsed state
+                sidebar.classList.remove('lg:w-[260px]');
+                sidebar.classList.add('lg:w-[80px]');
+                expanded.classList.add('hidden');
+                collapsed.classList.remove('hidden');
+                collapsed.classList.add('flex');
+                if (toggleBtn) toggleBtn.classList.add('hidden');
+            } else {
+                // Expanded state
+                sidebar.classList.remove('lg:w-[80px]');
+                sidebar.classList.add('lg:w-[260px]');
+                expanded.classList.remove('hidden');
+                collapsed.classList.add('hidden');
+                collapsed.classList.remove('flex');
+                if (toggleBtn) toggleBtn.classList.remove('hidden');
+            }
+
+            // Update toggle button icons (if visible)
+            if (iconCollapse && iconExpand && toggleText) {
+                iconCollapse.classList.toggle('hidden', _sidebarCollapsed);
+                iconExpand.classList.toggle('hidden', !_sidebarCollapsed);
+                toggleText.textContent = _sidebarCollapsed ? 'Expandir' : 'Colapsar';
+            }
+        }
+
         // ── Init ──────────────────────────────────────────────────────────────────────
         document.addEventListener("DOMContentLoaded", () => {
+            initTheme();
+            initSidebar();
             const t = localStorage.getItem(TOKEN_KEY);
             const exp = parseInt(localStorage.getItem(EXPIRE_KEY) || '0', 10);
             if (t && Date.now() < exp) { TOKEN = t; showDashboard(); }

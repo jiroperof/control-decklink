@@ -116,6 +116,16 @@
                 updateBar('gpu', d.gpu, 'gpu'); updateBar('vram', d.vram, 'vram');
                 updateBar('disk', d.disk, 'disk');
 
+                // Actualizar métricas en sidebar colapsado
+                const cc = document.getElementById('collapsedCpu');
+                const cr = document.getElementById('collapsedRam');
+                const cg = document.getElementById('collapsedGpu');
+                const cd = document.getElementById('collapsedDisk');
+                if (cc) cc.textContent = Math.round(d.cpu);
+                if (cr) cr.textContent = Math.round(d.ram);
+                if (cg) cg.textContent = Math.round(d.gpu);
+                if (cd) cd.textContent = Math.round(100 - d.disk); // Show free %
+
                 // Lógica de Tiempo Restante Predictivo
                 const freeGB = d.disk_total * (1 - (d.disk / 100));
                 let activeBitrateMbps = 0;
