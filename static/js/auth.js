@@ -142,7 +142,7 @@
 
         function initSidebar() {
             _sidebarCollapsed = localStorage.getItem(SIDEBAR_KEY) === 'true';
-            updateSidebarState();
+            updateSidebarState(false);
         }
 
         function toggleSidebar() {
@@ -151,7 +151,7 @@
             updateSidebarState();
         }
 
-        function updateSidebarState() {
+        function updateSidebarState(animate = true) {
             const sidebar = document.getElementById('sidebar');
             const expanded = document.getElementById('sidebarExpanded');
             const collapsed = document.getElementById('sidebarCollapsed');
@@ -163,20 +163,49 @@
             if (!sidebar || !expanded || !collapsed) return;
 
             if (_sidebarCollapsed) {
-                // Collapsed state
                 sidebar.classList.remove('lg:w-[260px]');
                 sidebar.classList.add('lg:w-[80px]');
-                expanded.classList.add('hidden');
-                collapsed.classList.remove('hidden');
-                collapsed.classList.add('flex');
+
+                // Animar salida del panel expandido
+                expanded.classList.add('hiding');
+                setTimeout(() => {
+                    expanded.classList.add('hidden');
+                    expanded.classList.remove('hiding');
+
+                    // Animar entrada del panel colapsado
+                    collapsed.classList.add('start-hidden');
+                    collapsed.classList.remove('hidden');
+                    collapsed.classList.add('flex');
+                    requestAnimationFrame(() => {
+                        collapsed.classList.remove('start-hidden');
+                        collapsed.classList.add('showing');
+                        setTimeout(() => collapsed.classList.remove('showing'), 300);
+                    });
+                }, animate ? 220 : 0);
+
                 if (toggleBtn) toggleBtn.classList.add('hidden');
             } else {
-                // Expanded state
                 sidebar.classList.remove('lg:w-[80px]');
                 sidebar.classList.add('lg:w-[260px]');
+
+                // Animar salida del panel colapsado
+                collapsed.classList.add('hiding');
+                setTimeout(() => {
+                    collapsed.classList.add('hidden');
+                    collapsed.classList.remove('flex');
+                    collapsed.classList.remove('hiding');
+
+                    // Animar entrada del panel expandido
+                    expanded.classList.add('start-hidden');
+                    expanded.classList.remove('hidden');
+                    requestAnimationFrame(() => {
+                        expanded.classList.remove('start-hidden');
+                        expanded.classList.add('showing');
+                        setTimeout(() => expanded.classList.remove('showing'), 300);
+                    });
+                }, animate ? 220 : 0);
+
                 expanded.classList.remove('hidden');
-                collapsed.classList.add('hidden');
-                collapsed.classList.remove('flex');
                 if (toggleBtn) toggleBtn.classList.remove('hidden');
             }
 
