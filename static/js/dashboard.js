@@ -513,7 +513,7 @@
                 <td class="py-2 pr-4 text-slate-400 text-right whitespace-nowrap">${fmtIso(f.created)}</td>
                 <td class="py-2 text-right whitespace-nowrap flex gap-1 justify-end">
                     <button onclick="playVideo('${enc}')" class="bg-blue-600/20 hover:bg-blue-600 text-blue-400 hover:text-white px-2 py-1 rounded transition-colors" title="Reproducir">▶️</button>
-                    <a href="/api/files/download?file=${enc}&token=${TOKEN}" class="bg-green-600/20 hover:bg-green-600 text-green-400 hover:text-white px-2 py-1 rounded transition-colors" title="Descargar" download>⬇️</a>
+                    <button onclick="downloadVideo('${enc}')" class="bg-green-600/20 hover:bg-green-600 text-green-400 hover:text-white px-2 py-1 rounded transition-colors" title="Descargar">⬇️</button>
                     ${isAdmin ? `<button onclick="deleteVideo('${enc}')" class="bg-red-600/20 hover:bg-red-600 text-red-400 hover:text-white px-2 py-1 rounded transition-colors" title="Eliminar"><svg class="w-4 h-4 inline-block" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg></button>` : ''}
                 </td>
             </tr>`}).join('')}
@@ -715,7 +715,7 @@
                 if (!chk.ok) { showToast('Contraseña incorrecta.', 'error'); return; }
             } catch (_) { showToast('Error de conexión al verificar contraseña.', 'error'); return; }
 
-            if (!confirm(`¿Borrar todos los videos del día ${dateVal}?`)) return;
+            if (!window.confirm(`¿Borrar todos los videos del día ${dateVal}? Esta acción no se puede deshacer.`)) return;
             const btn = document.getElementById('btnSpecificCleanup');
             const oldText = btn.textContent;
             btn.disabled = true; btn.textContent = 'Borrando…';
@@ -747,7 +747,7 @@
                 if (!chk.ok) { showToast('Contraseña incorrecta.', 'error'); return; }
             } catch (_) { showToast('Error de conexión al verificar contraseña.', 'error'); return; }
 
-            if (!confirm('¿Estás seguro de querer borrar todos los videos anteriores a hoy?')) return;
+            if (!window.confirm('¿Borrar TODOS los videos anteriores a hoy? Esta acción no se puede deshacer.')) return;
             const btn = document.getElementById('btnManualCleanup');
             const oldText = btn.textContent;
             btn.disabled = true; btn.textContent = 'Borrando Todo...';
@@ -786,18 +786,52 @@
             modal.classList.add('hidden');
         }
 
-        async function deleteVideo(encName) {
-            const pass = prompt(`Para borrar este archivo, ingresa clave de Operador/Admin:`);
-            if (!pass) return;
+        async function downloadVideo(encName) {
+            const decName = decodeURIComponent(encName);
+            try {
+                const res = await fetch(`/api/files/download?file=${encName}`, {
+                    headers: { 'X-Token': TOKEN }
+                });
+                if (!res.ok) { showToast('Error al descargar el archivo.', 'error'); return; }
+                const blob = await res.blob();
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url; a.download = decName;
+                document.body.appendChild(a); a.click();
+                document.body.removeChild(a);
+                setTimeout(() => URL.revokeObjectURL(url), 10000);
+            } catch (_) { showToast('Error de conexión al descargar.', 'error'); }
+        }
+
+        let _pendingDeleteFile = null;
+        function deleteVideo(encName) {
+            _pendingDeleteFile = encName;
+            const modal = document.getElementById('modalDeleteFile');
+            const nameEl = document.getElementById('deleteFileName');
+            if (nameEl) nameEl.textContent = decodeURIComponent(encName);
+            const passEl = document.getElementById('deleteFilePass');
+            if (passEl) passEl.value = '';
+            if (modal) { modal.classList.remove('hidden'); setTimeout(() => passEl && passEl.focus(), 100); }
+        }
+        function closeDeleteModal() {
+            _pendingDeleteFile = null;
+            const modal = document.getElementById('modalDeleteFile');
+            if (modal) modal.classList.add('hidden');
+        }
+        async function confirmDeleteVideo() {
+            if (!_pendingDeleteFile) return;
+            const passEl = document.getElementById('deleteFilePass');
+            const pass = passEl ? passEl.value : '';
+            if (!pass) { showToast('Ingresa la contraseña para confirmar.', 'warning'); return; }
             try {
                 const res = await fetch('/api/files/delete', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json', 'X-Token': TOKEN },
-                    body: JSON.stringify({ filename: decodeURIComponent(encName), password: pass })
+                    body: JSON.stringify({ filename: decodeURIComponent(_pendingDeleteFile), password: pass })
                 });
                 if (res.ok) {
                     showToast('Archivo eliminado exitosamente.', 'success');
-                    loadFiles();
+                    closeDeleteModal(); loadFiles();
                 } else {
                     const e = await res.json();
                     showToast('Error borrando archivo: ' + e.detail, 'error');

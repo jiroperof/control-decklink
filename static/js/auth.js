@@ -103,8 +103,8 @@
         setInterval(() => {
             if (!TOKEN) return;
             idleSeconds++;
-            if (idleSeconds >= 180) { // 3 minutos
-                showToast("Sesión expirada por inactividad (3 minutos).", "warning");
+            if (idleSeconds >= 1200) { // 20 minutos
+                showToast("Sesión expirada por inactividad (20 minutos).", "warning");
                 logout();
             }
         }, 1000);
@@ -217,8 +217,7 @@
             }
         }
 
-        // ── Init ──────────────────────────────────────────────────────────────────────
-        // ── Estado de canales en login (sin token, usa /health) ──────────────────────
+        // ── Init / Estado de canales en login (sin token, usa /health) ───────────────
         let _loginStatusTimer = null;
 
         async function updateLoginChannelStatus() {
@@ -377,9 +376,7 @@
             SESSION_ID = localStorage.getItem(SESSION_KEY) || '';
             USER_CHANNEL = localStorage.getItem(CHANNEL_KEY) || null;
             document.getElementById('roleBadge').textContent = USERNAME;
-            // Mostrar IP dinámica del host actual en vez de una IP hardcodeada
-            const ipLabel = document.getElementById('networkIpLabel');
-            if (ipLabel) ipLabel.textContent = 'IP: ' + (window.location.hostname || 'localhost');
+            if (_loginStatusTimer) { clearInterval(_loginStatusTimer); _loginStatusTimer = null; }
             restrictUIByRole();
             renderAllChannels();
             startUpdates();
@@ -423,12 +420,12 @@
 
                 if (!res.ok) {
                     const e = await res.json();
-                    err.textContent = res.status === 429 ? "Bloqueo por seguridad (Intenta en 5 min)." : e.detail; 
+                    const et = document.getElementById('loginErrorText');
+                    const msg = res.status === 429 ? "Bloqueo por seguridad (Intenta en 5 min)." : (e.detail || 'Error desconocido');
+                    if (et) et.textContent = msg; else err.textContent = msg;
                     err.classList.remove('hidden');
                     btn.disabled = false; btn.innerHTML = 'Iniciar Sesión';
-                    if(res.status === 429) {
-                        playErrorBeep();
-                    }
+                    if(res.status === 429) playErrorBeep();
                     return;
                 }
                 const data = await res.json();
