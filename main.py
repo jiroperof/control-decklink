@@ -1,4 +1,4 @@
-import subprocess, os, re, signal, asyncio, logging, psutil, time, json, shlex, uuid, secrets, smtplib, base64 as _b64
+import subprocess, os, re, signal, asyncio, logging, psutil, time, json, shlex, uuid, secrets, smtplib, socket, base64 as _b64
 from logging.handlers import RotatingFileHandler
 from datetime import datetime, date, timedelta
 from datetime import time as dtime
@@ -645,7 +645,7 @@ async def system_monitor_task():
             # IP de la interfaz eno1
             try:
                 addrs = psutil.net_if_addrs().get('eno1', [])
-                server_ip = next((a.address for a in addrs if a.family.name in ('AF_INET', '2')), "")
+                server_ip = next((a.address for a in addrs if a.family == socket.AF_INET), "")
             except Exception:
                 server_ip = cached_metrics.get("server_ip", "")
 
