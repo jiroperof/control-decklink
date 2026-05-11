@@ -129,6 +129,8 @@ if _missing:
 AUTO_RESTART   = os.environ.get("AUTO_RESTART",   "false").lower() == "true"
 ALLOWED_ORIGINS = [o.strip() for o in
     os.environ.get("ALLOWED_ORIGINS","http://localhost:8000,http://127.0.0.1:8000").split(",") if o.strip()]
+SMTP_PASS_ENV  = os.environ.get("SMTP_PASS", "")
+CAPTURAS_PATH  = os.environ.get("CAPTURAS_PATH", "/home/administrador/Capturas")
 
 # ── Usuarios y roles ──────────────────────────────────────────────────────────
 USERS = {
@@ -625,7 +627,7 @@ async def system_monitor_task():
         await asyncio.sleep(2)
 
 async def disk_cleanup_task():
-    """Tarea en segundo plano para verificar espacio en disco y limpiar si es necesario (cada 2 minutos)"""
+    """Tarea en segundo plano para verificar espacio en disco de Capturas y limpiar si es necesario (cada 2 minutos)"""
     logger.info("[DISK-CLEANUP] Iniciando tarea de monitoreo de espacio en disco.")
     while True:
         try:
@@ -633,7 +635,10 @@ async def disk_cleanup_task():
             trigger = int((cfg.get("disk_guard") or {}).get("trigger_percent", 90))
             trigger = min(99, max(1, trigger))
 
-            dsk = psutil.disk_usage("/")
+            try:
+                dsk = psutil.disk_usage(CAPTURAS_PATH)
+            except Exception:
+                dsk = psutil.disk_usage("/")
             if dsk.percent >= trigger:
                 script_path = os.path.join(_BASE_DIR, "scripts", "cleanup.sh")
                 proc = await asyncio.create_subprocess_exec(
@@ -647,10 +652,10 @@ async def disk_cleanup_task():
                     logger.warning(f"[DISK-CLEANUP] Limpieza automática ejecutada:\n{output}")
                     cfg_e = await asyncio.to_thread(_load_email_config_sync)
                     if cfg_e.get("notify_disk_guard"):
-                        dsk = psutil.disk_usage("/")
                         asyncio.create_task(send_email(
                             "disk_guard", "Limpieza automática de disco ejecutada",
-                            ["El disco superó el umbral configurado y se ejecutó limpieza automática.",
+                            ["El disco de Capturas superó el umbral configurado y se ejecutó limpieza automática.",
+                             f"Disco: {CAPTURAS_PATH}",
                              f"Uso actual: {dsk.percent:.1f}%",
                              f"Libre: {dsk.free//(1024**3)} GB",
                              f"Hora: {datetime.now().strftime('%d/%m/%Y %H:%M:%S')}"],
@@ -707,6 +712,10 @@ async def _build_and_send_daily_report(turno: str = "mañana"):
     try:
         now = datetime.now()
         dsk = psutil.disk_usage("/")
+        try:
+            dsk_cap = psutil.disk_usage(CAPTURAS_PATH)
+        except Exception:
+            dsk_cap = dsk
         mem = psutil.virtual_memory()
         cpu = psutil.cpu_percent(interval=1)
 
@@ -722,11 +731,14 @@ async def _build_and_send_daily_report(turno: str = "mañana"):
 
         # ── Colores según umbral ──────────────────────────────────────────────
         disk_col = "#f87171" if dsk.percent >= 85 else "#fbbf24" if dsk.percent >= 65 else "#4ade80"
+        cap_col  = "#f87171" if dsk_cap.percent >= 85 else "#fbbf24" if dsk_cap.percent >= 65 else "#4ade80"
         cpu_col  = "#f87171" if cpu >= 90 else "#fbbf24" if cpu >= 70 else "#4ade80"
         ram_col  = "#f87171" if mem.percent >= 90 else "#fbbf24" if mem.percent >= 70 else "#60a5fa"
 
         disk_free_gb  = round(dsk.free  / (1024**3), 1)
         disk_total_gb = round(dsk.total / (1024**3), 1)
+        cap_free_gb   = round(dsk_cap.free  / (1024**3), 1)
+        cap_total_gb  = round(dsk_cap.total / (1024**3), 1)
         ram_used_gb   = round((mem.total - mem.available) / (1024**3), 1)
         ram_total_gb  = round(mem.total / (1024**3), 1)
 
@@ -870,6 +882,14 @@ async def _build_and_send_daily_report(turno: str = "mañana"):
           {_bar(dsk.percent, disk_col)}
           <div style="color:{disk_col};font-family:monospace;font-size:22px;font-weight:900;margin-top:4px;">{dsk.percent:.1f}%</div>
           <div style="color:#475569;font-size:10px;font-family:monospace;">{disk_free_gb} GB libres de {disk_total_gb} GB</div>
+        </td>
+      </tr>
+      <tr>
+        <td colspan="3" style="padding-top:16px;vertical-align:top;">
+          <div style="color:#64748b;font-size:9px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;">Disco de Capturas (Hitachi 1.8TB)</div>
+          {_bar(dsk_cap.percent, cap_col)}
+          <div style="color:{cap_col};font-family:monospace;font-size:22px;font-weight:900;margin-top:4px;">{dsk_cap.percent:.1f}%</div>
+          <div style="color:#475569;font-size:10px;font-family:monospace;">{cap_free_gb} GB libres de {cap_total_gb} GB &mdash; {CAPTURAS_PATH}</div>
         </td>
       </tr>
     </table>
@@ -1439,12 +1459,16 @@ async def disk_guard_task():
                     logger.warning(f"[DISK_GUARD] Liberando espacio: borrados {n_del} archivo(s). Disco={result.get('disk_percent')}%")
                     cfg_e = await asyncio.to_thread(_load_email_config_sync)
                     if cfg_e.get("notify_disk_guard"):
-                        dsk = psutil.disk_usage("/")
+                        try:
+                            dsk_cap = psutil.disk_usage(CAPTURAS_PATH)
+                        except Exception:
+                            dsk_cap = psutil.disk_usage("/")
                         asyncio.create_task(send_email(
                             "disk_guard", f"Guardián de disco eliminó {n_del} archivo(s)",
-                            [f"Archivos eliminados: {n_del}",
-                             f"Uso del disco: {result.get('disk_percent')}% → {dsk.percent:.1f}%",
-                             f"Libre: {dsk.free//(1024**3)} GB",
+                            [f"Disco: {CAPTURAS_PATH}",
+                             f"Archivos eliminados: {n_del}",
+                             f"Uso del disco: {result.get('disk_percent')}% → {dsk_cap.percent:.1f}%",
+                             f"Libre: {dsk_cap.free//(1024**3)} GB",
                              f"Hora: {datetime.now().strftime('%d/%m/%Y %H:%M:%S')}"],
                             cooldown_key="disk_guard_action"
                         ))
@@ -1456,7 +1480,7 @@ async def disk_guard_task():
 # ── Ruta base de grabaciones ──────────────────────────────────────────────────
 def _resolve_dest_path() -> Path:
     """Determina la ruta base de grabaciones a partir de la configuración activa de cada canal."""
-    dest = "/home/administrador/Capturas"
+    dest = CAPTURAS_PATH
     for mgr in managers.values():
         if mgr.config and "dest_path" in mgr.config:
             dest = mgr.config["dest_path"]
@@ -1503,7 +1527,7 @@ DEFAULT_EMAIL_CONFIG = {
     "smtp_host": "vtvcorreo.vtv.gob.ve",
     "smtp_port": 25,
     "smtp_user": "capturadora@vtv.gob.ve",
-    "smtp_pass": "V12345678",
+    "smtp_pass": SMTP_PASS_ENV,
     "smtp_tls": False,
     "from_addr": "capturadora@vtv.gob.ve",
     "from_name": "Capturadora 2.0 VTV",
@@ -1532,6 +1556,9 @@ def _load_email_config_sync() -> dict:
             cfg.update(loaded)
     except Exception as e:
         logger.error(f"[EMAIL] Error leyendo email_config: {e}")
+    # La variable de entorno siempre tiene prioridad sobre el archivo guardado
+    if SMTP_PASS_ENV:
+        cfg["smtp_pass"] = SMTP_PASS_ENV
     return cfg
 
 def _save_email_config_sync(cfg: dict) -> None:
