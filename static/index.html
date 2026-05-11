@@ -1042,39 +1042,41 @@
                 <div id="resPanel" class="font-mono h-full">
                 <div class="glass-panel p-6 rounded-3xl shadow-2xl h-full flex flex-col gap-0 relative">
                     <!-- Collapsed state: Icon bar -->
-                    <div id="sidebarCollapsed" class="hidden flex-col items-center gap-4 py-2">
-                        <div class="flex flex-col items-center gap-3">
-                            <div class="group relative">
-                                <div class="w-10 h-10 rounded-xl bg-slate-800/80 flex items-center justify-center border border-slate-700/50">
-                                    <span class="text-green-400 text-lg">⚡</span>
-                                </div>
-                                <span id="collapsedCpu" class="absolute -top-1 -right-1 w-5 h-5 bg-green-500 rounded-full text-[9px] flex items-center justify-center text-white font-bold">0</span>
-                                <span class="absolute left-full ml-2 px-2 py-1 bg-slate-800 text-white text-[10px] rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap z-50">CPU</span>
+                    <div id="sidebarCollapsed" class="hidden flex-col items-center gap-2 py-2 w-full">
+                        <!-- CPU -->
+                        <div class="flex flex-col items-center gap-0.5 w-full">
+                            <div class="relative w-12 h-12 rounded-xl bg-slate-800/80 flex items-center justify-center border border-slate-700/50">
+                                <span class="text-green-400 text-xl">⚡</span>
+                                <span id="collapsedCpu" class="absolute -top-1 -right-1 min-w-[20px] h-5 bg-green-500 rounded-full text-[9px] flex items-center justify-center text-white font-black px-1">0</span>
                             </div>
-                            <div class="group relative">
-                                <div class="w-10 h-10 rounded-xl bg-slate-800/80 flex items-center justify-center border border-slate-700/50">
-                                    <span class="text-blue-400 text-lg">💾</span>
-                                </div>
-                                <span id="collapsedRam" class="absolute -top-1 -right-1 w-5 h-5 bg-blue-500 rounded-full text-[9px] flex items-center justify-center text-white font-bold">0</span>
-                                <span class="absolute left-full ml-2 px-2 py-1 bg-slate-800 text-white text-[10px] rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap z-50">RAM</span>
-                            </div>
-                            <div class="group relative">
-                                <div class="w-10 h-10 rounded-xl bg-slate-800/80 flex items-center justify-center border border-slate-700/50">
-                                    <span class="text-red-400 text-lg">🎬</span>
-                                </div>
-                                <span id="collapsedGpu" class="absolute -top-1 -right-1 w-5 h-5 bg-red-500 rounded-full text-[9px] flex items-center justify-center text-white font-bold">0</span>
-                                <span class="absolute left-full ml-2 px-2 py-1 bg-slate-800 text-white text-[10px] rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap z-50">GPU</span>
-                            </div>
-                            <div class="group relative">
-                                <div class="w-10 h-10 rounded-xl bg-slate-800/80 flex items-center justify-center border border-slate-700/50">
-                                    <span class="text-teal-400 text-lg">💿</span>
-                                </div>
-                                <span id="collapsedDisk" class="absolute -top-1 -right-1 w-5 h-5 bg-green-500 rounded-full text-[9px] flex items-center justify-center text-white font-bold">0</span>
-                                <span class="absolute left-full ml-2 px-2 py-1 bg-slate-800 text-white text-[10px] rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap z-50">Disco</span>
-                            </div>
+                            <span class="text-[8px] font-black text-slate-400 uppercase tracking-widest">CPU</span>
                         </div>
-                        <!-- Expand button inline -->
-                        <button onclick="toggleSidebar()" class="mt-4 p-2 rounded-lg bg-slate-800/60 hover:bg-slate-700/80 border border-slate-700/50 transition-all" title="Expandir panel">
+                        <!-- RAM -->
+                        <div class="flex flex-col items-center gap-0.5 w-full">
+                            <div class="relative w-12 h-12 rounded-xl bg-slate-800/80 flex items-center justify-center border border-slate-700/50">
+                                <span class="text-blue-400 text-xl">💾</span>
+                                <span id="collapsedRam" class="absolute -top-1 -right-1 min-w-[20px] h-5 bg-blue-500 rounded-full text-[9px] flex items-center justify-center text-white font-black px-1">0</span>
+                            </div>
+                            <span class="text-[8px] font-black text-slate-400 uppercase tracking-widest">RAM</span>
+                        </div>
+                        <!-- GPU -->
+                        <div class="flex flex-col items-center gap-0.5 w-full">
+                            <div class="relative w-12 h-12 rounded-xl bg-slate-800/80 flex items-center justify-center border border-slate-700/50">
+                                <span class="text-red-400 text-xl">🎬</span>
+                                <span id="collapsedGpu" class="absolute -top-1 -right-1 min-w-[20px] h-5 bg-red-500 rounded-full text-[9px] flex items-center justify-center text-white font-black px-1">0</span>
+                            </div>
+                            <span class="text-[8px] font-black text-slate-400 uppercase tracking-widest">GPU</span>
+                        </div>
+                        <!-- DISCO -->
+                        <div class="flex flex-col items-center gap-0.5 w-full">
+                            <div class="relative w-12 h-12 rounded-xl bg-slate-800/80 flex items-center justify-center border border-slate-700/50">
+                                <span class="text-teal-400 text-xl">💿</span>
+                                <span id="collapsedDisk" class="absolute -top-1 -right-1 min-w-[20px] h-5 bg-teal-500 rounded-full text-[9px] flex items-center justify-center text-white font-black px-1">0</span>
+                            </div>
+                            <span class="text-[8px] font-black text-slate-400 uppercase tracking-widest">DISCO</span>
+                        </div>
+                        <!-- Expand button -->
+                        <button onclick="toggleSidebar()" class="mt-2 w-12 h-8 rounded-lg bg-slate-800/60 hover:bg-slate-700/80 border border-slate-700/50 transition-all flex items-center justify-center" title="Expandir panel">
                             <svg class="w-4 h-4 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 5l7 7-7 7M5 5l7 7-7 7"></path></svg>
                         </button>
                     </div>
