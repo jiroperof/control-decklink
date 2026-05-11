@@ -218,7 +218,7 @@
         }
 
         // ── Init ──────────────────────────────────────────────────────────────────────
-        // ── Estado de canales en login (sin token, usa /health) ──────────────
+        // ── Estado de canales en login (sin token, usa /health) ──────────────────────
         let _loginStatusTimer = null;
 
         async function updateLoginChannelStatus() {
@@ -230,14 +230,14 @@
                 ['1','2','3','4'].forEach(id => {
                     const card = document.getElementById('loginCh' + id);
                     if (!card) return;
-                    const dot  = card.querySelector('.login-ch-dot');
-                    const lbl  = card.querySelector('.login-ch-lbl');
+                    const dot = card.firstElementChild;
+                    const lbl = card.lastElementChild;
                     if (rec[id]) {
-                        if (dot) { dot.className = 'login-ch-dot w-1.5 h-1.5 rounded-full bg-red-500 animate-pulse inline-block'; }
-                        if (lbl) { lbl.textContent = 'GRABANDO'; lbl.className = 'login-ch-lbl text-[8px] font-bold text-red-400 uppercase tracking-wide'; }
+                        if (dot) { dot.classList.remove('bg-slate-600','bg-slate-700'); dot.classList.add('bg-red-500','animate-pulse'); }
+                        if (lbl) { lbl.textContent = 'GRABANDO'; lbl.style.color = '#f87171'; }
                     } else {
-                        if (dot) { dot.className = 'login-ch-dot w-1.5 h-1.5 rounded-full bg-slate-700 inline-block'; }
-                        if (lbl) { lbl.textContent = 'EN ESPERA'; lbl.className = 'login-ch-lbl text-[8px] font-bold text-slate-700 uppercase tracking-wide'; }
+                        if (dot) { dot.classList.remove('bg-red-500','animate-pulse'); dot.classList.add('bg-slate-600'); }
+                        if (lbl) { lbl.textContent = 'EN ESPERA'; lbl.style.color = ''; }
                     }
                 });
             } catch (_) {}
@@ -260,6 +260,7 @@
                 if (p) {
                     p.addEventListener('keydown', e => { if (e.key === 'Enter') login(); });
                 }
+                // Iniciar polling de estado de canales en login
                 updateLoginChannelStatus();
                 _loginStatusTimer = setInterval(updateLoginChannelStatus, 3000);
             }
@@ -397,6 +398,10 @@
             document.getElementById('loginSection').classList.remove('hidden');
             document.getElementById('mainSection').classList.add('hidden');
             setTimeout(() => { if (u) u.focus(); }, 100);
+            // Reiniciar polling de estado de canales
+            if (_loginStatusTimer) clearInterval(_loginStatusTimer);
+            updateLoginChannelStatus();
+            _loginStatusTimer = setInterval(updateLoginChannelStatus, 3000);
         }
         // ── Auth ────────────────────────────────────────────────────────────────────
         async function login(force = false) {
