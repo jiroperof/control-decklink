@@ -115,6 +115,7 @@
                 updateBar('cpu', d.cpu, 'cpu'); updateBar('ram', d.ram, 'ram');
                 updateBar('gpu', d.gpu, 'gpu'); updateBar('vram', d.vram, 'vram');
                 updateBar('disk', d.disk, 'disk');
+                updateBar('disk2', d.disk2 ?? 0, 'disk2');
 
                 // Actualizar métricas en sidebar colapsado
                 const cc = document.getElementById('collapsedCpu');
@@ -126,10 +127,16 @@
                 if (cr) cr.textContent = Math.round(d.ram);
                 if (cg) cg.textContent = Math.round(d.gpu);
                 if (cv) cv.textContent = Math.round(d.vram);
-                if (cd) cd.textContent = Math.round(100 - d.disk); // Show free %
+                if (cd) cd.textContent = Math.round(100 - (d.disk2 ?? d.disk)); // % libre disco capturas
 
-                // Lógica de Tiempo Restante Predictivo
-                const freeGB = d.disk_total * (1 - (d.disk / 100));
+                // Actualizar modelos de discos
+                const dM = document.getElementById('diskModel');
+                if (dM) dM.textContent = (d.disk_total || '0') + ' GB';
+                const d2M = document.getElementById('disk2Model');
+                if (d2M) d2M.textContent = (d.disk2_free ?? 0) + ' GB libres / ' + (d.disk2_total ?? 0) + ' GB';
+
+                // Lógica de Tiempo Restante Predictivo (basado en disco de Capturas)
+                const freeGB = d.disk2_free ?? (d.disk_total * (1 - (d.disk / 100)));
                 let activeBitrateMbps = 0;
                 let fallbackBitrate = 15;
                 ['1', '2', '3', '4'].forEach(id => {
@@ -162,7 +169,6 @@
                 const rM = document.getElementById('ramModel'); if (rM) rM.textContent = (d.ram_total || '0') + ' GB';
                 const gM = document.getElementById('gpuModel'); if (gM) gM.textContent = d.gpu_name || 'N/A';
                 const vM = document.getElementById('vramModel'); if (vM) vM.textContent = (d.vram_total || '0') + ' GB';
-                const dM = document.getElementById('diskModel'); if (dM) dM.textContent = (d.disk_total || '0') + ' GB';
 
                 onNetOk();
             } catch (_) { onNetFail(); }
@@ -291,6 +297,7 @@
                 cpu: rounded >= 95 ? 'bg-red-600' : rounded >= 85 ? 'bg-orange-500' : 'bg-green-500',
                 ram: rounded >= 95 ? 'bg-red-600' : rounded >= 85 ? 'bg-orange-500' : 'bg-blue-500',
                 disk: rounded >= 59 ? 'bg-red-600' : rounded >= 36 ? 'bg-yellow-500' : 'bg-green-500',
+                disk2: rounded >= 85 ? 'bg-red-600' : rounded >= 65 ? 'bg-yellow-500' : 'bg-teal-500',
                 gpu: 'bg-red-600',
                 vram: 'bg-red-400',
             };

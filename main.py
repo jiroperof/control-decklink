@@ -74,6 +74,7 @@ except Exception:
 
 cached_metrics = {
     "cpu": 0, "ram": 0, "ram_total": 0, "disk": 0, "disk_total": 0,
+    "disk2": 0, "disk2_total": 0, "disk2_free": 0,
     "gpu": 0, "vram": 0, "vram_total": 0, "net": 0, "net_mbps": 0,
     "cpu_name": CPU_MODEL, "gpu_name": GPU_MODEL
 }
@@ -596,11 +597,19 @@ async def system_monitor_task():
             mem = psutil.virtual_memory()
             dsk = psutil.disk_usage("/")
             cpu_val = psutil.cpu_percent(interval=None)
+            try:
+                dsk2 = psutil.disk_usage("/home/administrador/Capturas")
+                disk2_pct   = round(dsk2.percent, 1)
+                disk2_total = round(dsk2.total / (1024**3), 1)
+                disk2_free  = round(dsk2.free  / (1024**3), 1)
+            except Exception:
+                disk2_pct = disk2_total = disk2_free = 0
 
             cached_metrics.update({
                 "cpu": cpu_val, 
                 "ram": mem.percent, "ram_total": round(mem.total / (1024**3), 1),
                 "disk": dsk.percent, "disk_total": round(dsk.total / (1024**3), 1),
+                "disk2": disk2_pct, "disk2_total": disk2_total, "disk2_free": disk2_free,
                 "gpu": gpu["load"], "vram": gpu["vram"], "vram_total": gpu["total_gb"],
                 "net": min(100, round((mbps/1000)*100, 1)), "net_mbps": round(mbps, 1)
             })
