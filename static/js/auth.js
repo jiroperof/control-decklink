@@ -218,6 +218,31 @@
         }
 
         // ── Init ──────────────────────────────────────────────────────────────────────
+        // ── Estado de canales en login (sin token, usa /health) ──────────────
+        let _loginStatusTimer = null;
+
+        async function updateLoginChannelStatus() {
+            try {
+                const res = await fetch('/health');
+                if (!res.ok) return;
+                const d = await res.json();
+                const rec = d.recording || {};
+                ['1','2','3','4'].forEach(id => {
+                    const card = document.getElementById('loginCh' + id);
+                    if (!card) return;
+                    const dot  = card.querySelector('.login-ch-dot');
+                    const lbl  = card.querySelector('.login-ch-lbl');
+                    if (rec[id]) {
+                        if (dot) { dot.className = 'login-ch-dot w-1.5 h-1.5 rounded-full bg-red-500 animate-pulse inline-block'; }
+                        if (lbl) { lbl.textContent = 'GRABANDO'; lbl.className = 'login-ch-lbl text-[8px] font-bold text-red-400 uppercase tracking-wide'; }
+                    } else {
+                        if (dot) { dot.className = 'login-ch-dot w-1.5 h-1.5 rounded-full bg-slate-700 inline-block'; }
+                        if (lbl) { lbl.textContent = 'EN ESPERA'; lbl.className = 'login-ch-lbl text-[8px] font-bold text-slate-700 uppercase tracking-wide'; }
+                    }
+                });
+            } catch (_) {}
+        }
+
         document.addEventListener("DOMContentLoaded", () => {
             initTheme();
             initSidebar();
@@ -235,6 +260,8 @@
                 if (p) {
                     p.addEventListener('keydown', e => { if (e.key === 'Enter') login(); });
                 }
+                updateLoginChannelStatus();
+                _loginStatusTimer = setInterval(updateLoginChannelStatus, 3000);
             }
         });
         // Carga los nombres de grupos desde el servidor para el login
