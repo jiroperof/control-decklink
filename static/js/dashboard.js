@@ -138,27 +138,35 @@
                 // Lógica de Tiempo Restante Predictivo (basado en disco de Capturas)
                 const freeGB = d.disk2_free ?? (d.disk_total * (1 - (d.disk / 100)));
                 let activeBitrateMbps = 0;
-                let fallbackBitrate = 15;
+                let anyRunning = false;
                 ['1', '2', '3', '4'].forEach(id => {
                     const brEl = document.getElementById('bitrate_' + id);
                     const bnum = parseInt((brEl?.value || '15M').replace('M', '')) || 15;
-                    if (id === '1') fallbackBitrate = bnum;
-                    if (channels[id]?.running) activeBitrateMbps += bnum;
+                    if (channels[id]?.running) { activeBitrateMbps += bnum; anyRunning = true; }
                 });
-                if (activeBitrateMbps === 0) activeBitrateMbps = fallbackBitrate;
-                
-                let MBps = (activeBitrateMbps * 1.5) / 8; // x1.5 x maxrate de ffmpeg vbr
+                // Si no hay canales grabando, estimar con el bitrate configurado del CH1
+                // pero sin aplicar overhead (es solo referencia de capacidad máxima)
+                if (!anyRunning) {
+                    const brEl1 = document.getElementById('bitrate_1');
+                    activeBitrateMbps = parseInt((brEl1?.value || '15M').replace('M', '')) || 15;
+                }
+
+                // Factor overhead VBR real: ~1.05 promedio sostenido (no 1.5 que es solo el pico maxrate)
+                const vbrOverhead = anyRunning ? 1.05 : 1.0;
+                let MBps = (activeBitrateMbps * vbrOverhead) / 8; // Mbps → MB/s
                 if (MBps === 0) MBps = 1;
-                
+
                 let hoursLeft = (freeGB * 1024) / MBps / 3600;
-                
+
                 const dr = document.getElementById('diskRemaining');
                 if (dr) {
-                    if (hoursLeft > 99) dr.textContent = "⏱ +99h restantes";
-                    else if (hoursLeft < 1) dr.textContent = "⏱ " + Math.floor(hoursLeft * 60) + "min restantes";
-                    else dr.textContent = "⏱ " + hoursLeft.toFixed(1) + "h restantes";
-                    
-                    if (freeGB < 50 && Object.values(channels).some(c => c.running)) playErrorBeep();
+                    const label = anyRunning ? "restantes" : "cap. máx.";
+                    if (hoursLeft > 999) dr.textContent = `⏱ +999h ${label}`;
+                    else if (hoursLeft > 99) dr.textContent = `⏱ +99h ${label}`;
+                    else if (hoursLeft < 1) dr.textContent = `⏱ ${Math.floor(hoursLeft * 60)}min ${label}`;
+                    else dr.textContent = `⏱ ${hoursLeft.toFixed(1)}h ${label}`;
+
+                    if (freeGB < 50 && anyRunning) playErrorBeep();
                 }
 
                 // Network specific update
