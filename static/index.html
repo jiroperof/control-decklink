@@ -372,8 +372,14 @@
            FONDOS OSCUROS DENTRO DE PANELES → CLAROS
            ════════════════════════════════════════════════════════════════ */
 
+        /* Forzar color-scheme claro para inputs nativos (time, date, etc.) */
+        [data-theme="light"] {
+            color-scheme: light;
+        }
+
         /* bg-slate-900 y variantes → blanco/gris muy claro */
         [data-theme="light"] .glass-panel .bg-slate-900\/40,
+        [data-theme="light"] .glass-panel .bg-slate-900\/50,
         [data-theme="light"] .glass-panel .bg-slate-900\/60,
         [data-theme="light"] .glass-panel .bg-slate-900\/80,
         [data-theme="light"] .glass-panel .bg-slate-900 {
