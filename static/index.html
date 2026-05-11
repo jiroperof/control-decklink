@@ -368,6 +368,74 @@
             background: #94a3b8;
         }
 
+        /* ════════════════════════════════════════════════════════════════
+           FONDOS OSCUROS DENTRO DE PANELES → CLAROS
+           ════════════════════════════════════════════════════════════════ */
+
+        /* bg-slate-900 y variantes → blanco/gris muy claro */
+        [data-theme="light"] .glass-panel .bg-slate-900\/40,
+        [data-theme="light"] .glass-panel .bg-slate-900\/60,
+        [data-theme="light"] .glass-panel .bg-slate-900\/80,
+        [data-theme="light"] .glass-panel .bg-slate-900 {
+            background-color: #f1f5f9 !important;
+        }
+
+        /* Sección de programar canal y sub-bloques */
+        [data-theme="light"] .glass-panel .bg-slate-800\/40,
+        [data-theme="light"] .glass-panel .bg-slate-800\/60,
+        [data-theme="light"] .glass-panel .bg-slate-800\/80,
+        [data-theme="light"] .glass-panel .bg-slate-800 {
+            background-color: #f8fafc !important;
+        }
+
+        /* Inputs especiales con fondo negro fijo (#0f172a) */
+        [data-theme="light"] .glass-panel .bg-\[\#0f172a\] {
+            background-color: #ffffff !important;
+        }
+
+        /* Bordes oscuros dentro de paneles → sutiles */
+        [data-theme="light"] .glass-panel .border-slate-700,
+        [data-theme="light"] .glass-panel .border-slate-700\/50,
+        [data-theme="light"] .glass-panel .border-slate-700\/40,
+        [data-theme="light"] .glass-panel .border-slate-600 {
+            border-color: #e2e8f0 !important;
+        }
+
+        /* Texto blanco dentro de sub-bloques */
+        [data-theme="light"] .glass-panel .bg-slate-900\/40 .text-white,
+        [data-theme="light"] .glass-panel .bg-slate-900\/40 .text-slate-300,
+        [data-theme="light"] .glass-panel .bg-slate-900\/40 .text-slate-400 {
+            color: #334155 !important;
+        }
+
+        /* Tarjetas de procesos activos */
+        [data-theme="light"] .glass-panel .bg-slate-900\/60 {
+            background-color: #f1f5f9 !important;
+            border-color: #e2e8f0 !important;
+        }
+
+        /* Inputs de hora con border-slate-700 */
+        [data-theme="light"] .glass-panel input[style*="background: transparent"],
+        [data-theme="light"] .glass-panel input[style*="background:transparent"] {
+            background: #ffffff !important;
+            color: #0f172a !important;
+        }
+
+        /* Texto blanco en fondos ahora claros */
+        [data-theme="light"] .glass-panel .text-white {
+            color: #0f172a !important;
+        }
+
+        [data-theme="light"] .glass-panel .text-slate-300,
+        [data-theme="light"] .glass-panel .text-slate-400 {
+            color: #475569 !important;
+        }
+
+        [data-theme="light"] .glass-panel .text-slate-500,
+        [data-theme="light"] .glass-panel .text-slate-600 {
+            color: #64748b !important;
+        }
+
         /* Logs FFmpeg - mantener oscuro */
         [data-theme="light"] #logBox_1,
         [data-theme="light"] #logBox_2,
