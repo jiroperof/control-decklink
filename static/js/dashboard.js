@@ -172,6 +172,8 @@
                 // Network specific update
                 const nV = document.getElementById('netVal'); if (nV) nV.textContent = d.net_mbps + ' Mbps';
                 const nB = document.getElementById('netBar'); if (nB) nB.style.width = d.net + '%';
+                const nIp = document.getElementById('networkIpLabel');
+                if (nIp) nIp.textContent = d.server_ip ? 'IP: ' + d.server_ip : 'IP: ...';
 
                 const cM = document.getElementById('cpuModel'); if (cM) cM.textContent = d.cpu_name || 'N/A';
                 const rM = document.getElementById('ramModel'); if (rM) rM.textContent = (d.ram_total || '0') + ' GB';
@@ -191,7 +193,7 @@
                 const cRamM = document.getElementById('cRamModel'); if (cRamM) cRamM.textContent = (d.ram_total || '0') + ' GB';
                 const cGpuM = document.getElementById('cGpuModel'); if (cGpuM) cGpuM.textContent = d.gpu_name || '';
                 const cNetIp = document.getElementById('cNetIp');
-                if (cNetIp) cNetIp.textContent = document.getElementById('networkIpLabel')?.textContent || '';
+                if (cNetIp) cNetIp.textContent = d.server_ip || '';
                 // Tiempo restante en panel compacto (mismo cálculo)
                 const cDR = document.getElementById('cDiskRemaining');
                 if (cDR) {

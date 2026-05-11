@@ -75,7 +75,7 @@ except Exception:
 cached_metrics = {
     "cpu": 0, "ram": 0, "ram_total": 0, "disk": 0, "disk_total": 0,
     "disk2": 0, "disk2_total": 0, "disk2_free": 0,
-    "gpu": 0, "vram": 0, "vram_total": 0, "net": 0, "net_mbps": 0,
+    "gpu": 0, "vram": 0, "vram_total": 0, "net": 0, "net_mbps": 0, "server_ip": "",
     "cpu_name": CPU_MODEL, "gpu_name": GPU_MODEL
 }
 cached_processes = {"processes": [], "count": 0}
@@ -642,13 +642,21 @@ async def system_monitor_task():
             except Exception:
                 disk2_pct = disk2_total = disk2_free = 0
 
+            # IP de la interfaz eno1
+            try:
+                addrs = psutil.net_if_addrs().get('eno1', [])
+                server_ip = next((a.address for a in addrs if a.family.name in ('AF_INET', '2')), "")
+            except Exception:
+                server_ip = cached_metrics.get("server_ip", "")
+
             cached_metrics.update({
                 "cpu": cpu_val, 
                 "ram": mem.percent, "ram_total": round(mem.total / (1024**3), 1),
                 "disk": dsk.percent, "disk_total": round(dsk.total / (1024**3), 1),
                 "disk2": disk2_pct, "disk2_total": disk2_total, "disk2_free": disk2_free,
                 "gpu": gpu["load"], "vram": gpu["vram"], "vram_total": gpu["total_gb"],
-                "net": min(100, round((mbps/1000)*100, 1)), "net_mbps": round(mbps, 1)
+                "net": min(100, round((mbps/1000)*100, 1)), "net_mbps": round(mbps, 1),
+                "server_ip": server_ip
             })
 
             # Processes
@@ -1701,7 +1709,8 @@ def _build_html_email(subject: str, event_type: str, body_lines: list[str]) -> s
           <td>
             <span style="color:#334155;font-size:10px;font-weight:700;letter-spacing:1px;text-transform:uppercase;font-family:monospace;">
               C.A. Venezolana de Televisión &nbsp;·&nbsp; {now_str}
-            </span>
+            </span><br>
+            <a href="http://capturadora2.0.vtv.gov.ve" style="color:#dc2626;font-size:10px;font-weight:700;letter-spacing:0.5px;font-family:monospace;text-decoration:none;">capturadora2.0.vtv.gov.ve</a>
           </td>
           <td align="right">
             <span style="color:#dc2626;font-size:10px;font-weight:900;letter-spacing:2px;font-family:monospace;">VTV</span>
