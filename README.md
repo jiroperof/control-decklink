@@ -1,6 +1,6 @@
 <div align="center">
   <img src="static/logo.png" alt="VTV Logo" width="140"/>
-  <h1>VTV — Capturadora Multicanal 2.2</h1>
+  <h1>VTV — Capturadora Multicanal 2.3</h1>
   <p><strong>Sistema de grabación SDI en tiempo real con Blackmagic DeckLink + NVIDIA NVENC</strong></p>
 
   ![Python](https://img.shields.io/badge/Python-3.12-blue?logo=python&logoColor=white)
@@ -14,7 +14,9 @@
 
 ## 📺 Acerca del Proyecto
 
-**Capturadora Multicanal 2.2** es una plataforma web para la ingesta y codificación en tiempo real de señales SDI profesionales. Diseñada para entornos *broadcast* 24/7, controla de forma independiente cuatro canales DeckLink con aceleración GPU NVENC, segmentación automática de archivos MP4, recuperación ante caídas, reportes automáticos por correo y un panel de administración completo accesible desde el navegador.
+**Capturadora Multicanal 2.3** es una plataforma web para la ingesta y codificación en tiempo real de señales SDI profesionales. Diseñada para entornos *broadcast* 24/7, controla de forma independiente cuatro canales DeckLink con aceleración GPU NVENC, segmentación automática de archivos MP4, recuperación ante caídas, reportes automáticos por correo y un panel de administración completo accesible desde el navegador.
+
+Los videos se almacenan en un **disco dedicado de capturas** (Hitachi 1.8 TB, montado en `/home/administrador/Capturas`) separado del disco del sistema operativo (Samsung SSD 238 GB), con monitoreo y alertas independientes para cada unidad.
 
 ---
 
@@ -26,14 +28,14 @@
 | 🏎️ **NVENC H.264** | Codificación por hardware (preset P4/HQ + VBR), desentrelazado `bwdif`, 29.97 fps |
 | 🔐 **RBAC 4 roles** | `admin` · `operator` · `group1` · `group2` — permisos granulares por canal |
 | 👁️ **Live preview** | Stream MJPEG en el navegador sin interrumpir la grabación |
-| 📊 **Telemetría** | CPU · RAM · GPU · VRAM · Disco · Red en tiempo real (psutil + nvidia-smi) |
+| 📊 **Telemetría** | CPU · RAM · GPU · VRAM · Disco SSD + Disco Capturas · Red en tiempo real (psutil + nvidia-smi) |
 | 🛡️ **Watchdog** | Daemon que detecta caídas de FFmpeg y relanza el proceso automáticamente |
 | 📅 **Scheduler** | Programación de inicio/stop por hora con configuración por canal |
-| 🧹 **Limpieza automática** | Script de retención configurable (N días), con opción de limpieza manual desde la UI |
+| 🧹 **Limpieza automática** | Monitoreo y limpieza sobre el disco de Capturas; script de retención configurable (N días), limpieza manual desde UI |
 | 📈 **Panel estadísticas** | Gráficas Chart.js: almacenamiento, horas grabadas, audit log de accesos |
 | 🔒 **Brute-force protection** | Bloqueo temporal de IP tras 5 intentos fallidos (rate limiting) |
 | 📧 **Notificaciones por correo** | Alertas SMTP para 7 tipos de eventos con rate-limiting y plantilla HTML branded |
-| 📋 **Reportes diarios** | Reporte automático a las 06:00 y 22:00 con logo VTV, métricas, canales y accesos |
+| 📋 **Reportes diarios** | Reporte automático a las 06:00 y 22:00 con logo VTV, métricas (SSD + Capturas), canales y accesos |
 | ⚡ **UI sin build step** | Vanilla JS + Tailwind CDN — sin Node.js, sin bundler |
 
 ---
@@ -147,8 +149,10 @@ cp .env.example .env   # editar con tus valores
 | `operator` | Solo lectura: métricas y estado de canales |
 | `group1` | Canal 1 únicamente: iniciar/detener grabación, ver telemetría, preview |
 | `group2` | Canal 2 únicamente: igual que group1 |
+| `group3` | Canal 3 únicamente: igual que group1 |
+| `group4` | Canal 4 únicamente: igual que group1 |
 
-Los usuarios `group1`/`group2` se crean desde el panel de Administración dentro de la propia web app.
+Los usuarios de grupo se crean desde el panel de Administración dentro de la propia web app.
 
 ---
 
@@ -177,7 +181,7 @@ Se envían **dos veces al día** con información completa del sistema:
 | Mañana | 06:00 | 🟡 amarillo |
 | Noche  | 22:00 | 🟣 violeta |
 
-Cada reporte incluye: logo VTV · recursos del servidor (CPU/RAM/Disco) · cantidad de videos y tamaño de carpeta · estado de los 4 canales · últimos 3 accesos al sistema.
+Cada reporte incluye: logo VTV · recursos del servidor (CPU/RAM/Disco SSD/Disco Capturas) · cantidad de videos y tamaño de carpeta · estado de los 4 canales · últimos 3 accesos al sistema.
 
 > Para enviar el reporte manualmente: **Admin → Notif. → ✉ Enviar Prueba**
 
@@ -204,11 +208,29 @@ OPERATOR_TOKEN=token-secreto-operador
 
 AUTO_RESTART=true            # Watchdog auto-relanza FFmpeg si cae
 ALLOWED_ORIGINS=http://localhost:8000,http://192.168.1.x:8000
+
+SMTP_PASS=tu-contraseña-smtp # Siempre tiene prioridad sobre email_config.json
+CAPTURAS_PATH=/home/administrador/Capturas  # Ruta base del disco de capturas
 ```
 
 ---
 
 ## 📝 Changelog
+
+### v2.3 — Mayo 2026
+- **Nuevo:** Panel de recursos muestra dos discos independientes: SSD del sistema (/) y disco Hitachi 1.8 TB de Capturas
+- **Nuevo:** Botón **LIMPIAR** solo disponible en el disco de Capturas
+- **Nuevo:** Tiempo restante predictivo basado en espacio libre del disco de Capturas
+- **Nuevo:** Variable de entorno `CAPTURAS_PATH` configurable (default `/home/administrador/Capturas`)
+- **Nuevo:** Variable de entorno `SMTP_PASS` — contraseña SMTP fuera del código fuente
+- **Mejora:** `disk_cleanup_task`, `disk_guard_task` y reporte diario monitorizan el disco de Capturas
+- **Mejora:** Reporte diario incluye barra de uso del disco de Capturas
+- **Mejora:** `schedule_checker_task` envía notificaciones por correo al disparar grabaciones programadas
+- **Fix:** Race condition al detener preview antes de grabar (espera real hasta 3 s + SIGKILL)
+- **Fix:** Watchdog limpia `mgr.config` si `AUTO_RESTART=false` (evitaba config huérfana)
+- **Fix:** UI revierte estado optimista si el servidor devuelve error en start/stop
+- **Fix:** `system_monitor_task` usa `CAPTURAS_PATH` en vez de path hardcodeado
+- **Seguridad:** `SMTP_PASS` del `.env` siempre tiene prioridad sobre el valor guardado en `email_config.json`
 
 ### v2.2 — Mayo 2026
 - **Nuevo:** Sistema completo de notificaciones por correo (`smtplib`, sin dependencias externas)
@@ -234,5 +256,5 @@ ALLOWED_ORIGINS=http://localhost:8000,http://192.168.1.x:8000
 ---
 
 <div align="center">
-  <sub>Desarrollado para entornos de transmisión y broadcast SDI continuo · C.A. Venezolana de Televisión · v2.2</sub>
+  <sub>Desarrollado para entornos de transmisión y broadcast SDI continuo · C.A. Venezolana de Televisión · v2.3</sub>
 </div>
