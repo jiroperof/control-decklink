@@ -375,13 +375,16 @@
                     dest_path: document.getElementById('destPath_' + id).value.trim() || '/home/administrador/Capturas',
                 }) : null;
 
+                const prevRunning = channels[id].running;
                 channels[id].running = (type === 'start');
                 renderAllChannels();
 
                 const res = await fetch(`/api/${type}/${id}`, {
                     method: 'POST', headers: { 'Content-Type': 'application/json', 'X-Token': TOKEN }, body
                 });
-                if (!res.ok) { 
+                if (!res.ok) {
+                    channels[id].running = prevRunning;
+                    renderAllChannels();
                     try {
                         const e = await res.json(); 
                         showToast('Error: ' + (typeof e.detail === 'string' ? e.detail : JSON.stringify(e.detail)), 'error'); 

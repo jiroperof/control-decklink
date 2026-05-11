@@ -416,12 +416,24 @@ class RecordingManager:
         # Detener vista previa limpiamente antes de grabar
         if self.preview_process:
             try:
+                pid = getattr(self.preview_process, 'pid', None)
                 self.preview_process.terminate()
-                # No podemos await aquí, pero marcamos como None
+                # Esperar hasta 3s a que el proceso asyncio termine (desde hilo síncrono)
+                deadline = time.time() + 3.0
+                while time.time() < deadline:
+                    if self.preview_process.returncode is not None:
+                        break
+                    time.sleep(0.1)
+                if self.preview_process.returncode is None:
+                    try:
+                        self.preview_process.kill()
+                    except Exception:
+                        pass
+                logger.info(f"[CH{self.source_id}] Preview detenido (PID {pid}) antes de grabar")
             except Exception as e:
                 logger.warning(f"[CH{self.source_id}] Error deteniendo preview: {e}")
             self.preview_process = None
-            time.sleep(1)  # dar tiempo al dispositivo de liberarse
+            time.sleep(0.5)  # breve pausa para liberar el dispositivo
 
         # Detener grabación anterior si la hubiera (sin corte limpio en este caso)
         self._stop_sync(graceful=False)
@@ -547,6 +559,8 @@ async def watchdog_task():
                 logger.warning(f"[CH{ch}] FFmpeg murió inesperadamente")
                 old_cfg = mgr.config
                 mgr.process = None; mgr.started_at = None
+                if not AUTO_RESTART:
+                    mgr.config = None  # limpiar config huérfana si no hay auto-restart
                 if AUTO_RESTART and old_cfg:
                     try:
                         ok, msg = await mgr.start(RecordConfig(**old_cfg))
@@ -572,10 +586,31 @@ async def schedule_checker_task():
         for ch, mgr in managers.items():
             if mgr.scheduled_start and not mgr.is_recording() and now >= mgr.scheduled_start:
                 cfg = mgr.scheduled_config; mgr.scheduled_start = None
-                if cfg: await mgr.start(cfg)
+                if cfg:
+                    ok, msg = await mgr.start(cfg)
+                    logger.info(f"[CH{ch}] Grabación programada {'iniciada' if ok else 'FALLIDA'}: {msg}")
+                    cfg_e = await asyncio.to_thread(_load_email_config_sync)
+                    if cfg_e.get("notify_recording_start"):
+                        asyncio.create_task(send_email(
+                            "start", f"Canal {ch} — Grabación programada iniciada",
+                            [f"Canal: DeckLink Duo ({ch})", "Inicio: Programado automáticamente",
+                             f"Estado: {'✅ Iniciada' if ok else '❌ Falló'}",
+                             f"Bitrate: {cfg.bitrate}", f"Segmentos: {cfg.segment_minutes} min",
+                             f"Hora: {now.strftime('%d/%m/%Y %H:%M:%S')}"],
+                            cooldown_key=f"start_{ch}"
+                        ))
             if mgr.scheduled_stop and mgr.is_recording() and now >= mgr.scheduled_stop:
                 mgr.scheduled_stop = None
                 await mgr.stop_and_clean()
+                logger.info(f"[CH{ch}] Grabación detenida por programación")
+                cfg_e = await asyncio.to_thread(_load_email_config_sync)
+                if cfg_e.get("notify_recording_stop"):
+                    asyncio.create_task(send_email(
+                        "stop", f"Canal {ch} — Grabación programada detenida",
+                        [f"Canal: DeckLink Duo ({ch})", "Parada: Programada automáticamente",
+                         f"Hora: {now.strftime('%d/%m/%Y %H:%M:%S')}"],
+                        cooldown_key=f"stop_{ch}"
+                    ))
 
 async def system_monitor_task():
     global last_net_time, last_net_bytes, cached_metrics, cached_processes
@@ -600,7 +635,7 @@ async def system_monitor_task():
             dsk = psutil.disk_usage("/")
             cpu_val = psutil.cpu_percent(interval=None)
             try:
-                dsk2 = psutil.disk_usage("/home/administrador/Capturas")
+                dsk2 = psutil.disk_usage(CAPTURAS_PATH)
                 disk2_pct   = round(dsk2.percent, 1)
                 disk2_total = round(dsk2.total / (1024**3), 1)
                 disk2_free  = round(dsk2.free  / (1024**3), 1)
