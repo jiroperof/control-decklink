@@ -133,7 +133,7 @@
                 const dM = document.getElementById('diskModel');
                 if (dM) dM.textContent = (d.disk_total || '0') + ' GB';
                 const d2M = document.getElementById('disk2Model');
-                if (d2M) d2M.textContent = (d.disk2_free ?? 0) + ' GB libres / ' + (d.disk2_total ?? 0) + ' GB';
+                if (d2M) d2M.textContent = (d.disk2_free ?? 0) + ' GB libres';
 
                 // Lógica de Tiempo Restante Predictivo (basado en disco de Capturas)
                 const freeGB = d.disk2_free ?? (d.disk_total * (1 - (d.disk / 100)));
