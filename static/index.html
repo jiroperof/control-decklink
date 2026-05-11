@@ -549,6 +549,59 @@
         .toast.hiding {
             animation: fadeOut 0.3s ease forwards;
         }
+
+        /* ════════════════════════════════════════════════════════════════
+           MODO COMPACTO
+           ════════════════════════════════════════════════════════════════ */
+        /* Transición suave al cambiar modo */
+        #gridCards, #sidebar, .glass-panel {
+            transition: all 0.25s cubic-bezier(0.4,0,0.2,1);
+        }
+
+        /* En modo compacto los canales van en 4 columnas en vez de 2 */
+        body.compact-mode #gridCards {
+            grid-template-columns: repeat(4, minmax(0, 1fr));
+        }
+        @media (max-width: 1280px) {
+            body.compact-mode #gridCards {
+                grid-template-columns: repeat(2, minmax(0, 1fr));
+            }
+        }
+        @media (max-width: 768px) {
+            body.compact-mode #gridCards {
+                grid-template-columns: repeat(1, minmax(0, 1fr));
+            }
+        }
+
+        /* Tarjeta canal compacta: oculta secciones secundarias */
+        body.compact-mode .ch-card-secondary { display: none !important; }
+
+        /* Padding reducido en tarjeta */
+        body.compact-mode .ch-card-body { padding: 0.6rem !important; }
+
+        /* Botones iniciar/detener más pequeños */
+        body.compact-mode .btn-rec-start,
+        body.compact-mode .btn-rec-stop {
+            padding-top: 0.5rem !important;
+            padding-bottom: 0.5rem !important;
+            font-size: 0.7rem !important;
+            border-radius: 0.75rem !important;
+        }
+
+        /* Sidebar compacto: más estrecho, barras mini */
+        body.compact-mode #sidebar {
+            width: 220px !important;
+            min-width: 220px !important;
+        }
+        body.compact-mode .res-bar-label { font-size: 9px !important; }
+        body.compact-mode .res-bar-track { height: 4px !important; }
+
+        /* Botón modo compacto activo */
+        #btnCompact.compact-on {
+            background-color: rgba(234,179,8,0.2) !important;
+            border-color: rgba(234,179,8,0.5) !important;
+            color: rgb(250,204,21) !important;
+        }
     </style>
 </head>
 
@@ -662,6 +715,11 @@
                             </button>
                         </div>
 
+                        <!-- Compact Mode Toggle -->
+                        <button id="btnCompact" onclick="toggleCompactMode()" class="flex items-center justify-center w-9 h-9 rounded-lg bg-slate-800/60 hover:bg-slate-700/80 border border-slate-700/50 transition-all" title="Modo compacto">
+                            <svg class="w-4 h-4 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 10h16M4 14h16M4 18h16"/></svg>
+                        </button>
+
                         <!-- Theme Toggle -->
                         <button id="themeToggle" onclick="toggleTheme()" class="flex items-center justify-center w-9 h-9 rounded-lg bg-slate-800/60 hover:bg-slate-700/80 border border-slate-700/50 transition-all" title="Cambiar tema">
                             <svg id="themeIconSun" class="w-5 h-5 text-yellow-400 hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z"></path></svg>
@@ -727,12 +785,12 @@
                     <span class="text-red-500">🔴 DeckLink Duo (1)</span><span id="autoRestartBanner_1"
                         class="hidden text-orange-400 text-[9px] bg-orange-900/30 px-2 py-1 rounded border border-orange-700/50">🔄
                         Auto-Rec Injected</span></div>
-                <div class="p-4 flex-1 flex flex-col">
+                <div class="ch-card-body p-4 flex-1 flex flex-col">
                     <div id="scheduleBanner_1"
                         class="hidden mb-4 text-blue-400 text-[10px] font-bold bg-blue-900/20 border border-blue-700/40 rounded-xl py-2 px-3 text-center">
                     </div>
 
-                    <div class="admin-ui-block grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                    <div class="ch-card-secondary admin-ui-block grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
                         <div>
                             <label class="block text-[9px] font-bold text-slate-400 mb-1 uppercase">Calidad del
                                 Master</label>
@@ -781,7 +839,7 @@
                     </div>
 
                     <!-- GRABACIÓN PROGRAMADA -->
-                    <div class="admin-ui-block mb-4 bg-slate-900/50 rounded-2xl border border-slate-700/50 p-4 pb-3">
+                    <div class="ch-card-secondary admin-ui-block mb-4 bg-slate-900/50 rounded-2xl border border-slate-700/50 p-4 pb-3">
                         <p class="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-3">⏰ Programar Canal
                         </p>
                         <div id="scheduleBody_1">
@@ -811,7 +869,7 @@
                     <div class="mt-auto"></div>
 
                     <!-- Duración -->
-                    <div id="durationBox_1" class="my-2 text-center transition-all duration-300 opacity-50">
+                    <div id="durationBox_1" class="ch-card-secondary my-2 text-center transition-all duration-300 opacity-50">
                         <p class="text-[9px] text-slate-500 uppercase font-bold mb-0.5">Duración (CH1)</p>
                         <p id="durationVal_1"
                             class="text-2xl font-black text-red-400 font-mono tracking-widest drop-shadow-md">00:00:00
@@ -820,11 +878,11 @@
 
                     <div class="admin-ui-block grid grid-cols-2 gap-4 mt-2">
                         <button id="btnStart_1" onclick="execute('1', 'start')"
-                            class="bg-red-600 hover:bg-red-500 py-4 rounded-2xl font-black text-lg active:scale-95 uppercase shadow-lg shadow-red-900/40 transition-all">Iniciar</button>
+                            class="btn-rec-start bg-red-600 hover:bg-red-500 py-4 rounded-2xl font-black text-lg active:scale-95 uppercase shadow-lg shadow-red-900/40 transition-all">Iniciar</button>
                         <button id="btnStop_1" onclick="execute('1', 'stop')"
-                            class="bg-slate-700 hover:bg-slate-600 py-4 rounded-2xl font-black text-lg active:scale-95 uppercase shadow-lg transition-all">Detener</button>
+                            class="btn-rec-stop bg-slate-700 hover:bg-slate-600 py-4 rounded-2xl font-black text-lg active:scale-95 uppercase shadow-lg transition-all">Detener</button>
                     </div>
-                    <button id="btnPreview_1" onclick="openPreview('1')" class="w-full mt-3 bg-slate-800/60 hover:bg-slate-700 border border-slate-700 py-2 rounded-xl font-bold text-[10px] uppercase tracking-widest transition-all active:scale-95 disabled:opacity-30 disabled:cursor-not-allowed">👁 Vista Previa</button>
+                    <button id="btnPreview_1" onclick="openPreview('1')" class="ch-card-secondary w-full mt-3 bg-slate-800/60 hover:bg-slate-700 border border-slate-700 py-2 rounded-xl font-bold text-[10px] uppercase tracking-widest transition-all active:scale-95 disabled:opacity-30 disabled:cursor-not-allowed">👁 Vista Previa</button>
                 </div>
             </div>
 
@@ -835,12 +893,12 @@
                     <span class="text-blue-500">🔴 DeckLink Duo (2)</span><span id="autoRestartBanner_2"
                         class="hidden text-orange-400 text-[9px] bg-orange-900/30 px-2 py-1 rounded border border-orange-700/50">🔄
                         Auto-Rec Injected</span></div>
-                <div class="p-4 flex-1 flex flex-col">
+                <div class="ch-card-body p-4 flex-1 flex flex-col">
                     <div id="scheduleBanner_2"
                         class="hidden mb-4 text-blue-400 text-[10px] font-bold bg-blue-900/20 border border-blue-700/40 rounded-xl py-2 px-3 text-center">
                     </div>
 
-                    <div class="admin-ui-block grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                    <div class="ch-card-secondary admin-ui-block grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
                         <div>
                             <label class="block text-[9px] font-bold text-slate-400 mb-1 uppercase">Calidad del
                                 Master</label>
@@ -869,7 +927,7 @@
                         </div>
                     </div>
 
-                    <div class="admin-ui-block mb-4">
+                    <div class="ch-card-secondary admin-ui-block mb-4">
                         <label class="block text-[9px] font-bold text-slate-400 mb-1 uppercase">Carpeta de
                             Destino</label>
                         <div class="flex gap-2">
@@ -889,7 +947,7 @@
                     </div>
 
                     <!-- GRABACIÓN PROGRAMADA -->
-                    <div class="admin-ui-block mb-4 bg-slate-900/50 rounded-2xl border border-slate-700/50 p-4 pb-3">
+                    <div class="ch-card-secondary admin-ui-block mb-4 bg-slate-900/50 rounded-2xl border border-slate-700/50 p-4 pb-3">
                         <p class="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-3">⏰ Programar Canal
                         </p>
                         <div id="scheduleBody_2">
@@ -919,7 +977,7 @@
                     <div class="mt-auto"></div>
 
                     <!-- Duración -->
-                    <div id="durationBox_2" class="my-2 text-center transition-all duration-300 opacity-50">
+                    <div id="durationBox_2" class="ch-card-secondary my-2 text-center transition-all duration-300 opacity-50">
                         <p class="text-[9px] text-slate-500 uppercase font-bold mb-0.5">Duración (CH2)</p>
                         <p id="durationVal_2"
                             class="text-2xl font-black text-red-400 font-mono tracking-widest drop-shadow-md">00:00:00
@@ -928,11 +986,11 @@
 
                     <div class="admin-ui-block grid grid-cols-2 gap-4 mt-2">
                         <button id="btnStart_2" onclick="execute('2', 'start')"
-                            class="bg-red-600 hover:bg-red-500 py-4 rounded-2xl font-black text-lg active:scale-95 uppercase shadow-lg shadow-red-900/40 transition-all">Iniciar</button>
+                            class="btn-rec-start bg-red-600 hover:bg-red-500 py-4 rounded-2xl font-black text-lg active:scale-95 uppercase shadow-lg shadow-red-900/40 transition-all">Iniciar</button>
                         <button id="btnStop_2" onclick="execute('2', 'stop')"
-                            class="bg-slate-700 hover:bg-slate-600 py-4 rounded-2xl font-black text-lg active:scale-95 uppercase shadow-lg transition-all">Detener</button>
+                            class="btn-rec-stop bg-slate-700 hover:bg-slate-600 py-4 rounded-2xl font-black text-lg active:scale-95 uppercase shadow-lg transition-all">Detener</button>
                     </div>
-                    <button id="btnPreview_2" onclick="openPreview('2')" class="w-full mt-3 bg-slate-800/60 hover:bg-slate-700 border border-slate-700 py-2 rounded-xl font-bold text-[10px] uppercase tracking-widest transition-all active:scale-95 disabled:opacity-30 disabled:cursor-not-allowed">👁 Vista Previa</button>
+                    <button id="btnPreview_2" onclick="openPreview('2')" class="ch-card-secondary w-full mt-3 bg-slate-800/60 hover:bg-slate-700 border border-slate-700 py-2 rounded-xl font-bold text-[10px] uppercase tracking-widest transition-all active:scale-95 disabled:opacity-30 disabled:cursor-not-allowed">👁 Vista Previa</button>
                 </div>
             </div>
 
@@ -943,12 +1001,12 @@
                     <span class="text-green-500">🔴 DeckLink Duo (3)</span><span id="autoRestartBanner_3"
                         class="hidden text-orange-400 text-[9px] bg-orange-900/30 px-2 py-1 rounded border border-orange-700/50">🔄
                         Auto-Rec Injected</span></div>
-                <div class="p-4 flex-1 flex flex-col">
+                <div class="ch-card-body p-4 flex-1 flex flex-col">
                     <div id="scheduleBanner_3"
                         class="hidden mb-4 text-blue-400 text-[10px] font-bold bg-blue-900/20 border border-blue-700/40 rounded-xl py-2 px-3 text-center">
                     </div>
 
-                    <div class="admin-ui-block grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                    <div class="ch-card-secondary admin-ui-block grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
                         <div>
                             <label class="block text-[9px] font-bold text-slate-400 mb-1 uppercase">Calidad del
                                 Master</label>
@@ -977,7 +1035,7 @@
                         </div>
                     </div>
 
-                    <div class="admin-ui-block mb-4">
+                    <div class="ch-card-secondary admin-ui-block mb-4">
                         <label class="block text-[9px] font-bold text-slate-400 mb-1 uppercase">Carpeta de
                             Destino</label>
                         <div class="flex gap-2">
@@ -997,7 +1055,7 @@
                     </div>
 
                     <!-- GRABACIÓN PROGRAMADA -->
-                    <div class="admin-ui-block mb-4 bg-slate-900/50 rounded-2xl border border-slate-700/50 p-4 pb-3">
+                    <div class="ch-card-secondary admin-ui-block mb-4 bg-slate-900/50 rounded-2xl border border-slate-700/50 p-4 pb-3">
                         <p class="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-3">⏰ Programar Canal
                         </p>
                         <div id="scheduleBody_3">
@@ -1027,7 +1085,7 @@
                     <div class="mt-auto"></div>
 
                     <!-- Duración -->
-                    <div id="durationBox_3" class="my-2 text-center transition-all duration-300 opacity-50">
+                    <div id="durationBox_3" class="ch-card-secondary my-2 text-center transition-all duration-300 opacity-50">
                         <p class="text-[9px] text-slate-500 uppercase font-bold mb-0.5">Duración (CH3)</p>
                         <p id="durationVal_3"
                             class="text-2xl font-black text-red-400 font-mono tracking-widest drop-shadow-md">00:00:00
@@ -1036,11 +1094,11 @@
 
                     <div class="admin-ui-block grid grid-cols-2 gap-4 mt-2">
                         <button id="btnStart_3" onclick="execute('3', 'start')"
-                            class="bg-red-600 hover:bg-red-500 py-4 rounded-2xl font-black text-lg active:scale-95 uppercase shadow-lg shadow-red-900/40 transition-all">Iniciar</button>
+                            class="btn-rec-start bg-red-600 hover:bg-red-500 py-4 rounded-2xl font-black text-lg active:scale-95 uppercase shadow-lg shadow-red-900/40 transition-all">Iniciar</button>
                         <button id="btnStop_3" onclick="execute('3', 'stop')"
-                            class="bg-slate-700 hover:bg-slate-600 py-4 rounded-2xl font-black text-lg active:scale-95 uppercase shadow-lg transition-all">Detener</button>
+                            class="btn-rec-stop bg-slate-700 hover:bg-slate-600 py-4 rounded-2xl font-black text-lg active:scale-95 uppercase shadow-lg transition-all">Detener</button>
                     </div>
-                    <button id="btnPreview_3" onclick="openPreview('3')" class="w-full mt-3 bg-slate-800/60 hover:bg-slate-700 border border-slate-700 py-2 rounded-xl font-bold text-[10px] uppercase tracking-widest transition-all active:scale-95 disabled:opacity-30 disabled:cursor-not-allowed">👁 Vista Previa</button>
+                    <button id="btnPreview_3" onclick="openPreview('3')" class="ch-card-secondary w-full mt-3 bg-slate-800/60 hover:bg-slate-700 border border-slate-700 py-2 rounded-xl font-bold text-[10px] uppercase tracking-widest transition-all active:scale-95 disabled:opacity-30 disabled:cursor-not-allowed">👁 Vista Previa</button>
                 </div>
             </div>
 
@@ -1051,12 +1109,12 @@
                     <span class="text-fuchsia-500">🔴 DeckLink Duo (4)</span><span id="autoRestartBanner_4"
                         class="hidden text-orange-400 text-[9px] bg-orange-900/30 px-2 py-1 rounded border border-orange-700/50">🔄
                         Auto-Rec Injected</span></div>
-                <div class="p-4 flex-1 flex flex-col">
+                <div class="ch-card-body p-4 flex-1 flex flex-col">
                     <div id="scheduleBanner_4"
                         class="hidden mb-4 text-blue-400 text-[10px] font-bold bg-blue-900/20 border border-blue-700/40 rounded-xl py-2 px-3 text-center">
                     </div>
 
-                    <div class="admin-ui-block grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                    <div class="ch-card-secondary admin-ui-block grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
                         <div>
                             <label class="block text-[9px] font-bold text-slate-400 mb-1 uppercase">Calidad del
                                 Master</label>
@@ -1085,7 +1143,7 @@
                         </div>
                     </div>
 
-                    <div class="admin-ui-block mb-4">
+                    <div class="ch-card-secondary admin-ui-block mb-4">
                         <label class="block text-[9px] font-bold text-slate-400 mb-1 uppercase">Carpeta de
                             Destino</label>
                         <div class="flex gap-2">
@@ -1105,7 +1163,7 @@
                     </div>
 
                     <!-- GRABACIÓN PROGRAMADA -->
-                    <div class="admin-ui-block mb-4 bg-slate-900/50 rounded-2xl border border-slate-700/50 p-4 pb-3">
+                    <div class="ch-card-secondary admin-ui-block mb-4 bg-slate-900/50 rounded-2xl border border-slate-700/50 p-4 pb-3">
                         <p class="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-3">⏰ Programar Canal
                         </p>
                         <div id="scheduleBody_4">
@@ -1135,7 +1193,7 @@
                     <div class="mt-auto"></div>
 
                     <!-- Duración -->
-                    <div id="durationBox_4" class="my-2 text-center transition-all duration-300 opacity-50">
+                    <div id="durationBox_4" class="ch-card-secondary my-2 text-center transition-all duration-300 opacity-50">
                         <p class="text-[9px] text-slate-500 uppercase font-bold mb-0.5">Duración (CH4)</p>
                         <p id="durationVal_4"
                             class="text-2xl font-black text-red-400 font-mono tracking-widest drop-shadow-md">00:00:00
@@ -1144,11 +1202,11 @@
 
                     <div class="admin-ui-block grid grid-cols-2 gap-4 mt-2">
                         <button id="btnStart_4" onclick="execute('4', 'start')"
-                            class="bg-red-600 hover:bg-red-500 py-4 rounded-2xl font-black text-lg active:scale-95 uppercase shadow-lg shadow-red-900/40 transition-all">Iniciar</button>
+                            class="btn-rec-start bg-red-600 hover:bg-red-500 py-4 rounded-2xl font-black text-lg active:scale-95 uppercase shadow-lg shadow-red-900/40 transition-all">Iniciar</button>
                         <button id="btnStop_4" onclick="execute('4', 'stop')"
-                            class="bg-slate-700 hover:bg-slate-600 py-4 rounded-2xl font-black text-lg active:scale-95 uppercase shadow-lg transition-all">Detener</button>
+                            class="btn-rec-stop bg-slate-700 hover:bg-slate-600 py-4 rounded-2xl font-black text-lg active:scale-95 uppercase shadow-lg transition-all">Detener</button>
                     </div>
-                    <button id="btnPreview_4" onclick="openPreview('4')" class="w-full mt-3 bg-slate-800/60 hover:bg-slate-700 border border-slate-700 py-2 rounded-xl font-bold text-[10px] uppercase tracking-widest transition-all active:scale-95 disabled:opacity-30 disabled:cursor-not-allowed">👁 Vista Previa</button>
+                    <button id="btnPreview_4" onclick="openPreview('4')" class="ch-card-secondary w-full mt-3 bg-slate-800/60 hover:bg-slate-700 border border-slate-700 py-2 rounded-xl font-bold text-[10px] uppercase tracking-widest transition-all active:scale-95 disabled:opacity-30 disabled:cursor-not-allowed">👁 Vista Previa</button>
                 </div>
             </div>
 

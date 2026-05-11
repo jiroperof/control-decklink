@@ -221,6 +221,7 @@
         document.addEventListener("DOMContentLoaded", () => {
             initTheme();
             initSidebar();
+            initCompactMode();
             const t = localStorage.getItem(TOKEN_KEY);
             const exp = parseInt(localStorage.getItem(EXPIRE_KEY) || '0', 10);
             if (t && Date.now() < exp) { TOKEN = t; showDashboard(); }

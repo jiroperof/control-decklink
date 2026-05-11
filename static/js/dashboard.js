@@ -917,6 +917,22 @@
             }
         }
 
+        // ── Modo Compacto ─────────────────────────────────────────────────────────────
+        function toggleCompactMode() {
+            const isCompact = document.body.classList.toggle('compact-mode');
+            localStorage.setItem('compactMode', isCompact ? '1' : '0');
+            const btn = document.getElementById('btnCompact');
+            if (btn) btn.classList.toggle('compact-on', isCompact);
+        }
+
+        function initCompactMode() {
+            if (localStorage.getItem('compactMode') === '1') {
+                document.body.classList.add('compact-mode');
+                const btn = document.getElementById('btnCompact');
+                if (btn) btn.classList.add('compact-on');
+            }
+        }
+
         // ── Filtro de Canal por Grupo ─────────────────────────────────────────────────
         function applyChannelFilter() {
             if (!USER_CHANNEL) return;
