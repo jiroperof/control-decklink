@@ -570,13 +570,14 @@
         /* Grid: 4 columnas para los canales, sidebar normal oculto */
         body.compact-mode #mainGrid {
             flex-direction: row !important;
-            align-items: flex-start !important;
+            align-items: stretch !important;
             gap: 0.5rem !important;
         }
 
         body.compact-mode #gridCards {
             grid-template-columns: repeat(4, minmax(0, 1fr));
             gap: 0.5rem !important;
+            align-items: stretch;
         }
 
         @media (max-width: 1280px) {
@@ -588,15 +589,16 @@
         /* Sidebar normal: oculto en compacto */
         body.compact-mode #sidebar { display: none !important; }
 
-        /* Panel compacto de recursos: columna derecha */
+        /* Panel compacto de recursos: columna derecha, altura completa */
         body.compact-mode #compactResources {
             display: flex !important;
             flex-direction: column;
-            gap: 0.45rem;
+            justify-content: space-between;
             width: 160px !important;
             min-width: 160px !important;
             flex-shrink: 0;
-            padding: 0.6rem 0.65rem !important;
+            align-self: stretch;
+            padding: 0.65rem 0.7rem !important;
             margin-top: 0 !important;
         }
 
