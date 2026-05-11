@@ -516,6 +516,7 @@
             background: #020617;
             position: relative;
             overflow: hidden;
+            min-height: 100vh;
         }
         #loginSection::before {
             content: '';
@@ -549,8 +550,8 @@
             z-index: 1;
             display: flex;
             width: 100%;
-            max-width: 820px;
-            min-height: 460px;
+            max-width: 860px;
+            min-height: min(680px, calc(100vh - 48px));
             border-radius: 1.75rem;
             overflow: hidden;
             box-shadow: 0 0 0 1px rgba(255,255,255,0.06), 0 40px 80px rgba(0,0,0,0.6);
@@ -559,14 +560,14 @@
 
         /* Panel izquierdo: branding */
         .login-brand {
-            width: 280px;
+            width: 300px;
             flex-shrink: 0;
             background: linear-gradient(160deg, #0f172a 0%, #1e0a0a 60%, #0f172a 100%);
             border-right: 1px solid rgba(220,38,38,0.2);
             display: flex;
             flex-direction: column;
             justify-content: space-between;
-            padding: 2.25rem 2rem;
+            padding: 2.5rem 2.25rem;
             position: relative;
             overflow: hidden;
         }
@@ -595,8 +596,8 @@
             -webkit-backdrop-filter: blur(20px);
             display: flex;
             flex-direction: column;
-            justify-content: center;
-            padding: 2.5rem 2.25rem;
+            justify-content: space-between;
+            padding: 2.75rem 2.5rem;
         }
 
         /* Input wrapper con icono */
@@ -672,7 +673,7 @@
         /* Responsive: stacked en móvil */
         @media (max-width: 640px) {
             .login-card { flex-direction: column; max-width: 420px; min-height: unset; }
-            .login-brand { width: 100%; min-height: 160px; padding: 1.5rem; }
+            .login-brand { width: 100%; min-height: 180px; padding: 1.5rem; }
             .login-form-panel { padding: 1.75rem 1.5rem; }
         }
 
@@ -930,12 +931,11 @@
 
             <!-- Panel izquierdo: Branding -->
             <div class="login-brand">
-                <!-- Logo + nombre -->
                 <div>
-                    <img src="logo.png" alt="VTV" class="h-14 mb-5 drop-shadow-lg" />
+                    <img src="logo.png" alt="VTV" class="h-14 mb-6 drop-shadow-lg" />
                     <h2 class="text-2xl font-black tracking-tight text-white uppercase leading-tight mb-1">CAPTURADORA<br><span class="text-red-500">2.0</span></h2>
                     <p class="text-[9px] text-slate-500 font-bold uppercase tracking-[0.2em] mb-6">Sistema Multicanal · VTV</p>
-                    <div class="flex flex-col gap-2">
+                    <div class="flex flex-col gap-2 mb-8">
                         <div class="flex items-center gap-2">
                             <span class="w-1.5 h-1.5 rounded-full bg-green-400 animate-pulse"></span>
                             <span class="text-[10px] text-slate-400 font-bold uppercase tracking-widest">Sistema en línea</span>
@@ -949,41 +949,65 @@
                             <span class="text-[10px] text-slate-400 font-bold uppercase tracking-widest">Acceso autenticado</span>
                         </div>
                     </div>
+                    <!-- Mini grid de canales -->
+                    <p class="text-[8px] text-slate-600 font-black uppercase tracking-widest mb-2">Estado de canales</p>
+                    <div class="grid grid-cols-2 gap-2">
+                        <div class="bg-slate-900/60 border border-slate-700/40 rounded-xl p-3">
+                            <p class="text-[8px] text-slate-500 font-black uppercase tracking-widest mb-1.5">CH 1</p>
+                            <span class="w-1.5 h-1.5 rounded-full bg-slate-700 inline-block"></span>
+                        </div>
+                        <div class="bg-slate-900/60 border border-slate-700/40 rounded-xl p-3">
+                            <p class="text-[8px] text-slate-500 font-black uppercase tracking-widest mb-1.5">CH 2</p>
+                            <span class="w-1.5 h-1.5 rounded-full bg-slate-700 inline-block"></span>
+                        </div>
+                        <div class="bg-slate-900/60 border border-slate-700/40 rounded-xl p-3">
+                            <p class="text-[8px] text-slate-500 font-black uppercase tracking-widest mb-1.5">CH 3</p>
+                            <span class="w-1.5 h-1.5 rounded-full bg-slate-700 inline-block"></span>
+                        </div>
+                        <div class="bg-slate-900/60 border border-slate-700/40 rounded-xl p-3">
+                            <p class="text-[8px] text-slate-500 font-black uppercase tracking-widest mb-1.5">CH 4</p>
+                            <span class="w-1.5 h-1.5 rounded-full bg-slate-700 inline-block"></span>
+                        </div>
+                    </div>
                 </div>
                 <!-- Footer branding -->
-                <div>
-                    <div class="border-t border-slate-700/40 pt-4">
-                        <p class="text-[8px] text-slate-600 font-bold uppercase tracking-widest">C.A. Venezolana de Televisión</p>
-                        <p class="text-[8px] text-slate-700 font-bold uppercase tracking-widest mt-0.5">capturadora2.0.vtv.gov.ve</p>
-                    </div>
+                <div class="border-t border-slate-700/40 pt-4">
+                    <p class="text-[8px] text-slate-600 font-bold uppercase tracking-widest">C.A. Venezolana de Televisión</p>
+                    <p class="text-[8px] text-slate-700 font-bold uppercase tracking-widest mt-0.5">capturadora2.0.vtv.gov.ve</p>
                 </div>
             </div>
 
             <!-- Panel derecho: Formulario -->
             <div class="login-form-panel">
-                <div class="mb-7">
-                    <h3 class="text-xl font-black text-white uppercase tracking-tight mb-1">Iniciar Sesión</h3>
-                    <p class="text-[11px] text-slate-500 font-semibold">Ingresa tus credenciales para continuar</p>
+                <!-- Top -->
+                <div>
+                    <p class="text-[9px] text-red-500 font-black uppercase tracking-[0.25em] mb-2">Sistema Multicanal</p>
+                    <h3 class="text-2xl font-black text-white uppercase tracking-tight mb-1">Iniciar Sesión</h3>
+                    <p class="text-[12px] text-slate-500 font-semibold">Ingresa tus credenciales para continuar</p>
                 </div>
 
-                <div class="flex flex-col gap-4">
-                    <!-- Usuario -->
-                    <div class="login-input-wrap">
-                        <svg class="login-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/></svg>
-                        <input type="text" id="user" placeholder="Usuario" aria-label="Nombre de usuario" aria-required="true" autocomplete="username">
+                <!-- Campos -->
+                <div class="flex flex-col gap-5">
+                    <div>
+                        <label class="block text-[10px] font-black text-slate-500 uppercase tracking-widest mb-2">Usuario</label>
+                        <div class="login-input-wrap">
+                            <svg class="login-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/></svg>
+                            <input type="text" id="user" placeholder="Nombre de usuario" aria-label="Nombre de usuario" aria-required="true" autocomplete="username">
+                        </div>
                     </div>
-
-                    <!-- Contraseña -->
-                    <div class="login-input-wrap">
-                        <svg class="login-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/></svg>
-                        <input type="password" id="pass" placeholder="Contraseña" aria-label="Contraseña" aria-required="true" aria-describedby="loginError" autocomplete="current-password" style="padding-right:3rem">
-                        <button type="button" onmousedown="document.getElementById('pass').type='text'" onmouseup="document.getElementById('pass').type='password'" onmouseleave="document.getElementById('pass').type='password'" ontouchstart="document.getElementById('pass').type='text'" ontouchend="document.getElementById('pass').type='password'"
-                            class="absolute right-3 top-1/2 -translate-y-1/2 text-slate-600 hover:text-yellow-400 p-1.5 cursor-pointer transition-colors rounded" title="Mantener para ver clave">
-                            <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
-                            </svg>
-                        </button>
+                    <div>
+                        <label class="block text-[10px] font-black text-slate-500 uppercase tracking-widest mb-2">Contraseña</label>
+                        <div class="login-input-wrap">
+                            <svg class="login-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/></svg>
+                            <input type="password" id="pass" placeholder="Contraseña de acceso" aria-label="Contraseña" aria-required="true" aria-describedby="loginError" autocomplete="current-password" style="padding-right:3rem">
+                            <button type="button" onmousedown="document.getElementById('pass').type='text'" onmouseup="document.getElementById('pass').type='password'" onmouseleave="document.getElementById('pass').type='password'" ontouchstart="document.getElementById('pass').type='text'" ontouchend="document.getElementById('pass').type='password'"
+                                class="absolute right-3 top-1/2 -translate-y-1/2 text-slate-600 hover:text-yellow-400 p-1.5 cursor-pointer transition-colors rounded" title="Mantener para ver clave">
+                                <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                                </svg>
+                            </button>
+                        </div>
                     </div>
 
                     <!-- Error -->
@@ -992,16 +1016,22 @@
                         <span id="loginErrorText"></span>
                     </p>
 
-                    <!-- Botón -->
-                    <button id="btnLogin" onclick="login()" aria-label="Iniciar sesión en el sistema" class="login-btn mt-1">
+                    <button id="btnLogin" onclick="login()" aria-label="Iniciar sesión en el sistema" class="login-btn">
                         Iniciar Sesión
                     </button>
                 </div>
 
-                <!-- Footer del form -->
-                <div class="mt-8 pt-5 border-t border-slate-800">
-                    <p class="text-[10px] text-slate-600 text-center font-semibold">
-                        Acceso restringido · Solo personal autorizado
+                <!-- Bottom -->
+                <div class="flex flex-col gap-3">
+                    <div class="flex items-start gap-3 bg-slate-900/50 border border-slate-700/40 rounded-xl p-4">
+                        <svg class="w-4 h-4 text-slate-600 shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/></svg>
+                        <div>
+                            <p class="text-[10px] font-bold text-slate-500 uppercase tracking-wide">Acceso restringido</p>
+                            <p class="text-[10px] text-slate-600 mt-0.5">Solo personal autorizado. Todas las sesiones son registradas.</p>
+                        </div>
+                    </div>
+                    <p class="text-[9px] text-slate-700 text-center font-semibold uppercase tracking-widest">
+                        C.A. Venezolana de Televisión &nbsp;·&nbsp; 2026
                     </p>
                 </div>
             </div>
