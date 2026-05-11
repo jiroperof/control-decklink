@@ -567,9 +567,10 @@
             padding-bottom: 0.5rem !important;
         }
 
-        /* Grid: 4 columnas para los canales, sidebar oculto */
+        /* Grid: 4 columnas para los canales, sidebar normal oculto */
         body.compact-mode #mainGrid {
-            flex-direction: column !important;
+            flex-direction: row !important;
+            align-items: flex-start !important;
             gap: 0.5rem !important;
         }
 
@@ -586,6 +587,18 @@
 
         /* Sidebar normal: oculto en compacto */
         body.compact-mode #sidebar { display: none !important; }
+
+        /* Panel compacto de recursos: columna derecha */
+        body.compact-mode #compactResources {
+            display: flex !important;
+            flex-direction: column;
+            gap: 0.45rem;
+            width: 160px !important;
+            min-width: 160px !important;
+            flex-shrink: 0;
+            padding: 0.6rem 0.65rem !important;
+            margin-top: 0 !important;
+        }
 
         /* ── Tarjetas de canal en compacto ── */
         /* Header de tarjeta */
@@ -695,14 +708,7 @@
         /* Ocultar en modo normal */
         #compactResources { display: none; }
 
-        /* Mostrar solo en compacto */
-        body.compact-mode #compactResources {
-            display: grid !important;
-            grid-template-columns: repeat(6, 1fr);
-            gap: 0.4rem;
-            padding: 0.5rem 0.75rem;
-            margin-top: 0.4rem;
-        }
+        /* (la regla de display flex+columna está arriba, junto al layout) */
 
         .compact-res-item {
             display: flex;
@@ -1340,38 +1346,55 @@
 
             </div><!-- /gridCards -->
 
-            <!-- Monitor de recursos compacto: solo visible en modo compacto -->
+            <!-- Monitor de recursos compacto: solo visible en modo compacto, columna derecha -->
             <div id="compactResources" class="glass-panel rounded-2xl font-mono shadow-lg">
+                <!-- Título -->
+                <p class="text-[8px] font-black text-slate-500 uppercase tracking-widest mb-1">⚙ Recursos</p>
+
+                <!-- CPU -->
                 <div class="compact-res-item">
                     <div class="compact-res-label"><span class="text-green-400">CPU</span><span id="cCpuVal">0%</span></div>
                     <div class="compact-res-bar-track"><div id="cCpuBar" class="compact-res-bar-fill bg-green-500" style="width:0%"></div></div>
-                    <div id="cCpuModel" class="text-[7px] text-slate-500 uppercase tracking-widest truncate"></div>
+                    <div id="cCpuModel" class="text-[7px] text-slate-500 truncate"></div>
                 </div>
+                <!-- RAM -->
                 <div class="compact-res-item">
                     <div class="compact-res-label"><span class="text-blue-400">RAM</span><span id="cRamVal">0%</span></div>
                     <div class="compact-res-bar-track"><div id="cRamBar" class="compact-res-bar-fill bg-blue-500" style="width:0%"></div></div>
-                    <div id="cRamModel" class="text-[7px] text-slate-500 uppercase tracking-widest truncate"></div>
+                    <div id="cRamModel" class="text-[7px] text-slate-500 truncate"></div>
                 </div>
+                <!-- GPU -->
                 <div class="compact-res-item">
                     <div class="compact-res-label"><span class="text-red-400">GPU</span><span id="cGpuVal">0%</span></div>
                     <div class="compact-res-bar-track"><div id="cGpuBar" class="compact-res-bar-fill bg-red-500" style="width:0%"></div></div>
-                    <div id="cGpuModel" class="text-[7px] text-slate-500 uppercase tracking-widest truncate"></div>
+                    <div id="cGpuModel" class="text-[7px] text-slate-500 truncate"></div>
                 </div>
+                <!-- VRAM -->
                 <div class="compact-res-item">
                     <div class="compact-res-label"><span class="text-red-300">VRAM</span><span id="cVramVal">0%</span></div>
                     <div class="compact-res-bar-track"><div id="cVramBar" class="compact-res-bar-fill bg-red-400" style="width:0%"></div></div>
-                    <div class="text-[7px] text-slate-500 uppercase tracking-widest truncate">VRAM</div>
                 </div>
+                <!-- Disco Capturas -->
                 <div class="compact-res-item">
-                    <div class="compact-res-label"><span class="text-teal-400">CAP</span><span id="cDisk2Val">0%</span></div>
+                    <div class="compact-res-label"><span class="text-teal-400">CAPTURAS</span><span id="cDisk2Val">0%</span></div>
                     <div class="compact-res-bar-track"><div id="cDisk2Bar" class="compact-res-bar-fill bg-teal-500" style="width:0%"></div></div>
-                    <div id="cDiskRemaining" class="text-[7px] text-yellow-400 font-bold uppercase tracking-widest truncate">—</div>
+                    <div id="cDiskRemaining" class="text-[7px] text-yellow-400 font-bold truncate">—</div>
                 </div>
+                <!-- Red -->
                 <div class="compact-res-item">
-                    <div class="compact-res-label"><span class="text-teal-300">RED</span><span id="cNetVal">0</span></div>
+                    <div class="compact-res-label"><span class="text-teal-300">RED</span><span id="cNetVal" class="truncate max-w-[70px]">0</span></div>
                     <div class="compact-res-bar-track"><div id="cNetBar" class="compact-res-bar-fill bg-teal-400" style="width:0%"></div></div>
-                    <div id="cNetIp" class="text-[7px] text-slate-500 uppercase tracking-widest truncate"></div>
+                    <div id="cNetIp" class="text-[7px] text-slate-500 truncate"></div>
                 </div>
+
+                <!-- Separador -->
+                <div class="border-t border-slate-700/50 my-1"></div>
+
+                <!-- Botón Limpiar -->
+                <button onclick="openCleanupModal()" class="admin-ui-block w-full flex items-center justify-center gap-1.5 bg-red-600/80 hover:bg-red-500 text-red-100 hover:text-white px-2 py-1.5 rounded-lg font-bold text-[9px] uppercase tracking-widest transition-all active:scale-95 shadow-[0_0_10px_rgba(220,38,38,0.3)] border border-red-500/50">
+                    <svg class="w-3 h-3 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
+                    Limpiar
+                </button>
             </div><!-- /compactResources -->
 
             <!-- Sidebar -->
