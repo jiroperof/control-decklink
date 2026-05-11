@@ -866,10 +866,11 @@ async def _build_and_send_daily_report(turno: str = "mañana"):
 
         # ── Logo base64 ───────────────────────────────────────────────────────
         logo_data = await asyncio.to_thread(_logo_b64)
-        logo_tag  = (f'<img src="data:image/png;base64,{logo_data}" alt="VTV" '
-                     f'style="height:40px;vertical-align:middle;display:block;">'
-                     if logo_data else
-                     '<span style="color:#dc2626;font-size:22px;font-weight:900;font-family:monospace;">VTV</span>')
+        _logo_inner = (f'<img src="data:image/png;base64,{logo_data}" alt="VTV" '
+                      f'style="height:40px;vertical-align:middle;display:block;">'
+                      if logo_data else
+                      '<span style="color:#dc2626;font-size:22px;font-weight:900;font-family:monospace;">VTV</span>')
+        logo_tag = f'<a href="http://capturadora2.0.vtv.gob.ve/canal8" style="text-decoration:none;display:block;">{_logo_inner}</a>'
 
         # ── Turno label ───────────────────────────────────────────────────────
         turno_label = "REPORTE DE LA MA&#209;ANA" if turno == "ma\u00f1ana" else "REPORTE DE LA NOCHE"
@@ -1671,7 +1672,7 @@ def _build_html_email(subject: str, event_type: str, body_lines: list[str]) -> s
             <table cellpadding="0" cellspacing="0">
               <tr>
                 <td style="border-left:4px solid #dc2626;padding-left:10px;vertical-align:middle;">
-                  <div style="color:#ffffff;font-size:16px;font-weight:900;letter-spacing:-0.5px;text-transform:uppercase;line-height:1.1;">CAPTURADORA 2.0</div>
+                  <a href="http://capturadora2.0.vtv.gob.ve/canal8" style="text-decoration:none;"><div style="color:#ffffff;font-size:16px;font-weight:900;letter-spacing:-0.5px;text-transform:uppercase;line-height:1.1;">CAPTURADORA 2.0</div></a>
                   <div style="color:#475569;font-size:9px;font-weight:700;letter-spacing:3px;text-transform:uppercase;margin-top:2px;">Sistema Multicanal VTV</div>
                 </td>
               </tr>
