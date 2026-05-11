@@ -554,29 +554,23 @@
            MODO COMPACTO
            ════════════════════════════════════════════════════════════════ */
 
-        /* Botón modo compacto activo */
+        /* Botón toggle activo */
         #btnCompact.compact-on {
             background-color: rgba(234,179,8,0.2) !important;
             border-color: rgba(234,179,8,0.5) !important;
             color: rgb(250,204,21) !important;
         }
 
-        /* ── Layout principal en modo compacto ── */
-        body.compact-mode .container {
-            padding-top: 0.5rem !important;
-            padding-bottom: 0.5rem !important;
-        }
-
-        /* Grid: 4 columnas para los canales, sidebar normal oculto */
+        /* ── Layout: fila con 4 canales + columna de recursos ── */
         body.compact-mode #mainGrid {
             flex-direction: row !important;
             align-items: stretch !important;
-            gap: 0.5rem !important;
+            gap: 0.6rem !important;
         }
 
         body.compact-mode #gridCards {
             grid-template-columns: repeat(4, minmax(0, 1fr));
-            gap: 0.5rem !important;
+            gap: 0.6rem !important;
             align-items: stretch;
         }
 
@@ -589,149 +583,177 @@
         /* Sidebar normal: oculto en compacto */
         body.compact-mode #sidebar { display: none !important; }
 
-        /* Panel compacto de recursos: columna derecha, altura completa */
+        /* ── Tarjetas de canal ── */
+
+        /* Header: mantiene padding legible */
+        body.compact-mode .glass-panel .bg-slate-900\/40.px-5.py-4 {
+            padding: 0.55rem 0.9rem !important;
+            font-size: 11px !important;
+        }
+
+        /* Cuerpo */
+        body.compact-mode .ch-card-body {
+            padding: 0.65rem 0.75rem !important;
+            display: flex;
+            flex-direction: column;
+            gap: 0.4rem;
+        }
+
+        /* Ocultar spacer */
+        body.compact-mode .ch-card-body .mt-auto { display: none !important; }
+
+        /* Secciones secundarias visibles */
+        body.compact-mode .ch-card-secondary { display: block !important; }
+
+        /* Labels: legibles */
+        body.compact-mode .ch-card-body label {
+            font-size: 9px !important;
+            margin-bottom: 0.15rem !important;
+            letter-spacing: 0.04em !important;
+        }
+
+        /* Selects */
+        body.compact-mode .ch-card-body select {
+            padding: 0.3rem 0.5rem !important;
+            font-size: 11px !important;
+            border-radius: 0.5rem !important;
+        }
+
+        /* Input ruta destino */
+        body.compact-mode .ch-card-body input[type="text"] {
+            padding: 0.3rem 0.5rem !important;
+            font-size: 10px !important;
+            border-radius: 0.5rem !important;
+        }
+
+        /* Grid calidad + minutos: espaciado reducido */
+        body.compact-mode .ch-card-body .grid.grid-cols-1.md\:grid-cols-2 {
+            gap: 0.4rem !important;
+            margin-bottom: 0 !important;
+        }
+
+        /* Sección carpeta destino */
+        body.compact-mode .ch-card-secondary.admin-ui-block.mb-4 {
+            margin-bottom: 0 !important;
+        }
+
+        /* Contador +/- minutos */
+        body.compact-mode .ch-card-body .flex.items-center.bg-\[#0f172a\] button {
+            padding: 0.3rem 0.65rem !important;
+            font-size: 12px !important;
+        }
+        body.compact-mode .ch-card-body .flex.items-center.bg-\[#0f172a\] input {
+            padding: 0.3rem 0 !important;
+            font-size: 12px !important;
+        }
+
+        /* Sección programar canal */
+        body.compact-mode .ch-card-body .bg-slate-900\/50 {
+            padding: 0.45rem 0.6rem !important;
+            margin-bottom: 0 !important;
+            border-radius: 0.75rem !important;
+        }
+        body.compact-mode .ch-card-body .bg-slate-900\/50 > p {
+            font-size: 9px !important;
+            margin-bottom: 0.35rem !important;
+        }
+        body.compact-mode .ch-card-body .grid.grid-cols-2.gap-3 {
+            gap: 0.3rem !important;
+            margin-bottom: 0.3rem !important;
+        }
+        body.compact-mode .ch-card-body input[type="time"] {
+            padding: 0.25rem 0.4rem !important;
+            font-size: 11px !important;
+            border-radius: 0.45rem !important;
+        }
+        /* Botones Guardar/Borrar schedule */
+        body.compact-mode .ch-card-body .bg-slate-900\/50 .flex.gap-2 button {
+            padding: 0.3rem 0 !important;
+            font-size: 9px !important;
+            border-radius: 0.45rem !important;
+        }
+
+        /* Duración */
+        body.compact-mode [id^="durationBox_"] {
+            margin: 0.1rem 0 !important;
+        }
+        body.compact-mode [id^="durationBox_"] p:first-child {
+            font-size: 9px !important;
+        }
+        body.compact-mode [id^="durationVal_"] {
+            font-size: 1.3rem !important;
+            letter-spacing: 0.05em !important;
+        }
+
+        /* Botones Iniciar / Detener */
+        body.compact-mode .admin-ui-block.grid.grid-cols-2.gap-4.mt-2 {
+            gap: 0.4rem !important;
+            margin-top: 0.1rem !important;
+        }
+        body.compact-mode .btn-rec-start,
+        body.compact-mode .btn-rec-stop {
+            padding-top: 0.55rem !important;
+            padding-bottom: 0.55rem !important;
+            font-size: 0.7rem !important;
+            border-radius: 0.75rem !important;
+            letter-spacing: 0.08em !important;
+        }
+
+        /* Vista previa */
+        body.compact-mode .ch-card-secondary.w-full.mt-3 {
+            margin-top: 0.25rem !important;
+            padding: 0.3rem !important;
+            font-size: 9px !important;
+            border-radius: 0.6rem !important;
+        }
+
+        /* ── Monitor de recursos compacto ── */
+        #compactResources { display: none; }
+
         body.compact-mode #compactResources {
             display: flex !important;
             flex-direction: column;
             justify-content: space-between;
-            width: 160px !important;
-            min-width: 160px !important;
+            width: 175px !important;
+            min-width: 175px !important;
             flex-shrink: 0;
             align-self: stretch;
-            padding: 0.65rem 0.7rem !important;
-            margin-top: 0 !important;
+            padding: 0.75rem 0.85rem !important;
         }
-
-        /* ── Tarjetas de canal en compacto ── */
-        /* Header de tarjeta */
-        body.compact-mode .glass-panel .bg-slate-900\/40.px-5.py-4 {
-            padding: 0.4rem 0.75rem !important;
-        }
-
-        /* Cuerpo de tarjeta */
-        body.compact-mode .ch-card-body {
-            padding: 0.5rem !important;
-            gap: 0.25rem !important;
-        }
-
-        /* Ocultar el spacer mt-auto en compacto */
-        body.compact-mode .ch-card-body .mt-auto { display: none !important; }
-
-        /* Secciones secundarias: más pequeñas pero VISIBLES */
-        body.compact-mode .ch-card-secondary { display: block !important; }
-
-        /* Labels */
-        body.compact-mode .ch-card-body label {
-            font-size: 7px !important;
-            margin-bottom: 0.1rem !important;
-        }
-
-        /* Selects, inputs de texto */
-        body.compact-mode .ch-card-body select,
-        body.compact-mode .ch-card-body input[type="text"] {
-            padding: 0.25rem 0.5rem !important;
-            font-size: 10px !important;
-            border-radius: 0.5rem !important;
-        }
-
-        /* Grid calidad+minutos: 2 cols más comprimido */
-        body.compact-mode .ch-card-body .grid.grid-cols-1.md\:grid-cols-2 {
-            gap: 0.3rem !important;
-            margin-bottom: 0.3rem !important;
-        }
-
-        /* Carpeta de destino */
-        body.compact-mode .ch-card-secondary.admin-ui-block.mb-4:has(input[type="text"]) {
-            margin-bottom: 0.3rem !important;
-        }
-
-        /* Programar canal: más compacto */
-        body.compact-mode .ch-card-body .bg-slate-900\/50 {
-            padding: 0.35rem 0.5rem !important;
-            margin-bottom: 0.3rem !important;
-        }
-
-        body.compact-mode .ch-card-body .grid.grid-cols-2.gap-3 {
-            gap: 0.25rem !important;
-            margin-bottom: 0.25rem !important;
-        }
-
-        body.compact-mode .ch-card-body input[type="time"] {
-            padding: 0.2rem 0.35rem !important;
-            font-size: 10px !important;
-            border-radius: 0.4rem !important;
-        }
-
-        /* Botones Guardar/Borrar del schedule */
-        body.compact-mode .ch-card-body .flex.gap-2 button {
-            padding: 0.2rem 0 !important;
-            font-size: 9px !important;
-            border-radius: 0.4rem !important;
-        }
-
-        /* Contador +/- minutos */
-        body.compact-mode .ch-card-body .flex.items-center.bg-\[#0f172a\] {
-            border-radius: 0.5rem !important;
-        }
-        body.compact-mode .ch-card-body .flex.items-center.bg-\[#0f172a\] button {
-            padding: 0.25rem 0.6rem !important;
-            font-size: 11px !important;
-        }
-        body.compact-mode .ch-card-body .flex.items-center.bg-\[#0f172a\] input {
-            padding: 0.25rem 0 !important;
-            font-size: 11px !important;
-        }
-
-        /* Duración */
-        body.compact-mode #durationBox_1,
-        body.compact-mode #durationBox_2,
-        body.compact-mode #durationBox_3,
-        body.compact-mode #durationBox_4 {
-            margin: 0.15rem 0 !important;
-        }
-        body.compact-mode [id^="durationVal_"] {
-            font-size: 1.1rem !important;
-        }
-
-        /* Botones Iniciar/Detener */
-        body.compact-mode .btn-rec-start,
-        body.compact-mode .btn-rec-stop {
-            padding-top: 0.4rem !important;
-            padding-bottom: 0.4rem !important;
-            font-size: 0.65rem !important;
-            border-radius: 0.6rem !important;
-        }
-        body.compact-mode .admin-ui-block.grid.grid-cols-2.gap-4.mt-2 {
-            gap: 0.3rem !important;
-            margin-top: 0.3rem !important;
-        }
-
-        /* ── Monitor de recursos compacto (solo en modo compacto) ── */
-        /* Ocultar en modo normal */
-        #compactResources { display: none; }
-
-        /* (la regla de display flex+columna está arriba, junto al layout) */
 
         .compact-res-item {
             display: flex;
             flex-direction: column;
-            gap: 2px;
+            gap: 3px;
         }
         .compact-res-label {
-            font-size: 8px;
+            font-size: 9px;
             font-weight: 900;
             text-transform: uppercase;
-            letter-spacing: 0.05em;
-            color: #64748b;
+            letter-spacing: 0.06em;
             display: flex;
             justify-content: space-between;
+            align-items: baseline;
+        }
+        .compact-res-label span:last-child {
+            font-size: 10px;
+            font-weight: 700;
+            font-variant-numeric: tabular-nums;
+        }
+        .compact-res-subtext {
+            font-size: 8px;
+            color: #475569;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            margin-top: 1px;
         }
         .compact-res-bar-track {
             height: 5px;
             background: #1e293b;
             border-radius: 9999px;
             overflow: hidden;
-            border: 1px solid rgba(51,65,85,0.4);
+            border: 1px solid rgba(51,65,85,0.5);
         }
         .compact-res-bar-fill {
             height: 100%;
@@ -1351,51 +1373,74 @@
             <!-- Monitor de recursos compacto: solo visible en modo compacto, columna derecha -->
             <div id="compactResources" class="glass-panel rounded-2xl font-mono shadow-lg">
                 <!-- Título -->
-                <p class="text-[8px] font-black text-slate-500 uppercase tracking-widest mb-1">⚙ Recursos</p>
+                <p class="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-0.5">⚙ Monitor</p>
 
                 <!-- CPU -->
                 <div class="compact-res-item">
-                    <div class="compact-res-label"><span class="text-green-400">CPU</span><span id="cCpuVal">0%</span></div>
+                    <div class="compact-res-label">
+                        <span class="text-green-400">CPU</span>
+                        <span id="cCpuVal" class="text-green-300">0%</span>
+                    </div>
                     <div class="compact-res-bar-track"><div id="cCpuBar" class="compact-res-bar-fill bg-green-500" style="width:0%"></div></div>
-                    <div id="cCpuModel" class="text-[7px] text-slate-500 truncate"></div>
+                    <div id="cCpuModel" class="compact-res-subtext"></div>
                 </div>
+
                 <!-- RAM -->
                 <div class="compact-res-item">
-                    <div class="compact-res-label"><span class="text-blue-400">RAM</span><span id="cRamVal">0%</span></div>
+                    <div class="compact-res-label">
+                        <span class="text-blue-400">RAM</span>
+                        <span id="cRamVal" class="text-blue-300">0%</span>
+                    </div>
                     <div class="compact-res-bar-track"><div id="cRamBar" class="compact-res-bar-fill bg-blue-500" style="width:0%"></div></div>
-                    <div id="cRamModel" class="text-[7px] text-slate-500 truncate"></div>
+                    <div id="cRamModel" class="compact-res-subtext"></div>
                 </div>
+
                 <!-- GPU -->
                 <div class="compact-res-item">
-                    <div class="compact-res-label"><span class="text-red-400">GPU</span><span id="cGpuVal">0%</span></div>
+                    <div class="compact-res-label">
+                        <span class="text-red-400">GPU</span>
+                        <span id="cGpuVal" class="text-red-300">0%</span>
+                    </div>
                     <div class="compact-res-bar-track"><div id="cGpuBar" class="compact-res-bar-fill bg-red-500" style="width:0%"></div></div>
-                    <div id="cGpuModel" class="text-[7px] text-slate-500 truncate"></div>
+                    <div id="cGpuModel" class="compact-res-subtext"></div>
                 </div>
+
                 <!-- VRAM -->
                 <div class="compact-res-item">
-                    <div class="compact-res-label"><span class="text-red-300">VRAM</span><span id="cVramVal">0%</span></div>
+                    <div class="compact-res-label">
+                        <span class="text-red-300">VRAM</span>
+                        <span id="cVramVal" class="text-red-200">0%</span>
+                    </div>
                     <div class="compact-res-bar-track"><div id="cVramBar" class="compact-res-bar-fill bg-red-400" style="width:0%"></div></div>
                 </div>
+
                 <!-- Disco Capturas -->
                 <div class="compact-res-item">
-                    <div class="compact-res-label"><span class="text-teal-400">CAPTURAS</span><span id="cDisk2Val">0%</span></div>
+                    <div class="compact-res-label">
+                        <span class="text-teal-400">CAPTURAS</span>
+                        <span id="cDisk2Val" class="text-teal-300">0%</span>
+                    </div>
                     <div class="compact-res-bar-track"><div id="cDisk2Bar" class="compact-res-bar-fill bg-teal-500" style="width:0%"></div></div>
-                    <div id="cDiskRemaining" class="text-[7px] text-yellow-400 font-bold truncate">—</div>
+                    <div id="cDiskRemaining" class="compact-res-subtext" style="color:#fbbf24 !important;">—</div>
                 </div>
+
                 <!-- Red -->
                 <div class="compact-res-item">
-                    <div class="compact-res-label"><span class="text-teal-300">RED</span><span id="cNetVal" class="truncate max-w-[70px]">0</span></div>
-                    <div class="compact-res-bar-track"><div id="cNetBar" class="compact-res-bar-fill bg-teal-400" style="width:0%"></div></div>
-                    <div id="cNetIp" class="text-[7px] text-slate-500 truncate"></div>
+                    <div class="compact-res-label">
+                        <span class="text-sky-400">RED</span>
+                        <span id="cNetVal" class="text-sky-300 truncate" style="max-width:85px">0</span>
+                    </div>
+                    <div class="compact-res-bar-track"><div id="cNetBar" class="compact-res-bar-fill bg-sky-400" style="width:0%"></div></div>
+                    <div id="cNetIp" class="compact-res-subtext"></div>
                 </div>
 
                 <!-- Separador -->
-                <div class="border-t border-slate-700/50 my-1"></div>
+                <div class="border-t border-slate-700/50"></div>
 
                 <!-- Botón Limpiar -->
-                <button onclick="openCleanupModal()" class="admin-ui-block w-full flex items-center justify-center gap-1.5 bg-red-600/80 hover:bg-red-500 text-red-100 hover:text-white px-2 py-1.5 rounded-lg font-bold text-[9px] uppercase tracking-widest transition-all active:scale-95 shadow-[0_0_10px_rgba(220,38,38,0.3)] border border-red-500/50">
+                <button onclick="openCleanupModal()" class="admin-ui-block w-full flex items-center justify-center gap-1.5 bg-red-600/80 hover:bg-red-500 text-red-100 hover:text-white px-2 py-1.5 rounded-lg font-bold text-[9px] uppercase tracking-widest transition-all active:scale-95 shadow-[0_0_8px_rgba(220,38,38,0.3)] border border-red-500/50">
                     <svg class="w-3 h-3 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
-                    Limpiar
+                    Limpiar disco
                 </button>
             </div><!-- /compactResources -->
 
