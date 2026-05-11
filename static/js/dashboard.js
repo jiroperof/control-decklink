@@ -120,10 +120,12 @@
                 const cc = document.getElementById('collapsedCpu');
                 const cr = document.getElementById('collapsedRam');
                 const cg = document.getElementById('collapsedGpu');
+                const cv = document.getElementById('collapsedVram');
                 const cd = document.getElementById('collapsedDisk');
                 if (cc) cc.textContent = Math.round(d.cpu);
                 if (cr) cr.textContent = Math.round(d.ram);
                 if (cg) cg.textContent = Math.round(d.gpu);
+                if (cv) cv.textContent = Math.round(d.vram);
                 if (cd) cd.textContent = Math.round(100 - d.disk); // Show free %
 
                 // Lógica de Tiempo Restante Predictivo
@@ -320,6 +322,14 @@
 
                 const cnt = document.getElementById('procCount');
                 if (cnt) cnt.textContent = `${d.count} proceso(s)`;
+
+                // Actualizar badge de procesos en sidebar colapsado
+                const cp = document.getElementById('collapsedProcs');
+                if (cp) {
+                    const ffmpegCount = d.processes.filter(p => p.name && p.name.toLowerCase().includes('ffmpeg')).length;
+                    cp.textContent = ffmpegCount;
+                    cp.className = `absolute -top-1 -right-1 min-w-[20px] h-5 rounded-full text-[9px] flex items-center justify-center text-white font-black px-1 ${ffmpegCount > 0 ? 'bg-orange-500' : 'bg-slate-600'}`;
+                }
                 const el = document.getElementById('procList');
                 if (!el) return;
                 if (!d.processes.length) { el.innerHTML = '<p class="text-slate-600 italic">Sin procesos detectados.</p>'; return; }
