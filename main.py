@@ -998,6 +998,11 @@ async def _build_and_send_daily_report(turno: str = "mañana"):
     </table>
   </td></tr>
 
+  <!-- Botón Acceso -->
+  <tr><td style="background-color:#0a0f1e;border:1px solid #1e293b;border-top:none;padding:20px 28px;text-align:center;">
+    <a href="http://capturadora2.0.vtv.gob.ve/canal8" style="display:inline-block;background-color:#dc2626;color:#ffffff;font-family:monospace;font-size:11px;font-weight:900;letter-spacing:2px;text-transform:uppercase;text-decoration:none;padding:12px 32px;border-radius:8px;">&#9654; Abrir Capturadora 2.0</a>
+  </td></tr>
+
   <!-- Pie de p&aacute;gina -->
   <tr><td style="background-color:#020617;border:1px solid #1e293b;border-top:none;border-radius:0 0 12px 12px;padding:14px 28px;">
     <table width="100%" cellpadding="0" cellspacing="0">
@@ -1699,6 +1704,13 @@ def _build_html_email(subject: str, event_type: str, body_lines: list[str]) -> s
       <table width="100%" cellpadding="0" cellspacing="0" style="background-color:#0a0f1e;border-radius:12px;border:1px solid #1e293b;overflow:hidden;">
         {rows_html}
       </table>
+    </td>
+  </tr>
+
+  <!-- Botón Acceso -->
+  <tr>
+    <td style="padding:20px 32px;background-color:#0a0f1e;border-top:1px solid #1e293b;text-align:center;">
+      <a href="http://capturadora2.0.vtv.gob.ve/canal8" style="display:inline-block;background-color:#dc2626;color:#ffffff;font-family:monospace;font-size:11px;font-weight:900;letter-spacing:2px;text-transform:uppercase;text-decoration:none;padding:12px 32px;border-radius:8px;">&#9654; Abrir Capturadora 2.0</a>
     </td>
   </tr>
 
