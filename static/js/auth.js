@@ -377,7 +377,7 @@
             const roleVal = document.getElementById('user').value;
             const p = document.getElementById('pass').value;
             const err = document.getElementById('loginError');
-            if (!roleVal || !p) { err.textContent = 'Llena todos los campos'; err.classList.remove('hidden'); return; }
+            if (!roleVal || !p) { const et = document.getElementById('loginErrorText'); if(et) et.textContent = 'Llena todos los campos'; err.classList.remove('hidden'); return; }
 
             btn.disabled = true; btn.innerHTML = '<span class="spinner"></span>Verificando…';
             err.classList.add('hidden');
@@ -417,14 +417,16 @@
                 showDashboard();
                 showToast("¡Sesión iniciada correctamente!", "success");
             } catch (_) {
-                err.textContent = 'Error de conexión con el servidor.'; err.classList.remove('hidden');
+                const et2 = document.getElementById('loginErrorText'); if(et2) et2.textContent = 'Error de conexión con el servidor.'; err.classList.remove('hidden');
             } finally {
                 btn.disabled = false; btn.innerHTML = 'Iniciar Sesión';
             }
         }
         function showLoginErr(msg) {
             const el = document.getElementById('loginError');
-            if (el) { el.textContent = msg; el.classList.remove('hidden'); }
+            const et = document.getElementById('loginErrorText');
+            if (et) et.textContent = msg;
+            if (el) el.classList.remove('hidden');
         }
 
         // ── Logout ────────────────────────────────────────────────────────────────────
