@@ -1710,7 +1710,7 @@ def _build_html_email(subject: str, event_type: str, body_lines: list[str]) -> s
             <span style="color:#334155;font-size:10px;font-weight:700;letter-spacing:1px;text-transform:uppercase;font-family:monospace;">
               C.A. Venezolana de Televisión &nbsp;·&nbsp; {now_str}
             </span><br>
-            <a href="http://capturadora2.0.vtv.gov.ve" style="color:#dc2626;font-size:10px;font-weight:700;letter-spacing:0.5px;font-family:monospace;text-decoration:none;">capturadora2.0.vtv.gov.ve</a>
+            <a href="http://capturadora2.0.vtv.gob.ve/canal8" style="color:#dc2626;font-size:10px;font-weight:700;letter-spacing:0.5px;font-family:monospace;text-decoration:none;">capturadora2.0.vtv.gob.ve/canal8</a>
           </td>
           <td align="right">
             <span style="color:#dc2626;font-size:10px;font-weight:900;letter-spacing:2px;font-family:monospace;">VTV</span>
