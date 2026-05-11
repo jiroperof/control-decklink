@@ -553,54 +553,182 @@
         /* ════════════════════════════════════════════════════════════════
            MODO COMPACTO
            ════════════════════════════════════════════════════════════════ */
-        /* Transición suave al cambiar modo */
-        #gridCards, #sidebar, .glass-panel {
-            transition: all 0.25s cubic-bezier(0.4,0,0.2,1);
-        }
-
-        /* En modo compacto los canales van en 4 columnas en vez de 2 */
-        body.compact-mode #gridCards {
-            grid-template-columns: repeat(4, minmax(0, 1fr));
-        }
-        @media (max-width: 1280px) {
-            body.compact-mode #gridCards {
-                grid-template-columns: repeat(2, minmax(0, 1fr));
-            }
-        }
-        @media (max-width: 768px) {
-            body.compact-mode #gridCards {
-                grid-template-columns: repeat(1, minmax(0, 1fr));
-            }
-        }
-
-        /* Tarjeta canal compacta: oculta secciones secundarias */
-        body.compact-mode .ch-card-secondary { display: none !important; }
-
-        /* Padding reducido en tarjeta */
-        body.compact-mode .ch-card-body { padding: 0.6rem !important; }
-
-        /* Botones iniciar/detener más pequeños */
-        body.compact-mode .btn-rec-start,
-        body.compact-mode .btn-rec-stop {
-            padding-top: 0.5rem !important;
-            padding-bottom: 0.5rem !important;
-            font-size: 0.7rem !important;
-            border-radius: 0.75rem !important;
-        }
-
-        /* Sidebar compacto: más estrecho, barras mini */
-        body.compact-mode #sidebar {
-            width: 220px !important;
-            min-width: 220px !important;
-        }
-        body.compact-mode .res-bar-label { font-size: 9px !important; }
-        body.compact-mode .res-bar-track { height: 4px !important; }
 
         /* Botón modo compacto activo */
         #btnCompact.compact-on {
             background-color: rgba(234,179,8,0.2) !important;
             border-color: rgba(234,179,8,0.5) !important;
             color: rgb(250,204,21) !important;
+        }
+
+        /* ── Layout principal en modo compacto ── */
+        body.compact-mode .container {
+            padding-top: 0.5rem !important;
+            padding-bottom: 0.5rem !important;
+        }
+
+        /* Grid: 4 columnas para los canales, sidebar oculto */
+        body.compact-mode #mainGrid {
+            flex-direction: column !important;
+            gap: 0.5rem !important;
+        }
+
+        body.compact-mode #gridCards {
+            grid-template-columns: repeat(4, minmax(0, 1fr));
+            gap: 0.5rem !important;
+        }
+
+        @media (max-width: 1280px) {
+            body.compact-mode #gridCards {
+                grid-template-columns: repeat(2, minmax(0, 1fr));
+            }
+        }
+
+        /* Sidebar normal: oculto en compacto */
+        body.compact-mode #sidebar { display: none !important; }
+
+        /* ── Tarjetas de canal en compacto ── */
+        /* Header de tarjeta */
+        body.compact-mode .glass-panel .bg-slate-900\/40.px-5.py-4 {
+            padding: 0.4rem 0.75rem !important;
+        }
+
+        /* Cuerpo de tarjeta */
+        body.compact-mode .ch-card-body {
+            padding: 0.5rem !important;
+            gap: 0.25rem !important;
+        }
+
+        /* Ocultar el spacer mt-auto en compacto */
+        body.compact-mode .ch-card-body .mt-auto { display: none !important; }
+
+        /* Secciones secundarias: más pequeñas pero VISIBLES */
+        body.compact-mode .ch-card-secondary { display: block !important; }
+
+        /* Labels */
+        body.compact-mode .ch-card-body label {
+            font-size: 7px !important;
+            margin-bottom: 0.1rem !important;
+        }
+
+        /* Selects, inputs de texto */
+        body.compact-mode .ch-card-body select,
+        body.compact-mode .ch-card-body input[type="text"] {
+            padding: 0.25rem 0.5rem !important;
+            font-size: 10px !important;
+            border-radius: 0.5rem !important;
+        }
+
+        /* Grid calidad+minutos: 2 cols más comprimido */
+        body.compact-mode .ch-card-body .grid.grid-cols-1.md\:grid-cols-2 {
+            gap: 0.3rem !important;
+            margin-bottom: 0.3rem !important;
+        }
+
+        /* Carpeta de destino */
+        body.compact-mode .ch-card-secondary.admin-ui-block.mb-4:has(input[type="text"]) {
+            margin-bottom: 0.3rem !important;
+        }
+
+        /* Programar canal: más compacto */
+        body.compact-mode .ch-card-body .bg-slate-900\/50 {
+            padding: 0.35rem 0.5rem !important;
+            margin-bottom: 0.3rem !important;
+        }
+
+        body.compact-mode .ch-card-body .grid.grid-cols-2.gap-3 {
+            gap: 0.25rem !important;
+            margin-bottom: 0.25rem !important;
+        }
+
+        body.compact-mode .ch-card-body input[type="time"] {
+            padding: 0.2rem 0.35rem !important;
+            font-size: 10px !important;
+            border-radius: 0.4rem !important;
+        }
+
+        /* Botones Guardar/Borrar del schedule */
+        body.compact-mode .ch-card-body .flex.gap-2 button {
+            padding: 0.2rem 0 !important;
+            font-size: 9px !important;
+            border-radius: 0.4rem !important;
+        }
+
+        /* Contador +/- minutos */
+        body.compact-mode .ch-card-body .flex.items-center.bg-\[#0f172a\] {
+            border-radius: 0.5rem !important;
+        }
+        body.compact-mode .ch-card-body .flex.items-center.bg-\[#0f172a\] button {
+            padding: 0.25rem 0.6rem !important;
+            font-size: 11px !important;
+        }
+        body.compact-mode .ch-card-body .flex.items-center.bg-\[#0f172a\] input {
+            padding: 0.25rem 0 !important;
+            font-size: 11px !important;
+        }
+
+        /* Duración */
+        body.compact-mode #durationBox_1,
+        body.compact-mode #durationBox_2,
+        body.compact-mode #durationBox_3,
+        body.compact-mode #durationBox_4 {
+            margin: 0.15rem 0 !important;
+        }
+        body.compact-mode [id^="durationVal_"] {
+            font-size: 1.1rem !important;
+        }
+
+        /* Botones Iniciar/Detener */
+        body.compact-mode .btn-rec-start,
+        body.compact-mode .btn-rec-stop {
+            padding-top: 0.4rem !important;
+            padding-bottom: 0.4rem !important;
+            font-size: 0.65rem !important;
+            border-radius: 0.6rem !important;
+        }
+        body.compact-mode .admin-ui-block.grid.grid-cols-2.gap-4.mt-2 {
+            gap: 0.3rem !important;
+            margin-top: 0.3rem !important;
+        }
+
+        /* ── Monitor de recursos compacto (solo en modo compacto) ── */
+        /* Ocultar en modo normal */
+        #compactResources { display: none; }
+
+        /* Mostrar solo en compacto */
+        body.compact-mode #compactResources {
+            display: grid !important;
+            grid-template-columns: repeat(6, 1fr);
+            gap: 0.4rem;
+            padding: 0.5rem 0.75rem;
+            margin-top: 0.4rem;
+        }
+
+        .compact-res-item {
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+        }
+        .compact-res-label {
+            font-size: 8px;
+            font-weight: 900;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: #64748b;
+            display: flex;
+            justify-content: space-between;
+        }
+        .compact-res-bar-track {
+            height: 5px;
+            background: #1e293b;
+            border-radius: 9999px;
+            overflow: hidden;
+            border: 1px solid rgba(51,65,85,0.4);
+        }
+        .compact-res-bar-fill {
+            height: 100%;
+            border-radius: 9999px;
+            transition: width 0.5s ease;
         }
     </style>
 </head>
@@ -774,7 +902,7 @@
         </div>
 
         <!-- MAIN GRID -->
-        <div class="flex flex-col lg:flex-row gap-4 mb-6 animate-fade-in-up delay-100 items-start">
+        <div id="mainGrid" class="flex flex-col lg:flex-row gap-4 mb-6 animate-fade-in-up delay-100 items-start">
             <div id="gridCards" class="grid grid-cols-1 md:grid-cols-2 gap-4 flex-1 w-full">
 
 
@@ -1211,6 +1339,40 @@
             </div>
 
             </div><!-- /gridCards -->
+
+            <!-- Monitor de recursos compacto: solo visible en modo compacto -->
+            <div id="compactResources" class="glass-panel rounded-2xl font-mono shadow-lg">
+                <div class="compact-res-item">
+                    <div class="compact-res-label"><span class="text-green-400">CPU</span><span id="cCpuVal">0%</span></div>
+                    <div class="compact-res-bar-track"><div id="cCpuBar" class="compact-res-bar-fill bg-green-500" style="width:0%"></div></div>
+                    <div id="cCpuModel" class="text-[7px] text-slate-500 uppercase tracking-widest truncate"></div>
+                </div>
+                <div class="compact-res-item">
+                    <div class="compact-res-label"><span class="text-blue-400">RAM</span><span id="cRamVal">0%</span></div>
+                    <div class="compact-res-bar-track"><div id="cRamBar" class="compact-res-bar-fill bg-blue-500" style="width:0%"></div></div>
+                    <div id="cRamModel" class="text-[7px] text-slate-500 uppercase tracking-widest truncate"></div>
+                </div>
+                <div class="compact-res-item">
+                    <div class="compact-res-label"><span class="text-red-400">GPU</span><span id="cGpuVal">0%</span></div>
+                    <div class="compact-res-bar-track"><div id="cGpuBar" class="compact-res-bar-fill bg-red-500" style="width:0%"></div></div>
+                    <div id="cGpuModel" class="text-[7px] text-slate-500 uppercase tracking-widest truncate"></div>
+                </div>
+                <div class="compact-res-item">
+                    <div class="compact-res-label"><span class="text-red-300">VRAM</span><span id="cVramVal">0%</span></div>
+                    <div class="compact-res-bar-track"><div id="cVramBar" class="compact-res-bar-fill bg-red-400" style="width:0%"></div></div>
+                    <div class="text-[7px] text-slate-500 uppercase tracking-widest truncate">VRAM</div>
+                </div>
+                <div class="compact-res-item">
+                    <div class="compact-res-label"><span class="text-teal-400">CAP</span><span id="cDisk2Val">0%</span></div>
+                    <div class="compact-res-bar-track"><div id="cDisk2Bar" class="compact-res-bar-fill bg-teal-500" style="width:0%"></div></div>
+                    <div id="cDiskRemaining" class="text-[7px] text-yellow-400 font-bold uppercase tracking-widest truncate">—</div>
+                </div>
+                <div class="compact-res-item">
+                    <div class="compact-res-label"><span class="text-teal-300">RED</span><span id="cNetVal">0</span></div>
+                    <div class="compact-res-bar-track"><div id="cNetBar" class="compact-res-bar-fill bg-teal-400" style="width:0%"></div></div>
+                    <div id="cNetIp" class="text-[7px] text-slate-500 uppercase tracking-widest truncate"></div>
+                </div>
+            </div><!-- /compactResources -->
 
             <!-- Sidebar -->
             <div id="sidebar" class="w-full lg:w-[260px] lg:shrink-0 flex flex-col gap-4 transition-all duration-300">

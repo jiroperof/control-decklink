@@ -178,6 +178,30 @@
                 const gM = document.getElementById('gpuModel'); if (gM) gM.textContent = d.gpu_name || 'N/A';
                 const vM = document.getElementById('vramModel'); if (vM) vM.textContent = (d.vram_total || '0') + ' GB';
 
+                // ── Panel de recursos compacto ──
+                const _s = (id, v) => { const el = document.getElementById(id); if (el) el.style.width = v + '%'; };
+                const _t = (id, v) => { const el = document.getElementById(id); if (el) el.textContent = v; };
+                _t('cCpuVal', d.cpu + '%');   _s('cCpuBar', d.cpu);
+                _t('cRamVal', d.ram + '%');   _s('cRamBar', d.ram);
+                _t('cGpuVal', d.gpu + '%');   _s('cGpuBar', d.gpu);
+                _t('cVramVal', d.vram + '%'); _s('cVramBar', d.vram);
+                _t('cDisk2Val', (d.disk2 ?? d.disk) + '%'); _s('cDisk2Bar', d.disk2 ?? d.disk);
+                _t('cNetVal', (d.net_mbps ?? 0) + ' Mbps'); _s('cNetBar', d.net ?? 0);
+                const cCpuM = document.getElementById('cCpuModel'); if (cCpuM) cCpuM.textContent = d.cpu_name || '';
+                const cRamM = document.getElementById('cRamModel'); if (cRamM) cRamM.textContent = (d.ram_total || '0') + ' GB';
+                const cGpuM = document.getElementById('cGpuModel'); if (cGpuM) cGpuM.textContent = d.gpu_name || '';
+                const cNetIp = document.getElementById('cNetIp');
+                if (cNetIp) cNetIp.textContent = document.getElementById('networkIpLabel')?.textContent || '';
+                // Tiempo restante en panel compacto (mismo cálculo)
+                const cDR = document.getElementById('cDiskRemaining');
+                if (cDR) {
+                    const lbl = anyRunning ? "rest." : "máx.";
+                    if (hoursLeft > 999) cDR.textContent = `+999h ${lbl}`;
+                    else if (hoursLeft > 99) cDR.textContent = `+99h ${lbl}`;
+                    else if (hoursLeft < 1) cDR.textContent = `${Math.floor(hoursLeft * 60)}min ${lbl}`;
+                    else cDR.textContent = `${hoursLeft.toFixed(1)}h ${lbl}`;
+                }
+
                 onNetOk();
             } catch (_) { onNetFail(); }
         }
