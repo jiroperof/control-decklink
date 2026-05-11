@@ -931,6 +931,7 @@
 
             <!-- Panel izquierdo: Branding -->
             <div class="login-brand">
+                <!-- Logo + nombre -->
                 <div>
                     <img src="logo.png" alt="VTV" class="h-14 mb-6 drop-shadow-lg" />
                     <h2 class="text-2xl font-black tracking-tight text-white uppercase leading-tight mb-1">CAPTURADORA<br><span class="text-red-500">2.0</span></h2>
@@ -949,39 +950,43 @@
                             <span class="text-[10px] text-slate-400 font-bold uppercase tracking-widest">Acceso autenticado</span>
                         </div>
                     </div>
-                    <!-- Mini grid de canales -->
-                    <p class="text-[8px] text-slate-600 font-black uppercase tracking-widest mb-2">Estado de canales</p>
-                    <div class="grid grid-cols-2 gap-2">
-                        <div id="loginCh1" class="bg-slate-900/60 border border-slate-700/40 rounded-xl p-3">
-                            <p class="text-[8px] text-slate-500 font-black uppercase tracking-widest mb-1.5">CH 1</p>
-                            <div class="flex items-center gap-1.5">
-                                <span class="login-ch-dot w-1.5 h-1.5 rounded-full bg-slate-700 inline-block"></span>
-                                <span class="login-ch-lbl text-[8px] font-bold text-slate-700 uppercase tracking-wide">EN ESPERA</span>
+
+                    <!-- Canales decorativos -->
+                    <div class="flex flex-col gap-2">
+                        <p class="text-[8px] text-slate-600 font-black uppercase tracking-widest mb-1">Canales activos</p>
+                        <div class="grid grid-cols-2 gap-2">
+                            <div class="bg-slate-900/60 border border-slate-700/40 rounded-xl p-3">
+                                <p class="text-[8px] text-slate-500 font-black uppercase tracking-widest mb-1">CH1</p>
+                                <div id="loginCh1" class="flex items-center gap-1.5">
+                                    <span class="w-1.5 h-1.5 rounded-full bg-slate-600"></span>
+                                    <span class="text-[9px] text-slate-600 font-bold">—</span>
+                                </div>
                             </div>
-                        </div>
-                        <div id="loginCh2" class="bg-slate-900/60 border border-slate-700/40 rounded-xl p-3">
-                            <p class="text-[8px] text-slate-500 font-black uppercase tracking-widest mb-1.5">CH 2</p>
-                            <div class="flex items-center gap-1.5">
-                                <span class="login-ch-dot w-1.5 h-1.5 rounded-full bg-slate-700 inline-block"></span>
-                                <span class="login-ch-lbl text-[8px] font-bold text-slate-700 uppercase tracking-wide">EN ESPERA</span>
+                            <div class="bg-slate-900/60 border border-slate-700/40 rounded-xl p-3">
+                                <p class="text-[8px] text-slate-500 font-black uppercase tracking-widest mb-1">CH2</p>
+                                <div id="loginCh2" class="flex items-center gap-1.5">
+                                    <span class="w-1.5 h-1.5 rounded-full bg-slate-600"></span>
+                                    <span class="text-[9px] text-slate-600 font-bold">—</span>
+                                </div>
                             </div>
-                        </div>
-                        <div id="loginCh3" class="bg-slate-900/60 border border-slate-700/40 rounded-xl p-3">
-                            <p class="text-[8px] text-slate-500 font-black uppercase tracking-widest mb-1.5">CH 3</p>
-                            <div class="flex items-center gap-1.5">
-                                <span class="login-ch-dot w-1.5 h-1.5 rounded-full bg-slate-700 inline-block"></span>
-                                <span class="login-ch-lbl text-[8px] font-bold text-slate-700 uppercase tracking-wide">EN ESPERA</span>
+                            <div class="bg-slate-900/60 border border-slate-700/40 rounded-xl p-3">
+                                <p class="text-[8px] text-slate-500 font-black uppercase tracking-widest mb-1">CH3</p>
+                                <div id="loginCh3" class="flex items-center gap-1.5">
+                                    <span class="w-1.5 h-1.5 rounded-full bg-slate-600"></span>
+                                    <span class="text-[9px] text-slate-600 font-bold">—</span>
+                                </div>
                             </div>
-                        </div>
-                        <div id="loginCh4" class="bg-slate-900/60 border border-slate-700/40 rounded-xl p-3">
-                            <p class="text-[8px] text-slate-500 font-black uppercase tracking-widest mb-1.5">CH 4</p>
-                            <div class="flex items-center gap-1.5">
-                                <span class="login-ch-dot w-1.5 h-1.5 rounded-full bg-slate-700 inline-block"></span>
-                                <span class="login-ch-lbl text-[8px] font-bold text-slate-700 uppercase tracking-wide">EN ESPERA</span>
+                            <div class="bg-slate-900/60 border border-slate-700/40 rounded-xl p-3">
+                                <p class="text-[8px] text-slate-500 font-black uppercase tracking-widest mb-1">CH4</p>
+                                <div id="loginCh4" class="flex items-center gap-1.5">
+                                    <span class="w-1.5 h-1.5 rounded-full bg-slate-600"></span>
+                                    <span class="text-[9px] text-slate-600 font-bold">—</span>
+                                </div>
                             </div>
                         </div>
                     </div>
                 </div>
+
                 <!-- Footer branding -->
                 <div class="border-t border-slate-700/40 pt-4">
                     <p class="text-[8px] text-slate-600 font-bold uppercase tracking-widest">C.A. Venezolana de Televisión</p>
@@ -991,15 +996,16 @@
 
             <!-- Panel derecho: Formulario -->
             <div class="login-form-panel">
-                <!-- Top -->
+                <!-- Top: titulo -->
                 <div>
                     <p class="text-[9px] text-red-500 font-black uppercase tracking-[0.25em] mb-2">Sistema Multicanal</p>
                     <h3 class="text-2xl font-black text-white uppercase tracking-tight mb-1">Iniciar Sesión</h3>
                     <p class="text-[12px] text-slate-500 font-semibold">Ingresa tus credenciales para continuar</p>
                 </div>
 
-                <!-- Campos -->
+                <!-- Medio: campos -->
                 <div class="flex flex-col gap-5">
+                    <!-- Usuario -->
                     <div>
                         <label class="block text-[10px] font-black text-slate-500 uppercase tracking-widest mb-2">Usuario</label>
                         <div class="login-input-wrap">
@@ -1007,6 +1013,8 @@
                             <input type="text" id="user" placeholder="Nombre de usuario" aria-label="Nombre de usuario" aria-required="true" autocomplete="username">
                         </div>
                     </div>
+
+                    <!-- Contraseña -->
                     <div>
                         <label class="block text-[10px] font-black text-slate-500 uppercase tracking-widest mb-2">Contraseña</label>
                         <div class="login-input-wrap">
@@ -1028,13 +1036,15 @@
                         <span id="loginErrorText"></span>
                     </p>
 
+                    <!-- Botón -->
                     <button id="btnLogin" onclick="login()" aria-label="Iniciar sesión en el sistema" class="login-btn">
                         Iniciar Sesión
                     </button>
                 </div>
 
-                <!-- Bottom -->
-                <div class="flex flex-col gap-3">
+                <!-- Bottom: info + seguridad -->
+                <div class="flex flex-col gap-4">
+                    <!-- Aviso de seguridad -->
                     <div class="flex items-start gap-3 bg-slate-900/50 border border-slate-700/40 rounded-xl p-4">
                         <svg class="w-4 h-4 text-slate-600 shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/></svg>
                         <div>
@@ -1042,9 +1052,6 @@
                             <p class="text-[10px] text-slate-600 mt-0.5">Solo personal autorizado. Todas las sesiones son registradas.</p>
                         </div>
                     </div>
-                    <p class="text-[9px] text-slate-700 text-center font-semibold uppercase tracking-widest">
-                        C.A. Venezolana de Televisión &nbsp;·&nbsp; 2026
-                    </p>
                 </div>
             </div>
         </div>
