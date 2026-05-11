@@ -10,6 +10,7 @@ from fastapi.responses import JSONResponse, StreamingResponse, FileResponse, Red
 from fastapi.staticfiles import StaticFiles
 from fastapi.middleware.cors import CORSMiddleware
 from starlette.middleware.base import BaseHTTPMiddleware
+from starlette.middleware.trustedhost import TrustedHostMiddleware
 from pydantic import BaseModel, field_validator
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
@@ -131,6 +132,10 @@ ALLOWED_ORIGINS = [o.strip() for o in
     os.environ.get("ALLOWED_ORIGINS","http://localhost:8000,http://127.0.0.1:8000").split(",") if o.strip()]
 SMTP_PASS_ENV  = os.environ.get("SMTP_PASS", "")
 CAPTURAS_PATH  = os.environ.get("CAPTURAS_PATH", "/home/administrador/Capturas")
+# IP(s) del proxy inverso confiable (Apache local + FortiGate)
+# Separadas por coma. "127.0.0.1" siempre incluido.
+_TRUSTED_PROXY_RAW = os.environ.get("TRUSTED_PROXY", "")
+TRUSTED_PROXIES = {"127.0.0.1"} | {ip.strip() for ip in _TRUSTED_PROXY_RAW.split(",") if ip.strip()}
 
 # ── Usuarios y roles ──────────────────────────────────────────────────────────
 USERS = {
@@ -1068,9 +1073,14 @@ async def daily_report_task():
 app = FastAPI(title="VTV - Capturadora Multicanal 2.0", lifespan=lifespan)
 app.add_middleware(CORSMiddleware, allow_origins=ALLOWED_ORIGINS, allow_credentials=True, allow_methods=["*"], allow_headers=["*"])
 
+# Middleware: propaga X-Forwarded-For / X-Forwarded-Proto de proxies confiables
+# (Apache local en 127.0.0.1 y FortiGate SSL offload)
+from uvicorn.middleware.proxy_headers import ProxyHeadersMiddleware
+app.add_middleware(ProxyHeadersMiddleware, trusted_hosts=list(TRUSTED_PROXIES))
+
 # ── Configuración para Red Interna (HTTP) ────────────────────────────────────
-# Para red interna VTV: Sin HTTPS, sin warnings, acceso directo
-# Si necesitas HTTPS en el futuro, consulta HTTPS_SETUP.md
+# Tráfico interno: HTTP:8000 ← Apache(80) ← FortiGate(443) SSL offload
+# El cliente final siempre ve HTTPS gracias al offload en FortiGate
 
 # ── Endpoints ─────────────────────────────────────────────────────────────────
 @app.post("/api/admin/send-report")
